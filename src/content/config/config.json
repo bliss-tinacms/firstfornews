@@ -8,11 +8,11 @@
     "footerLogo": "/Splash-Newswire-Logo-White.png"
   },
   "contactForm": {
-    "formspreeEndpoint": "https://formspree.io/f/mwlejdvo",
+    "formspreeEndpoint": "https://formspree.io/f/xppwzoep",
     "heading": "You live here. You see things we don't.",
-    "description": "Story tips, correction requests, contributor inquiries, and general reader correspondence all reach a person on the newsroom staff.",
+    "description": "Story tips, corrections, letters, and general reader correspondence all reach a person on the newsroom staff.",
     "buttonText": "Send to the newsroom",
-    "note": "Read by a person during business hours. We reply to what we can pursue, and nothing runs on a single source.",
+    "note": "Fields marked * are required. Read during U.S. business hours. Do not use a work account if your message is sensitive.",
     "subject": "First For News contact form submission"
   },
   "codeInjection": {
