@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import matter from 'gray-matter';
 import type { APIRoute } from 'astro';
 
 export const prerender = false;
@@ -22,6 +25,48 @@ function getBranch() {
     process.env.TINA_BRANCH ||
     'main'
   );
+}
+
+function getLocalHomepageData() {
+  try {
+    const filePath = join(process.cwd(), 'src', 'content', 'page', 'home.mdx');
+    const parsed = matter(readFileSync(filePath, 'utf8'));
+    return parsed.data && Object.keys(parsed.data).length ? parsed.data : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function queryTargetsHomepage(bodyText: string) {
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    const variables = payload?.variables ?? {};
+    const relativePath = variables.relativePath || variables.relativePath__homepage || variables.path;
+    const query = String(payload?.query || '');
+    return relativePath === 'home.mdx' && /\bpage\s*\(/.test(query);
+  } catch (_error) {
+    return false;
+  }
+}
+
+function overrideHomepageResponse(text: string, bodyText: string) {
+  if (!queryTargetsHomepage(bodyText)) return text;
+  const localHome = getLocalHomepageData();
+  if (!localHome) return text;
+  try {
+    const json = JSON.parse(text);
+    if (json?.data?.page) {
+      json.data.page = {
+        ...json.data.page,
+        ...localHome,
+        _sys: json.data.page._sys ?? { filename: 'home', relativePath: 'home.mdx' },
+      };
+      return JSON.stringify(json);
+    }
+  } catch (_error) {
+    return text;
+  }
+  return text;
 }
 
 function corsHeaders(request: Request) {
@@ -106,7 +151,7 @@ export const POST: APIRoute = async ({ request }) => {
       body,
     });
 
-    const text = await upstreamResponse.text();
+    const text = overrideHomepageResponse(await upstreamResponse.text(), body);
 
     return new Response(text, {
       status: upstreamResponse.status,
