@@ -37,21 +37,44 @@ async function authorized(request: Request, url: URL) {
   return Boolean(user && (user as any).verified);
 }
 
+function cleanPath(value: string | null | undefined) {
+  return (value || "").replace(/^\/+|\/+$/g, "");
+}
+
 function directoryPrefix(directory: string | null) {
-  const clean = (directory || "").replace(/^\/+|\/+$/g, "");
+  const clean = cleanPath(directory);
   return clean ? clean + "/" : "";
+}
+
+function rootPrefix() {
+  const clean = cleanPath(process.env.CLOUDINARY_ROOT_FOLDER || process.env.CLOUDINARY_FOLDER || "firstfornews");
+  return clean ? clean + "/" : "";
+}
+
+function withRootPrefix(path: string) {
+  const root = rootPrefix();
+  const clean = cleanPath(path);
+  if (!root) return clean;
+  if (!clean) return root.replace(/\/$/, "");
+  return clean.startsWith(root) ? clean : root + clean;
+}
+
+function stripRootPrefix(publicId: string) {
+  const root = rootPrefix();
+  return root && publicId.startsWith(root) ? publicId.slice(root.length) : publicId;
 }
 
 function itemFromCloudinary(asset: any) {
   const publicId = asset.public_id || "";
-  const parts = publicId.split("/");
-  const filename = parts.pop() || publicId;
+  const displayId = stripRootPrefix(publicId);
+  const parts = displayId.split("/");
+  const filename = parts.pop() || displayId || publicId;
   const directory = parts.length ? "/" + parts.join("/") : "/";
   const src = asset.secure_url || asset.url;
 
   return {
     type: "file",
-    id: publicId,
+    id: displayId,
     filename,
     directory,
     src,
@@ -71,7 +94,7 @@ export async function GET({ request }: APIContext) {
 
     const directory = url.searchParams.get("directory") || "";
     const offset = url.searchParams.get("offset") || undefined;
-    const prefix = directoryPrefix(directory);
+    const prefix = withRootPrefix(directory);
 
     let search = cloudinary.search
       .expression(prefix ? `resource_type:image AND public_id:${prefix}*` : "resource_type:image")
@@ -107,7 +130,7 @@ export async function POST({ request }: APIContext) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const dataUri = `data:${file.type || "application/octet-stream"};base64,${buffer.toString("base64")}`;
-    const publicId = (directory + filename.replace(/\.[^.]+$/, "")).replace(/^\/+/, "");
+    const publicId = withRootPrefix(directory + filename.replace(/\.[^.]+$/, ""));
 
     const result = await cloudinary.uploader.upload(dataUri, {
       public_id: publicId,
@@ -129,7 +152,7 @@ export async function DELETE({ request, params }: APIContext) {
     getCredentials();
 
     const mediaParam = Array.isArray((params as any).media) ? (params as any).media.join("/") : String((params as any).media || "");
-    const publicId = decodeURIComponent(mediaParam).replace(/^\/+/, "");
+    const publicId = withRootPrefix(decodeURIComponent(mediaParam));
     if (!publicId) return json({ message: "Missing media id" }, 400);
 
     const result = await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
