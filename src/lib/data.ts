@@ -45,8 +45,51 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 	const permalink = node.permalink || readFrontmatterValue(collection, node._sys?.filename || null, 'permalink');
 	return permalink ? ({ ...node, permalink } as T) : node;
 }
-export const getConfig = () =>
-	requestWithMetadata(client.queries.config({ relativePath: 'config.json' }));
+
+function tinaProxyEndpoints() {
+	return [
+		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
+		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
+		process.env.PUBLIC_TINA_CONTENT_API_URL,
+		process.env.SITE_URL ? `${process.env.SITE_URL.replace(/\/$/, '')}/tina-content-proxy` : null,
+		'https://firstfornews.net/tina-content-proxy',
+	].filter(Boolean) as string[];
+}
+
+async function fetchLiveTina<T>(query: string, variables?: Record<string, unknown>, pick?: (json: any) => T | null | undefined) {
+	for (const endpoint of tinaProxyEndpoints()) {
+		try {
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ query, variables }),
+				cache: 'no-store',
+			});
+			if (!response.ok) continue;
+			const json = await response.json();
+			const data = pick ? pick(json) : json?.data;
+			if (data) return data;
+		} catch (_error) {
+			// Fall back to generated Tina client below.
+		}
+	}
+	return null;
+}
+
+export async function getConfig() {
+	const query = `query Config($relativePath: String!) {
+		config(relativePath: $relativePath) {
+			seo { title description siteOwner logo favicon footerLogo }
+			contactForm { formspreeEndpoint heading description buttonText note subject }
+			codeInjection { headerCode footerCode }
+			contactLinks { title link icon }
+			footerStarfield
+		}
+	}`;
+	const liveConfig = await fetchLiveTina(query, { relativePath: 'config.json' }, (json) => json?.data?.config);
+	if (liveConfig) return { data: { config: liveConfig } } as any;
+	return requestWithMetadata(client.queries.config({ relativePath: 'config.json' }));
+}
 
 
 async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
@@ -57,28 +100,8 @@ async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
 		}
 	}`;
 
-	const endpoints = [
-		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://firstfornews.net/tina-content-proxy',
-	].filter(Boolean) as string[];
-
-	for (const endpoint of endpoints) {
-		try {
-			const response = await fetch(endpoint, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ query, variables: { relativePath } }),
-				cache: 'no-store',
-			});
-			if (!response.ok) continue;
-			const json = await response.json();
-			if (json?.data?.navigation) return { data: { navigation: json.data.navigation } } as any;
-		} catch (_error) {
-			// fall back below
-		}
-	}
+	const liveNavigation = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.navigation);
+	if (liveNavigation) return { data: { navigation: liveNavigation } } as any;
 
 	return requestWithMetadata(client.queries.navigation({ relativePath }));
 }
@@ -118,38 +141,36 @@ async function getLivePage(slug: string) {
 		}
 	}`;
 
-	const endpoints = [
-		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://firstfornews.net/tina-content-proxy',
-	].filter(Boolean) as string[];
-
-	for (const endpoint of endpoints) {
-		try {
-			const response = await fetch(endpoint, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ query, variables: { relativePath } }),
-				cache: 'no-store',
-			});
-			if (!response.ok) continue;
-			const json = await response.json();
-			if (json?.data?.page) return { data: { page: json.data.page } } as any;
-		} catch (_error) {
-			// Fall back below.
-		}
-	}
+	const livePage = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.page);
+	if (livePage) return { data: { page: livePage } } as any;
 
 	return requestWithMetadata(client.queries.page({ relativePath }), { priority: 'primary' });
 }
 
 export const getPublicPage = (slug: string) => getLivePage(slug);
 
-export const getBlog = (slug: string) =>
-	requestWithMetadata(client.queries.blog({ relativePath: `${slug}.mdx` }), { priority: 'primary' });
-
-
+export async function getBlog(slug: string) {
+	const relativePath = slug.endsWith('.mdx') ? slug : slug + '.mdx';
+	const query = `query Blog($relativePath: String!) {
+		blog(relativePath: $relativePath) {
+			title
+			description
+			seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
+			pubDate
+			updatedDate
+			category { ... on Category { title description _sys { filename } } }
+			author { ... on User { name role avatar bio email _sys { filename } } }
+			heroImage
+			authorAlt
+			heroImageAlt
+			body
+			_sys { filename }
+		}
+	}`;
+	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
+	if (liveBlog) return { data: { blog: liveBlog } } as any;
+	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
+}
 
 
 async function getLiveUser(slug: string) {
@@ -165,28 +186,8 @@ async function getLiveUser(slug: string) {
 		}
 	}`;
 
-	const endpoints = [
-		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://firstfornews.net/tina-content-proxy',
-	].filter(Boolean) as string[];
-
-	for (const endpoint of endpoints) {
-		try {
-			const response = await fetch(endpoint, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ query, variables: { relativePath } }),
-				cache: 'no-store',
-			});
-			if (!response.ok) continue;
-			const json = await response.json();
-			if (json?.data?.user) return { data: { user: json.data.user } } as any;
-		} catch (_error) {
-			// Fall back below.
-		}
-	}
+	const liveUser = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.user);
+	if (liveUser) return { data: { user: liveUser } } as any;
 
 	return requestWithMetadata(client.queries.user({ relativePath }));
 }
@@ -194,6 +195,24 @@ async function getLiveUser(slug: string) {
 export const getUser = (slug: string) => getLiveUser(slug);
 
 export async function listPages() {
+	const query = `query PageConnection {
+		pageConnection {
+			edges {
+				node {
+					title
+					permalink
+					seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
+					_sys { filename }
+				}
+			}
+		}
+	}`;
+	const livePages = await fetchLiveTina(query, undefined, (json) => json?.data?.pageConnection?.edges);
+	if (Array.isArray(livePages)) {
+		return livePages
+			.flatMap((edge) => (edge?.node ? [edge.node] : []))
+			.map((node) => hydratePermalink('page', node));
+	}
 	const result = await client.queries.pageConnection();
 	return (result.data.pageConnection.edges ?? [])
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
@@ -201,6 +220,38 @@ export async function listPages() {
 }
 
 export async function listBlogs() {
+	const query = `query BlogConnection {
+		blogConnection {
+			edges {
+				node {
+					title
+					description
+					permalink
+					pubDate
+					updatedDate
+					heroImage
+					heroImageAlt
+					seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
+					category { ... on Category { title description _sys { filename } } }
+					author { ... on User { name role avatar bio email _sys { filename } } }
+					_sys { filename }
+				}
+			}
+		}
+	}`;
+	const liveBlogs = await fetchLiveTina(query, undefined, (json) => json?.data?.blogConnection?.edges);
+	const nodes = Array.isArray(liveBlogs)
+		? liveBlogs.flatMap((edge) => (edge?.node ? [edge.node] : []))
+		: null;
+	if (nodes) {
+		return nodes
+			.map((node) => hydratePermalink('blog', node))
+			.sort((a, b) => {
+				const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
+				const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
+				return bd - ad;
+			});
+	}
 	const result = await client.queries.blogConnection();
 	return (result.data.blogConnection.edges ?? [])
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
@@ -230,8 +281,8 @@ export type TestimonialBlock = Extract<PageBlock, { __typename: 'PageBlocksTesti
 export type VideoBlock = Extract<PageBlock, { __typename: 'PageBlocksVideo' }>;
 export type SplitBlock = Extract<PageBlock, { __typename: 'PageBlocksSplit' }>;
 
-export type CmsConfigNav = NonNullable<NonNullable<CmsConfig['nav']>[number]>;
-export type CmsConfigFooterNav = NonNullable<NonNullable<CmsConfig['footerNav']>[number]>;
+export type CmsConfigNav = any;
+export type CmsConfigFooterNav = any;
 export type CmsConfigContactLink = NonNullable<NonNullable<CmsConfig['contactLinks']>[number]>;
 export type CmsConfigSeo = NonNullable<CmsConfig['seo']>;
 
