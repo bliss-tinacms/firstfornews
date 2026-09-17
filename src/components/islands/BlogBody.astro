@@ -188,19 +188,6 @@ const heroImageAlt = (() => {
 							</div>
 						</div>
 					)}
-					{relatedPosts.length > 0 && (
-						<div class="rc">
-							<div class="rc-t">Latest in {categoryLabel}</div>
-							<div class="rc-b">
-								{relatedPosts.slice(0, 3).map((post) => (
-									<a href={getPostUrl(post)} class="rr">
-										<div class="rr-k">{getReferenceLabel(post.category) || 'Article'}</div>
-										<div class="rr-h">{getPostTitle(post)}</div>
-									</a>
-								))}
-							</div>
-						</div>
-					)}
 					<div class="rc">
 						<div class="rc-t">Share this report</div>
 						<div class="sh">
@@ -259,11 +246,11 @@ const heroImageAlt = (() => {
 				{relatedPosts.slice(0, 3).map((post) => (
 					<a href={getPostUrl(post)} class="mi">
 						{post.heroImage && <img src={post.heroImage} alt="" class="mi-img" width={420} height={262} />}
-						<span class="mi-c">
-							<span class="mi-k">{getReferenceLabel(post.category) || 'Article'}</span>
-							<span class="mi-h">{getPostTitle(post)}</span>
-							<span class="mi-x">{getPostDescription(post)}</span>
-						</span>
+						<div class="mi-c">
+							<div class="mi-k">{getReferenceLabel(post.category) || 'Article'}</div>
+							<div class="mi-h">{getPostTitle(post)}</div>
+							<p class="mi-x">{getPostDescription(post)}</p>
+						</div>
 					</a>
 				))}
 			</div>
