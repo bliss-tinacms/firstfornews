@@ -13,6 +13,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import matter from 'gray-matter';
 import type { TinaRichTextContent } from '@tinacms/astro';
 import { requestWithMetadata } from '@tinacms/astro/data';
 import client from '../../tina/__generated__/client';
@@ -39,6 +40,18 @@ function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null,
 		return null;
 	}
 	return null;
+}
+
+function readLocalPageFrontmatter(slug?: string | null) {
+	if (!slug) return null;
+	try {
+		const filename = slug.endsWith('.mdx') ? slug : slug + '.mdx';
+		const filePath = join(process.cwd(), 'src', 'content', 'page', filename);
+		const parsed = matter(readFileSync(filePath, 'utf8'));
+		return parsed.data && Object.keys(parsed.data).length ? parsed.data : null;
+	} catch (_error) {
+		return null;
+	}
 }
 
 function hydratePermalink<T extends { _sys?: { filename?: string | null } | null; permalink?: string | null }>(collection: 'blog' | 'page', node: T): T {
@@ -122,6 +135,26 @@ export const getFooterNavigation = () => getLiveNavigation('footer.json');
 
 export const getPage = (slug: string) =>
 	requestWithMetadata(client.queries.page({ relativePath: `${slug}.mdx` }), { priority: 'primary' });
+
+export const getEditablePage = (slug: string) => {
+	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
+	const localPage = slug === 'home' || relativePath === 'home.mdx' ? readLocalPageFrontmatter(relativePath) : null;
+	const source = client.queries.page({ relativePath }).then((result) => {
+		if (!localPage) return result;
+		return {
+			...result,
+			data: {
+				...result.data,
+				page: {
+					...(result.data?.page ?? {}),
+					...localPage,
+					_sys: result.data?.page?._sys ?? { filename: relativePath.replace(/\.mdx$/, '') },
+				},
+			},
+		};
+	});
+	return requestWithMetadata(source, { priority: 'primary' });
+};
 
 async function getLivePage(slug: string) {
 	const relativePath = slug.endsWith('.mdx') ? slug : slug + '.mdx';

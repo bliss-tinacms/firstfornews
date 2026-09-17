@@ -2,13 +2,13 @@
 import Base from '../layouts/Base.astro';
 import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import FrontPage from '../templates/FrontPage.astro';
-import { getConfig, getPage, getPublicPage, listBlogs } from '../lib/data';
+import { getConfig, getEditablePage, getPublicPage, listBlogs } from '../lib/data';
 import { islands } from '../lib/islands';
 import * as localHome from '../content/page/home.mdx';
 
 const slug = 'home';
 const page = await getPublicPage(slug);
-const editPage = await getPage(slug);
+const editPage = await getEditablePage(slug);
 const data = (localHome.frontmatter as any) ?? page.data?.page;
 const editData = editPage.data?.page ?? page.data?.page ?? data;
 if (!data) return new Response('Not Found', { status: 404 });
