@@ -190,6 +190,11 @@ async function getLivePage(slug: string) {
 
 export const getPublicPage = (slug: string) => getLivePage(slug);
 
+export const getEditableBlog = (slug: string) => {
+	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
+	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
+};
+
 export async function getBlog(slug: string) {
 	const relativePath = slug.endsWith('.mdx') ? slug : slug + '.mdx';
 	const query = `query Blog($relativePath: String!) {

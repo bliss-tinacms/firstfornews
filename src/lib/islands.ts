@@ -13,7 +13,7 @@ import PageBody from '../components/islands/PageBody.astro';
 import BlogBody from '../components/islands/BlogBody.astro';
 import Header from '../templates/Header.astro';
 import Footer from '../templates/Footer.astro';
-import { getBlog, getConfig, getEditablePage } from './data';
+import { getConfig, getEditableBlog, getEditablePage } from './data';
 
 export const islands: IslandRegistry = {
 	page: {
@@ -25,7 +25,7 @@ export const islands: IslandRegistry = {
 		}),
 	},
 	blog: {
-		fetch: (_request, params) => getBlog(params.get('slug') ?? ''),
+		fetch: (_request, params) => getEditableBlog(params.get('slug') ?? ''),
 		component: BlogBody,
 		wrapper: { tag: 'article' },
 		propsFromData: (data) => ({
