@@ -195,7 +195,7 @@ a:hover{color:var(--org2)}
   .ft-lg{flex-direction:column;align-items:flex-start;gap:14px}
 }
 
-/* SINGLE POST MOCKUP */
+/* SINGLE POST MOCKUP - copied from supplied single-post.html */
 /* ARTICLE HEAD */
 .ah{background:var(--blk);color:#fff;padding:58px 0 54px}
 .ah-in{max-width:none}
@@ -286,3 +286,85 @@ a:hover{color:var(--org2)}
 .mi-k{font-family:var(--cnd);font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--org2);margin-bottom:9px}
 .mi-h{font-family:var(--dsp);font-size:25px;font-weight:700;text-transform:uppercase;letter-spacing:-.005em;line-height:1.04;color:var(--blk);margin-bottom:9px}
 .mi-x{font-size:16px;color:var(--dim);line-height:1.7}
+
+@media(max-width:1080px){
+  .mnav{display:none}
+  .brg{display:inline-flex}
+  .mh-in{flex-wrap:wrap;gap:14px}
+  .ntog:checked ~ .w .mnav{display:flex;flex-direction:column;align-items:stretch;gap:0;flex:1 1 100%;order:3;border-top:1px solid rgba(255,255,255,.18)}
+  .ntog:checked ~ .w .mnav a{padding:13px 2px;border-bottom:1px solid rgba(255,255,255,.12);min-height:46px;display:flex;align-items:center}
+  .ah{padding:44px 0 42px}
+  .ah h1{font-size:46px}
+  .bd{padding-top:0}
+  .bd-in{grid-template-columns:1fr;gap:44px}
+  .rl{position:static}
+.pr h1{font-size:40px;scroll-margin-top:16px}
+.pr h2{scroll-margin-top:16px;font-size:31px}
+.pr h3{font-size:24px;scroll-margin-top:16px}
+.pr h4{font-size:19px;scroll-margin-top:16px}
+.pr h5{scroll-margin-top:16px}
+.pr h6{scroll-margin-top:16px}
+  /* wide tables scroll inside themselves — no wrapper div required */
+  .pr table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;table-layout:auto;font-size:16px}
+  .pr caption{position:sticky;left:0}
+  .pr thead th,.pr tbody td,.pr tbody th,.pr tfoot td{min-width:124px}
+  .pr tbody th{min-width:150px}
+.pr p,.pr li{font-size:18px}
+  .pr > div > p:first-of-type{font-size:20px}
+.pr blockquote p{font-size:26px}
+  /* below the two-column width the rail stacks — promote the contents list above
+     the article so it reads as navigation, and keep the other cards after it */
+  .bd-in{display:flex;flex-direction:column;align-items:stretch}
+  .rl{display:contents}
+  .toc{order:1}
+  .pr{order:2}
+  .rl .rc:not(.toc){order:3}
+  .li{order:0;margin:0 -32px}
+  .h2{font-size:36px}
+  .mo-g{grid-template-columns:1fr 1fr}
+  .ft-band-in p{font-size:26px}
+  .ft-cl{gap:16px 30px;padding:34px 0 26px}
+}
+@media(max-width:600px){
+  .w{padding:0 18px}
+  .mh-in img{max-height:36px}
+  .ah{padding:32px 0 30px}
+  .ah h1{font-size:32px}
+  .ah-by{gap:14px 0}
+  .ah-dt{text-align:left;width:100%}
+  .li{margin:0 -18px}
+  .bd{padding:36px 0 48px}
+.pr p,.pr li{font-size:17px}
+  .pr > div > p:first-of-type{font-size:19px}
+.pr h1{font-size:32px;margin-top:34px;border-bottom-width:5px}
+.pr h2{font-size:27px;margin-top:32px}
+.pr h3{font-size:22px}
+.pr h4{font-size:18px}
+.pr h5{font-size:16px}
+.pr h6{font-size:14px}
+  .pr table{font-size:15px}
+  .pr caption{padding:11px 14px}
+  .pr thead th,.pr tbody td,.pr tbody th,.pr tfoot td{padding:11px 14px;min-width:112px;word-break:normal;hyphens:auto}
+  .pr tbody th{min-width:132px}
+  .pr thead th{font-size:14px;letter-spacing:.07em}
+  .pr tbody th{font-size:15px;letter-spacing:.02em}
+  .pr tfoot td{font-size:14px;letter-spacing:.05em}
+.pr blockquote{padding:22px 20px;margin:26px 0}
+.pr blockquote p{font-size:23px}
+.pr blockquote cite{font-size:14px;letter-spacing:.1em}
+.pr ul li::before{top:21px}
+.pr ol li{padding-left:32px}
+.pr ol li::before{font-size:17px}
+  .h2{font-size:29px}
+  .mo{padding:44px 0 48px}
+  .mo-g{grid-template-columns:1fr}
+  .ft-band-in{padding:28px 0}
+  .ft-band-in p{font-size:22px}
+  .ft-cl{flex-direction:column;align-items:flex-start;gap:8px}
+  .ft-cl img{max-height:42px}
+  .ft-links{flex-direction:column;align-items:flex-start;width:100%}
+  .ft-links a{width:100%;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+  .ft-links a:last-child{border-bottom:none}
+  .ft-links a:not(:last-child)::after{display:none}
+  .ft-lg{flex-direction:column;align-items:flex-start;gap:14px}
+}

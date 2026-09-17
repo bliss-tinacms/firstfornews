@@ -27,6 +27,13 @@ type AuthorObject = ReferenceObject & {
 	email?: string | null;
 };
 
+type RichNode = {
+	type?: string;
+	text?: string;
+	children?: RichNode[];
+	[key: string]: unknown;
+};
+
 function getReferenceLabel(reference: unknown) {
 	if (!reference) return null;
 	if (typeof reference === 'string') {
@@ -50,10 +57,6 @@ function getReferenceSlug(reference: unknown) {
 	}
 	return null;
 }
-function getCategoryArchiveUrl(reference: unknown) {
-	const slug = getReferenceSlug(reference)?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-	return slug ? '/blog/category/' + slug + '/' : '/blog/';
-}
 
 function getAuthor(reference: unknown) {
 	if (!reference || typeof reference !== 'object') return null;
@@ -72,6 +75,38 @@ function getPostDescription(post: CmsBlog) {
 	return post.description || 'Read the full report.';
 }
 
+function getText(node: unknown): string {
+	if (!node || typeof node !== 'object') return '';
+	const item = node as RichNode;
+	if (typeof item.text === 'string') return item.text;
+	return Array.isArray(item.children) ? item.children.map(getText).join('') : '';
+}
+
+function slugify(value: string) {
+	return value
+		.toLowerCase()
+		.replace(/&/g, ' and ')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '') || 'section';
+}
+
+function getTocItems(body: unknown) {
+	if (!body || typeof body !== 'object') return [];
+	const root = body as RichNode;
+	const counts = new Map<string, number>();
+	return (root.children || [])
+		.filter((node) => node?.type === 'h2')
+		.map((node) => {
+			const title = getText(node).trim();
+			if (!title) return null;
+			const base = slugify(title);
+			const count = counts.get(base) || 0;
+			counts.set(base, count + 1);
+			return { title, id: count ? `${base}-${count + 1}` : base };
+		})
+		.filter(Boolean) as Array<{ title: string; id: string }>;
+}
+
 const postAuthor = data ? getAuthor(data.author) : null;
 const author = defaultAuthor || postAuthor;
 const authorName = getReferenceLabel(defaultAuthor) || getReferenceLabel(postAuthor) || getReferenceLabel(data?.author) || 'Newsroom Staff';
@@ -82,6 +117,8 @@ const categoryLabel = getReferenceLabel(data?.category) || 'Article';
 const publishedDate = data?.pubDate ? new Date(data.pubDate) : null;
 const shareUrl = data ? getPostUrl(data) : '/blog/';
 const shareTitle = data?.title || 'First For News';
+const tocItems = getTocItems(data?.body);
+const hasToc = tocItems.length > 0;
 
 const heroImageAlt = (() => {
   const sources = [];
@@ -117,7 +154,7 @@ const heroImageAlt = (() => {
 						)}
 					</a>
 					<div class="ah-au" data-tina-field={tinaField(data, 'author')}>
-						<div class="ah-an"><a href={authorArchiveUrl}>{authorName}</a></div>
+						<div class="ah-an">BY <a href={authorArchiveUrl}>{authorName}</a></div>
 					</div>
 					<div class="ah-dt">
 						{publishedDate && <span data-tina-field={tinaField(data, 'pubDate')}><FormattedDate date={publishedDate} /></span>}
@@ -136,14 +173,19 @@ const heroImageAlt = (() => {
 				)}
 
 				<aside class="rl" aria-label="Article tools">
-					<div class="rc toc">
-						<div class="rc-t">In this story</div>
-						<div class="rc-b">
-							<a class="tc" href="#article-body"><span class="tc-n">01</span><span class="tc-h">Report</span></a>
-							<a class="tc" href="#about-author"><span class="tc-n">02</span><span class="tc-h">Author</span></a>
-							{relatedPosts.length > 0 && <a class="tc" href="#more-stories"><span class="tc-n">03</span><span class="tc-h">More</span></a>}
+					{hasToc && (
+						<div class="rc toc">
+							<div class="rc-t">In this story</div>
+							<div class="rc-b">
+								{tocItems.map((item, index) => (
+									<a class="tc" href={`#${item.id}`}>
+										<span class="tc-n">{String(index + 1).padStart(2, '0')}</span>
+										<span class="tc-h">{item.title}</span>
+									</a>
+								))}
+							</div>
 						</div>
-					</div>
+					)}
 					{relatedPosts.length > 0 && (
 						<div class="rc">
 							<div class="rc-t">Latest in {categoryLabel}</div>
@@ -158,16 +200,20 @@ const heroImageAlt = (() => {
 						</div>
 					)}
 					<div class="rc">
-						<div class="rc-t">Share</div>
+						<div class="rc-t">Share this report</div>
 						<div class="sh">
-							<a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><span>Facebook</span></a>
-							<a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><span>X / Twitter</span></a>
-							<a href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`}><span>Email</span></a>
+							<a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><span>Share on Facebook</span></a>
+							<a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><span>Post on X</span></a>
+							<a href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`}><span>Email this story</span></a>
 						</div>
+					</div>
+					<div class="rc err">
+						<div class="rc-t">Spotted an error?</div>
+						<div class="corr-b">Tell the newsroom what needs correcting and include the article title or URL.</div>
 					</div>
 				</aside>
 
-				<article id="article-body" class="pr">
+				<article id="article-body" class="pr" data-toc-ids={JSON.stringify(tocItems.map((item) => item.id))}>
 					{data.body && (
 						<div data-tina-field={tinaField(data, 'body')}>
 							<TinaMarkdown content={data.body} components={mdxComponents} />
@@ -184,6 +230,17 @@ const heroImageAlt = (() => {
 				</article>
 			</div>
 		</section>
+		<script is:inline>
+			(() => {
+				const article = document.currentScript?.previousElementSibling?.querySelector?.('.pr') || document.querySelector('.pr[data-toc-ids]');
+				if (!article) return;
+				let ids = [];
+				try { ids = JSON.parse(article.getAttribute('data-toc-ids') || '[]'); } catch (_) {}
+				article.querySelectorAll('h2').forEach((heading, index) => {
+					if (ids[index] && !heading.id) heading.id = ids[index];
+				});
+			})();
+		</script>
 	</>
 )}
 
