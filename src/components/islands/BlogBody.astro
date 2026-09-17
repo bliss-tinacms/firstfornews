@@ -55,14 +55,13 @@ function getCategoryArchiveUrl(reference: unknown) {
 	return slug ? '/blog/category/' + slug + '/' : '/blog/';
 }
 
-
 function getAuthor(reference: unknown) {
 	if (!reference || typeof reference !== 'object') return null;
 	return reference as AuthorObject;
 }
 
 function getPostUrl(post: CmsBlog) {
-	return `/blog/${post._sys.filename}/`;
+	return getBlogPermalink(post);
 }
 
 function getPostTitle(post: CmsBlog) {
@@ -70,7 +69,7 @@ function getPostTitle(post: CmsBlog) {
 }
 
 function getPostDescription(post: CmsBlog) {
-	return post.description || 'Read the full local report.';
+	return post.description || 'Read the full report.';
 }
 
 const postAuthor = data ? getAuthor(data.author) : null;
@@ -78,15 +77,15 @@ const author = defaultAuthor || postAuthor;
 const authorName = getReferenceLabel(defaultAuthor) || getReferenceLabel(postAuthor) || getReferenceLabel(data?.author) || 'Newsroom Staff';
 const authorSlug = getReferenceSlug(data?.author) || getReferenceSlug(author);
 const authorArchiveUrl = authorSlug ? `/blog/author/${authorSlug}/` : '/blog/';
-const authorInitials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'HP';
+const authorInitials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'FF';
+const categoryLabel = getReferenceLabel(data?.category) || 'Article';
+const publishedDate = data?.pubDate ? new Date(data.pubDate) : null;
+const shareUrl = data ? getPostUrl(data) : '/blog/';
+const shareTitle = data?.title || 'First For News';
 
 const heroImageAlt = (() => {
   const sources = [];
   if (typeof data !== 'undefined' && data) sources.push(data);
-  if (typeof post !== 'undefined' && post) sources.push(post);
-  if (typeof blog !== 'undefined' && blog) sources.push(blog);
-  if (typeof entry !== 'undefined' && entry?.data) sources.push(entry.data);
-  if (typeof frontmatter !== 'undefined' && frontmatter) sources.push(frontmatter);
   for (const item of sources) {
     const value = item?.heroImageAlt || item?.featuredImageAlt || item?.imageAlt || item?.coverImageAlt || item?.thumbnailAlt;
     if (typeof value === 'string' && value.trim()) return value.trim();
@@ -95,81 +94,112 @@ const heroImageAlt = (() => {
     const value = item?.title;
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
-  return 'Hero image';
+  return 'Article lead image';
 })();
 ---
 
-{data?.heroImage && (
-	<figure data-tina-field={tinaField(data, 'heroImage')} class="single-post-hero">
-		<img width={1020} height={510} src={data.heroImage} alt={heroImageAlt} class="single-post-hero__image" />
-	</figure>
-)}
 {data && (
-	<div class="single-post-shell">
-		<header class="single-post-header">
-			{getReferenceLabel(data.category) && (
-				<p data-tina-field={tinaField(data, 'category')} class="single-post-kicker">
-					<a href={getCategoryArchiveUrl(data.category)}>{getReferenceLabel(data.category)}</a>
-				</p>
-			)}
-			{data.title && <h1 data-tina-field={tinaField(data, 'title')} class="single-post-title">{data.title}</h1>}
-			<div class="single-post-meta">
-				<span data-tina-field={tinaField(data, 'author')}>Published by: <a href={authorArchiveUrl}>{authorName}</a></span>
-				{data.pubDate && (
-					<>
-						<span class="single-post-meta__separator">·</span>
-						<span data-tina-field={tinaField(data, 'pubDate')}>
-							<FormattedDate date={new Date(data.pubDate)} />
-						</span>
-					</>
+	<>
+		<header class="ah">
+			<div class="w ah-in">
+				{categoryLabel && (
+					<div data-tina-field={tinaField(data, 'category')} class="ah-k">
+						<b>{categoryLabel}</b>
+					</div>
 				)}
-				{data.updatedDate && (
-					<>
-						<span class="single-post-meta__separator">·</span>
-						<span data-tina-field={tinaField(data, 'updatedDate')} class="single-post-meta__updated">Last updated <FormattedDate date={new Date(data.updatedDate)} /></span>
-					</>
-				)}
+				{data.title && <h1 data-tina-field={tinaField(data, 'title')}>{data.title}</h1>}
+				<div class="ah-by">
+					<a href={authorArchiveUrl} aria-label={`View ${authorName} archive`}>
+						{author?.avatar ? (
+							<img src={author.avatar} alt={authorName} width={52} height={52} class="ah-av" />
+						) : (
+							<span class="ah-av post-author-box__placeholder" aria-hidden="true">{authorInitials}</span>
+						)}
+					</a>
+					<div class="ah-au" data-tina-field={tinaField(data, 'author')}>
+						<div class="ah-an"><a href={authorArchiveUrl}>{authorName}</a></div>
+					</div>
+					<div class="ah-dt">
+						{publishedDate && <span data-tina-field={tinaField(data, 'pubDate')}><FormattedDate date={publishedDate} /></span>}
+						{data.updatedDate && <><br /><span data-tina-field={tinaField(data, 'updatedDate')}>Updated <FormattedDate date={new Date(data.updatedDate)} /></span></>}
+					</div>
+				</div>
 			</div>
 		</header>
 
-		{data.body && (
-			<div data-tina-field={tinaField(data, 'body')} class="single-post-content prose prose-lg">
-				<TinaMarkdown content={data.body} components={mdxComponents} />
-			</div>
-		)}
-
-		<section data-tina-field={tinaField(data, 'author')} class="post-author-box" aria-labelledby="post-author-heading">
-			<a href={authorArchiveUrl} class="post-author-box__media" aria-label={`View ${authorName} archive`}>
-				{author?.avatar ? (
-					<img src={author.avatar} alt={authorName} width={96} height={96} class="post-author-box__photo" />
-				) : (
-					<span class="post-author-box__placeholder" aria-hidden="true">{authorInitials}</span>
+		<section class="bd">
+			<div class="w bd-in">
+				{data.heroImage && (
+					<figure data-tina-field={tinaField(data, 'heroImage')} class="li">
+						<img width={1020} height={574} src={data.heroImage} alt={heroImageAlt} />
+					</figure>
 				)}
-			</a>
-			<div class="post-author-box__content">
-				<p class="post-author-box__label">Published by</p>
-				<h2 id="post-author-heading"><a href={authorArchiveUrl}>{authorName}</a></h2>
-				{author?.bio && <p class="post-author-box__bio">{author.bio}</p>}
+
+				<aside class="rl" aria-label="Article tools">
+					<div class="rc toc">
+						<div class="rc-t">In this story</div>
+						<div class="rc-b">
+							<a class="tc" href="#article-body"><span class="tc-n">01</span><span class="tc-h">Report</span></a>
+							<a class="tc" href="#about-author"><span class="tc-n">02</span><span class="tc-h">Author</span></a>
+							{relatedPosts.length > 0 && <a class="tc" href="#more-stories"><span class="tc-n">03</span><span class="tc-h">More</span></a>}
+						</div>
+					</div>
+					{relatedPosts.length > 0 && (
+						<div class="rc">
+							<div class="rc-t">Latest in {categoryLabel}</div>
+							<div class="rc-b">
+								{relatedPosts.slice(0, 3).map((post) => (
+									<a href={getPostUrl(post)} class="rr">
+										<div class="rr-k">{getReferenceLabel(post.category) || 'Article'}</div>
+										<div class="rr-h">{getPostTitle(post)}</div>
+									</a>
+								))}
+							</div>
+						</div>
+					)}
+					<div class="rc">
+						<div class="rc-t">Share</div>
+						<div class="sh">
+							<a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><span>Facebook</span></a>
+							<a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><span>X / Twitter</span></a>
+							<a href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`}><span>Email</span></a>
+						</div>
+					</div>
+				</aside>
+
+				<article id="article-body" class="pr">
+					{data.body && (
+						<div data-tina-field={tinaField(data, 'body')}>
+							<TinaMarkdown content={data.body} components={mdxComponents} />
+						</div>
+					)}
+
+					<section id="about-author" data-tina-field={tinaField(data, 'author')} class="corr" aria-labelledby="post-author-heading">
+						<div class="corr-t">Published by</div>
+						<div class="corr-b">
+							<strong id="post-author-heading"><a href={authorArchiveUrl}>{authorName}</a></strong>
+							{author?.bio ? ` — ${author.bio}` : ' — First For News newsroom contributor.'}
+						</div>
+					</section>
+				</article>
 			</div>
 		</section>
-
-	</div>
+	</>
 )}
+
 {data && relatedPosts.length > 0 && (
-	<section class="related-articles related-articles--full" aria-labelledby="related-articles-heading">
-		<div class="site-wrap">
-			<div class="related-articles__heading">
-				<h2 id="related-articles-heading">Related Articles</h2>
-				<span>{getReferenceLabel(data.category) || 'More stories'}</span>
-			</div>
-			<div class="related-articles__grid">
+	<section id="more-stories" class="mo" aria-labelledby="related-articles-heading">
+		<div class="w">
+			<div class="eye"><i></i><span>{categoryLabel}</span></div>
+			<h2 class="h2" id="related-articles-heading">More reporting</h2>
+			<div class="mo-g">
 				{relatedPosts.slice(0, 3).map((post) => (
-					<a href={getPostUrl(post)} class="related-card">
-						{post.heroImage && <img src={post.heroImage} alt="" class="related-card__image" width={420} height={236} />}
-						<span class="related-card__body">
-							<span class="related-card__kicker">{getReferenceLabel(post.category) || 'Article'}</span>
-							<span class="related-card__title">{getPostTitle(post)}</span>
-							<span class="related-card__excerpt">{getPostDescription(post)}</span>
+					<a href={getPostUrl(post)} class="mi">
+						{post.heroImage && <img src={post.heroImage} alt="" class="mi-img" width={420} height={262} />}
+						<span class="mi-c">
+							<span class="mi-k">{getReferenceLabel(post.category) || 'Article'}</span>
+							<span class="mi-h">{getPostTitle(post)}</span>
+							<span class="mi-x">{getPostDescription(post)}</span>
 						</span>
 					</a>
 				))}
