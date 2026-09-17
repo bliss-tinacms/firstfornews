@@ -2,6 +2,7 @@ import type { APIContext } from 'astro';
 import rss from '@astrojs/rss';
 import config from '../content/config/config.json';
 import { listBlogs } from '../lib/data';
+import { getBlogPermalink } from '../lib/permalinks';
 
 export const prerender = true;
 
@@ -15,7 +16,7 @@ export async function GET(context: APIContext) {
 			title: post.title,
 			description: post.description ?? undefined,
 			pubDate: post.pubDate ? new Date(post.pubDate) : undefined,
-			link: `/blog/${post._sys.filename}/`,
+			link: getBlogPermalink(post) + '/',
 		})),
 	});
 }

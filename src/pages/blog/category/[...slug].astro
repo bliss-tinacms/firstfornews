@@ -1,30 +1,8 @@
 ---
-import Base from '../../../layouts/Base.astro';
-import TinaIsland from '@tinacms/astro/TinaIsland.astro';
-import CategoryArchiveHeader from '../../../components/islands/CategoryArchiveHeader.astro';
-import { getConfig, listBlogs, type CmsBlog, type CmsCategory } from '../../../lib/data';
-import { islands } from '../../../lib/islands';
-import { getBlogPermalink } from '../../../lib/permalinks';
-
 export const prerender = false;
 
-const POSTS_PER_PAGE = 30;
-
-type ReferenceObject = { title?: string | null; name?: string | null; _sys?: { filename?: string | null } | null; };
-
-function slugify(value?: string | null) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
-function titleCase(value?: string | null) { return String(value || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()).trim(); }
-function labelFromReference(reference: unknown) {
-  if (!reference) return null;
-  if (typeof reference === 'string') return titleCase(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
-  if (typeof reference === 'object') { const item = reference as ReferenceObject; return String(item.title || item.name || item._sys?.filename || '') || null; }
-  return null;
-}
-function slugFromReference(reference: unknown) {
-  if (!reference) return null;
-  if (typeof reference === 'string') return slugify(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
-  if (typeof reference === 'object') { const item = reference as ReferenceObject; return slugify(item._sys?.filename || item.title || item.name || ''); }
-  return null;
+function slugify(value?: string | null) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 function parseArchiveParam(value?: string) {
   const parts = String(value || '').toLowerCase().split('/').filter(Boolean);
@@ -32,88 +10,9 @@ function parseArchiveParam(value?: string) {
   if (pageIndex >= 0) return { slug: parts.slice(0, pageIndex).join('/'), page: Math.max(1, Number(parts[pageIndex + 1] || '1') || 1) };
   return { slug: parts.join('/'), page: 1 };
 }
-function pagePath(basePath: string, page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
-function getAuthorName(reference: unknown) { return labelFromReference(reference) || 'First For News Staff'; }
-function getPostUrl(post: CmsBlog) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
-function categoryFileMap() {
-  const modules = import.meta.glob('../../../content/category/*.json', { eager: true });
-  const map = new Map<string, { label: string; filename: string }>();
-  for (const [filePath, mod] of Object.entries(modules)) {
-    const filename = filePath.split('/').pop()?.replace(/\.json$/i, '') || '';
-    const data = ((mod as any).default || mod || {}) as { title?: string; name?: string };
-    const label = String(data.title || data.name || titleCase(filename));
-    const slug = slugify(filename || label);
-    if (slug) map.set(slug, { label, filename });
-  }
-  return map;
-}
 
 const parsed = parseArchiveParam(Astro.params.slug);
-const config = (await getConfig()).data?.config ?? null;
-const categories = categoryFileMap();
-const allPosts = (await listBlogs()).filter((post) => slugFromReference(post.category) === parsed.slug);
-const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
-const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
-const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
-const categoryEntry = categories.get(parsed.slug);
-const categoryFromPosts = allPosts[0]?.category && typeof allPosts[0].category === 'object' ? allPosts[0].category as CmsCategory : null;
-const archiveTitle = labelFromReference(allPosts[0]?.category) || categoryEntry?.label || titleCase(parsed.slug) || 'Category';
-const categoryDocumentSlug = categoryEntry?.filename || categoryFromPosts?._sys?.filename || archiveTitle;
-if (!parsed.slug) return new Response('Not Found', { status: 404 });
-const basePath = '/blog/category/' + parsed.slug;
-const hasPosts = posts.length > 0;
-const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
-const description = hasPosts ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.';
+if (!parsed.slug) return Astro.redirect('/blog/', 301);
+const target = parsed.page > 1 ? `/${slugify(parsed.slug)}/page/${parsed.page}/` : `/${slugify(parsed.slug)}/`;
+return Astro.redirect(target, 301);
 ---
-
-<Base title={seoTitle} description={description}>
-  <main class="archive-template archive-template--category">
-    <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryDocumentSlug }} primary>
-      <CategoryArchiveHeader category={categoryFromPosts} fallbackTitle={archiveTitle} />
-    </TinaIsland>
-
-    <section class="grid-s">
-      <div class="archive-w">
-        {hasPosts ? (
-          <div class="pg">
-            {posts.map((post) => (
-              <a href={getPostUrl(post)} class="pc">
-                {post.heroImage ? <div class="pc-img" style={'background-image:url(' + post.heroImage + ')'}></div> : <div class="pc-img pc-img--empty"></div>}
-                <div class="pc-b">
-                  <div class="pc-k">{labelFromReference(post.category) || 'News'}</div>
-                  <div class="pc-t">{post.title}</div>
-                  {post.description && <p class="pc-x">{post.description}</p>}
-                  <div class="pc-m"><span class="pc-mn">{getAuthorName(post.author)}</span></div>
-                </div>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <div class="archive-empty">
-            <div class="archive-empty__eyebrow">No articles yet</div>
-            <h2>Articles in {archiveTitle} are coming soon.</h2>
-            <p>There are currently no published articles in this category. Please check back soon for official updates and newly published stories.</p>
-            <a href="/blog/">Browse all articles</a>
-          </div>
-        )}
-      </div>
-    </section>
-
-    {totalPages > 1 && (
-      <nav class="pag" aria-label="Archive pagination">
-        <div class="archive-w">
-          <div class="pag-in">
-            {currentPage > 1 && <a class="nx" href={pagePath(basePath, currentPage - 1)}>Prev</a>}
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const page = index + 1;
-              return page === currentPage
-                ? <a class="on" href={pagePath(basePath, page)}>{page}</a>
-                : <a href={pagePath(basePath, page)}>{page}</a>;
-            })}
-            {currentPage < totalPages && <a class="nx" href={pagePath(basePath, currentPage + 1)}>Next</a>}
-          </div>
-        </div>
-      </nav>
-    )}
-  </main>
-</Base>

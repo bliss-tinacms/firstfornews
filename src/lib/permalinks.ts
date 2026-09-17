@@ -42,7 +42,16 @@ export function getBlogRouteSlug(item: any): string {
 
 export function getBlogPermalink(item: any): string {
   const slug = getBlogRouteSlug(item);
-  return slug ? "/blog/" + slug : "/blog";
+  return slug ? "/" + slug : "/blog";
+}
+
+export function getCategoryRouteSlug(item: any): string {
+  return cleanSlug(item?._sys?.filename || item?._sys?.basename || item?.title || item?.name || "");
+}
+
+export function getCategoryPermalink(item: any): string {
+  const slug = getCategoryRouteSlug(item);
+  return slug ? "/" + slug : "/blog";
 }
 
 export function getPageRouteSlug(item: any): string {

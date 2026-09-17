@@ -1,7 +1,8 @@
 import type { Collection } from "tinacms";
 import { youTubeEmbedTemplate } from "../../src/components/mdx/YouTubeEmbed.template";
 import { seoFields } from "../fields/seo";
-import { viewFrontendField } from "../fields/view-frontend";
+import { viewFrontendField } from "../fields/view-frontend";
+
 
 function slugifyFilename(value?: string | null): string {
   if (!value || typeof value !== "string") return "untitled";
@@ -64,12 +65,13 @@ export const BlogCollection: Collection = {
     router: ({ document }) => {
       const raw = cleanPublicSlug((document as any)?.permalink) || filenameFromDocument(document);
       const slug = raw.startsWith("blog/") ? raw.slice(5) : raw;
-      return slug ? "/blog/" + slug : "/blog/";
+      return slug ? "/" + slug : "/blog/";
     },
   },
   fields: [
     viewFrontendField("blog"),
-    { type: "string", name: "title", label: "Title", isTitle: true, required: true },
+    { type: "string", name: "title", label: "Title", isTitle: true, required: true },
+
     { name: "description", label: "Description", type: "string" },
     seoFields,
     { name: "pubDate", label: "Publication Date", type: "datetime" },

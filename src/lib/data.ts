@@ -202,6 +202,7 @@ export async function getBlog(slug: string) {
 			title
 			description
 			seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
+			permalink
 			pubDate
 			updatedDate
 			category { ... on Category { title description _sys { filename } } }

@@ -36,7 +36,7 @@ function resolveFrontendUrl(kind: ViewKind, values: Record<string, any>) {
     '';
 
   const slug = normalizeSlug(raw);
-  if (kind === 'blog') return slug ? '/blog/' + slug + '/' : '/blog/';
+  if (kind === 'blog') return slug ? '/' + (slug.startsWith('blog/') ? slug.slice(5) : slug) + '/' : '/blog/';
   if (!slug || slug === 'home' || slug === 'index') return '/';
   return '/' + slug + '/';
 }

@@ -7,7 +7,7 @@ export const CategoryCollection: Collection = {
   format: "json",
   ui: {
     router({ document }) {
-      return `/blog/category/${document._sys.filename}`;
+      return `/${String(document._sys.filename || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/`;
     },
   },
   fields: [

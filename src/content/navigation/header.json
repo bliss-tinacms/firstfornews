@@ -3,31 +3,31 @@
   "items": [
     {
       "label": "Business",
-      "href": "/blog/category/business/"
+      "href": "/business/"
     },
     {
       "label": "Technology",
-      "href": "/blog/category/technology/"
+      "href": "/technology/"
     },
     {
       "label": "Health",
-      "href": "/blog/category/health/"
+      "href": "/health/"
     },
     {
       "label": "Politics",
-      "href": "/blog/category/politics/"
+      "href": "/politics/"
     },
     {
       "label": "World",
-      "href": "/blog/category/world/"
+      "href": "/world/"
     },
     {
       "label": "Lifestyle",
-      "href": "/blog/category/lifestyle/"
+      "href": "/lifestyle/"
     },
     {
       "label": "Featured",
-      "href": "/blog/category/featured/"
+      "href": "/featured/"
     }
   ]
 }

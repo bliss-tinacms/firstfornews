@@ -1,37 +1,238 @@
 ---
-import { getPageRouteSlug } from '../lib/permalinks';
+import { getBlogPermalink, getBlogRouteSlug, getCategoryRouteSlug, getPageRouteSlug } from '../lib/permalinks';
 import Base from '../layouts/Base.astro';
+import BlogPost from '../layouts/BlogPost.astro';
 import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import PageBody from '../components/islands/PageBody.astro';
-import { getConfig, getPublicPage, listPages } from '../lib/data';
+import BlogBody from '../components/islands/BlogBody.astro';
+import CategoryArchiveHeader from '../components/islands/CategoryArchiveHeader.astro';
+import { getBlog, getConfig, getPublicPage, getUser, listBlogs, listPages, type CmsBlog, type CmsCategory } from '../lib/data';
 import { islands } from '../lib/islands';
 
 export const prerender = false;
 
-const routeSlug = (Astro.params.slug ?? '').toString();
-const allPages = await listPages();
-const matchedPage = allPages.find((page) => getPageRouteSlug(page) === routeSlug || page._sys.filename === routeSlug);
-const documentSlug = matchedPage?._sys.filename ?? routeSlug;
-const page = await getPublicPage(documentSlug);
-const data = page.data?.page;
-if (!data) return new Response('Not Found', { status: 404 });
+const POSTS_PER_PAGE = 30;
+const routeSlug = (Astro.params.slug ?? '').toString().toLowerCase().replace(/^\/+|\/+$/g, '');
 const config = (await getConfig()).data?.config ?? null;
-const seo = data.seo ?? null;
-const title = seo?.metaTitle || data.seoTitle || config?.seo?.title || 'TinaCMS + Astro';
-const description = seo?.metaDescription || config?.seo?.description || 'Welcome to my website!';
+const allPages = await listPages();
+const allPosts = await listBlogs();
+
+type ReferenceObject = { title?: string | null; name?: string | null; _sys?: { filename?: string | null } | null; };
+
+function slugify(value?: string | null) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+function titleCase(value?: string | null) { return String(value || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()).trim(); }
+function labelFromReference(reference: unknown) {
+  if (!reference) return null;
+  if (typeof reference === 'string') return titleCase(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
+  if (typeof reference === 'object') { const item = reference as ReferenceObject; return String(item.title || item.name || item._sys?.filename || '') || null; }
+  return null;
+}
+function slugFromReference(reference: unknown) {
+  if (!reference) return null;
+  if (typeof reference === 'string') return slugify(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
+  if (typeof reference === 'object') { const item = reference as ReferenceObject; return slugify(item._sys?.filename || item.title || item.name || ''); }
+  return null;
+}
+function getReferenceKey(reference: unknown) {
+  if (!reference) return null;
+  if (typeof reference === 'string') return reference;
+  if (typeof reference === 'object') {
+    const item = reference as ReferenceObject;
+    return item._sys?.filename || item.title || item.name || null;
+  }
+  return null;
+}
+function parseArchiveParam(value?: string) {
+  const parts = String(value || '').toLowerCase().split('/').filter(Boolean);
+  const pageIndex = parts.indexOf('page');
+  if (pageIndex >= 0) return { slug: parts.slice(0, pageIndex).join('/'), page: Math.max(1, Number(parts[pageIndex + 1] || '1') || 1) };
+  return { slug: parts.join('/'), page: 1 };
+}
+function pagePath(basePath: string, page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
+function getAuthorName(reference: unknown) { return labelFromReference(reference) || 'First For News Staff'; }
+function getPostUrl(post: CmsBlog) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
+function categoryFileMap() {
+  const modules = import.meta.glob('../content/category/*.json', { eager: true });
+  const map = new Map<string, { label: string; filename: string; data: CmsCategory | null }>();
+  for (const [filePath, mod] of Object.entries(modules)) {
+    const filename = filePath.split('/').pop()?.replace(/\.json$/i, '') || '';
+    const data = ((mod as any).default || mod || {}) as CmsCategory;
+    const label = String((data as any)?.title || (data as any)?.name || titleCase(filename));
+    const slug = slugify(filename || label);
+    if (slug) map.set(slug, { label, filename, data: { ...(data as any), _sys: { filename } } as CmsCategory });
+  }
+  return map;
+}
+
+const matchedPage = allPages.find((page) => getPageRouteSlug(page) === routeSlug || page._sys.filename === routeSlug);
+let view: 'page' | 'category' | 'blog' | 'not-found' = 'not-found';
+let pageData: any = null;
+let pageTitle = '';
+let pageDescription = '';
+
+let categoryContext: any = null;
+let blogContext: any = null;
+
+if (matchedPage) {
+  const documentSlug = matchedPage._sys.filename ?? routeSlug;
+  const page = await getPublicPage(documentSlug);
+  const data = page.data?.page;
+  if (data) {
+    const seo = data.seo ?? null;
+    view = 'page';
+    pageData = data;
+    pageTitle = seo?.metaTitle || data.seoTitle || config?.seo?.title || 'First For News';
+    pageDescription = seo?.metaDescription || config?.seo?.description || 'Welcome to First For News.';
+  }
+}
+
+if (view === 'not-found') {
+  const parsed = parseArchiveParam(routeSlug);
+  const categories = categoryFileMap();
+  const categoryEntry = categories.get(parsed.slug);
+  if (categoryEntry) {
+    const allCategoryPosts = allPosts.filter((post) => slugFromReference(post.category) === parsed.slug);
+    const totalPages = Math.max(1, Math.ceil(allCategoryPosts.length / POSTS_PER_PAGE));
+    const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
+    const posts = allCategoryPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+    const categoryFromPosts = allCategoryPosts[0]?.category && typeof allCategoryPosts[0].category === 'object' ? allCategoryPosts[0].category as CmsCategory : categoryEntry.data;
+    const archiveTitle = labelFromReference(allCategoryPosts[0]?.category) || categoryEntry.label || titleCase(parsed.slug) || 'Category';
+    view = 'category';
+    categoryContext = {
+      parsed,
+      posts,
+      totalPages,
+      currentPage,
+      categoryFromPosts,
+      archiveTitle,
+      categoryDocumentSlug: categoryEntry.filename || categoryFromPosts?._sys?.filename || archiveTitle,
+      basePath: '/' + parsed.slug,
+      hasPosts: posts.length > 0,
+      seoTitle: archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News'),
+      description: allCategoryPosts.length > 0 ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.',
+    };
+  }
+}
+
+if (view === 'not-found') {
+  const matchedPost = allPosts.find((post) => getBlogRouteSlug(post) === routeSlug || post._sys.filename === routeSlug);
+  if (matchedPost) {
+    const documentSlug = matchedPost._sys.filename ?? routeSlug;
+    const blog = await getBlog(documentSlug);
+    const data = blog.data?.blog;
+    if (data) {
+      const canonicalSlug = getBlogRouteSlug(data);
+      if (canonicalSlug && canonicalSlug !== routeSlug) return Astro.redirect(getBlogPermalink(data) + '/', 301);
+      const defaultAuthor = (await getUser('admin')).data?.user ?? null;
+      const currentCategoryKey = getReferenceKey(data.category);
+      const relatedPosts = allPosts
+        .filter((post) => post._sys.filename !== documentSlug)
+        .filter((post) => currentCategoryKey && getReferenceKey(post.category) === currentCategoryKey)
+        .slice(0, 3);
+      const seo = data.seo ?? null;
+      const title = seo?.metaTitle || data.title || '';
+      const description = seo?.metaDescription || data.description || '';
+      view = 'blog';
+      blogContext = {
+        documentSlug,
+        data,
+        defaultAuthor,
+        relatedPosts,
+        layoutProps: {
+          title,
+          description,
+          pubDate: data.pubDate ? new Date(data.pubDate) : new Date(),
+          updatedDate: data.updatedDate ? new Date(data.updatedDate) : undefined,
+          heroImage: seo?.ogImage || data.heroImage || null,
+          ogTitle: seo?.ogTitle || title,
+          ogDescription: seo?.ogDescription || description,
+          canonicalUrl: seo?.canonicalUrl || getBlogPermalink(data) + '/',
+          noindex: seo?.noindex || false,
+          nofollow: seo?.nofollow || false,
+        },
+      };
+    }
+  }
+}
+
+if (view === 'not-found') return new Response('Not Found', { status: 404 });
 ---
 
-<Base
-  title={title}
-  description={description}
-  image={seo?.ogImage || undefined}
-  ogTitle={seo?.ogTitle || title}
-  ogDescription={seo?.metaDescription || description}
-  canonicalUrl={seo?.canonicalUrl || undefined}
-  noindex={seo?.noindex || false}
-  nofollow={seo?.nofollow || false}
->
-  <TinaIsland name="page" wrapper={islands.page.wrapper} params={{ slug: documentSlug }} primary>
-    <PageBody data={data} config={config} />
-  </TinaIsland>
-</Base>
+{view === 'page' && pageData && (
+  <Base
+    title={pageTitle}
+    description={pageDescription}
+    image={pageData.seo?.ogImage || undefined}
+    ogTitle={pageData.seo?.ogTitle || pageTitle}
+    ogDescription={pageData.seo?.metaDescription || pageDescription}
+    canonicalUrl={pageData.seo?.canonicalUrl || undefined}
+    noindex={pageData.seo?.noindex || false}
+    nofollow={pageData.seo?.nofollow || false}
+  >
+    <TinaIsland name="page" wrapper={islands.page.wrapper} params={{ slug: pageData._sys?.filename || routeSlug }} primary>
+      <PageBody data={pageData} config={config} />
+    </TinaIsland>
+  </Base>
+)}
+
+{view === 'category' && categoryContext && (
+  <Base title={categoryContext.seoTitle} description={categoryContext.description}>
+    <main class="archive-template archive-template--category">
+      <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryContext.categoryDocumentSlug }} primary>
+        <CategoryArchiveHeader category={categoryContext.categoryFromPosts} fallbackTitle={categoryContext.archiveTitle} />
+      </TinaIsland>
+
+      <section class="grid-s">
+        <div class="archive-w">
+          {categoryContext.hasPosts ? (
+            <div class="pg">
+              {categoryContext.posts.map((post: CmsBlog) => (
+                <a href={getPostUrl(post)} class="pc">
+                  {post.heroImage ? <div class="pc-img" style={'background-image:url(' + post.heroImage + ')'}></div> : <div class="pc-img pc-img--empty"></div>}
+                  <div class="pc-b">
+                    <div class="pc-k">{labelFromReference(post.category) || 'News'}</div>
+                    <div class="pc-t">{post.title}</div>
+                    {post.description && <p class="pc-x">{post.description}</p>}
+                    <div class="pc-m"><span class="pc-mn">{getAuthorName(post.author)}</span></div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="archive-empty">
+              <div class="archive-empty__eyebrow">No articles yet</div>
+              <h2>Articles in {categoryContext.archiveTitle} are coming soon.</h2>
+              <p>There are currently no published articles in this category. Please check back soon for official updates and newly published stories.</p>
+              <a href="/blog/">Browse all articles</a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {categoryContext.totalPages > 1 && (
+        <nav class="pag" aria-label="Archive pagination">
+          <div class="archive-w">
+            <div class="pag-in">
+              {categoryContext.currentPage > 1 && <a class="nx" href={pagePath(categoryContext.basePath, categoryContext.currentPage - 1)}>Prev</a>}
+              {Array.from({ length: categoryContext.totalPages }).map((_, index) => {
+                const page = index + 1;
+                return page === categoryContext.currentPage
+                  ? <a class="on" href={pagePath(categoryContext.basePath, page)}>{page}</a>
+                  : <a href={pagePath(categoryContext.basePath, page)}>{page}</a>;
+              })}
+              {categoryContext.currentPage < categoryContext.totalPages && <a class="nx" href={pagePath(categoryContext.basePath, categoryContext.currentPage + 1)}>Next</a>}
+            </div>
+          </div>
+        </nav>
+      )}
+    </main>
+  </Base>
+)}
+
+{view === 'blog' && blogContext && (
+  <BlogPost {...blogContext.layoutProps}>
+    <TinaIsland name="blog" wrapper={islands.blog.wrapper} params={{ slug: blogContext.documentSlug }} primary>
+      <BlogBody data={blogContext.data} relatedPosts={blogContext.relatedPosts} defaultAuthor={blogContext.defaultAuthor} />
+    </TinaIsland>
+  </BlogPost>
+)}
