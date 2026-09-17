@@ -18,50 +18,46 @@ interface Props {
 }
 
 const { config, navigation } = Astro.props;
-
 const currentYear = new Date().getFullYear();
-const footerMenuItems = ((navigation?.items ?? []) as NavItem[]).filter((item) => item && item.label && item.href);
 const seo = config?.seo ?? null;
 const siteTitle = seo?.title || 'First For News';
-const footerLogo = seo?.footerLogo || seo?.logo || '';
+const footerLogo = seo?.footerLogo || seo?.logo || '/brand-assets/a80bca69-bdf7-4a94-80eb-063779debed2.png';
+const footerMenuItems = ((navigation?.items ?? []) as NavItem[]).filter((item) => item && item.label && item.href);
+const fineLinks = [
+  { label: 'Privacy', href: '/privacy-policy/' },
+  { label: 'Terms', href: '/terms-of-use/' },
+  { label: 'Cookie', href: '/cookie-policy/' },
+  { label: 'AI', href: '/ai-policy/' },
+  { label: 'DMCA', href: '/dmca-policy/' },
+  { label: 'Sponsored', href: '/sponsored-content-policy/' },
+  { label: 'Sitemap', href: '/sitemap/' },
+];
 ---
 
-<footer class="foot">
-  <div class="w">
-    <div class="foot-hero">
-      <div class="fh-l">
-        {footerLogo ? (
-          <img
-            class="fh-logo"
-            src={footerLogo}
-            alt={siteTitle}
-            data-tina-field={seo ? tinaField(seo, "footerLogo") : undefined}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div class="fh-wordmark" aria-label={siteTitle}>
-            <span class="fh-mark" aria-hidden="true"></span>
-            <span>{siteTitle}</span>
-          </div>
-        )}
-        <p class="fh-p">Share news that matters. From company announcements and community developments to events and noteworthy updates, your story can start here.</p>
-      </div>
-      <div class="fh-r">
-        <div class="fh-eye">Have news to share?</div>
-        <p class="fh-h">Put Your Story on Our Radar</p>
-        <p class="fh-x">Send your announcement, story tip, or noteworthy update to the First For News editorial team for review and editorial consideration.</p>
-        <a href="/contact" class="fh-cta">Submit your news</a>
+<footer class="ft" data-brand-footer>
+  <div class="ft-band">
+    <div class="w">
+      <div class="ft-band-in">
+        <p>Timely stories, useful insights, and clear coverage of the topics that matter.</p>
       </div>
     </div>
   </div>
-
   <div class="w">
-    <div class="foot-btm">
-      <p>&copy; {currentYear} First For News. Your news, everywhere it matters.</p>
-      <nav class="foot-legal" aria-label={navigation?.title || 'Footer menu'}>
+    <div class="ft-cl">
+      <img src={footerLogo} alt={siteTitle} data-tina-field={seo ? tinaField(seo, 'footerLogo') : undefined} loading="lazy" decoding="async" />
+      <nav class="ft-links" aria-label={navigation?.title || 'Footer menu'}>
         {footerMenuItems.map((item) => (
-          <a href={item.href || '#'} data-tina-field={tinaField(item, "label")}>{item.label}</a>
+          <a href={item.href || '#'} data-tina-field={tinaField(item, 'label')}>{item.label}</a>
+        ))}
+      </nav>
+    </div>
+  </div>
+  <div class="w">
+    <div class="ft-lg">
+      <p>&copy; {currentYear} First For News. All rights reserved.</p>
+      <nav class="ft-fine" aria-label="Footer legal links">
+        {fineLinks.map((item) => (
+          <a href={item.href}>{item.label}</a>
         ))}
       </nav>
     </div>

@@ -5,55 +5,49 @@ import type { CmsBlog, CmsConfig } from '../lib/data';
 type Post = CmsBlog;
 
 interface Props {
-	posts: Post[];
-	config?: CmsConfig | null;
-	data?: any;
+  posts: Post[];
+  config?: CmsConfig | null;
+  data?: any;
 }
 
-const { posts, config, data } = Astro.props;
+const { posts, data } = Astro.props;
 const homepageBlocks = Array.isArray(data?.blocks) ? data.blocks : [];
 const isHomepageTemplateBlock = (block: any) =>
-	block?._template === 'homepageTemplate' || block?.__typename === 'PageBlocksHomepageTemplate';
-const homepageBlock = homepageBlocks.find(isHomepageTemplateBlock) ?? null;
-const homepage = homepageBlock ?? data?.homepage ?? {};
-const seo = config?.seo ?? null;
-const siteTitle = seo?.title || 'Harbor Post';
+  block?._template === 'homepageTemplate' || block?.__typename === 'PageBlocksHomepageTemplate';
+const homepage = homepageBlocks.find(isHomepageTemplateBlock) ?? data?.homepage ?? {};
 
 function value<T>(input: T | null | undefined, fallback: T): T {
-	return input === null || input === undefined || input === '' ? fallback : input;
+  return input === null || input === undefined || input === '' ? fallback : input;
 }
 
 function list<T>(input: T[] | null | undefined, fallback: T[]): T[] {
-	return Array.isArray(input) && input.length ? input : fallback;
+  return Array.isArray(input) && input.length ? input : fallback;
 }
 
 function getReferenceLabel(reference: unknown) {
-	if (!reference) return null;
-	if (typeof reference === 'string') {
-		return reference.split('/').pop()?.replace(/.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
-	}
-	if (typeof reference === 'object' && reference) {
-		const record = reference as { title?: string | null; name?: string | null };
-		return record.title || record.name || null;
-	}
-	return null;
+  if (!reference) return null;
+  if (typeof reference === 'string') {
+    return reference.split('/').pop()?.replace(/\.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
+  }
+  if (typeof reference === 'object' && reference) {
+    const record = reference as { title?: string | null; name?: string | null };
+    return record.title || record.name || null;
+  }
+  return null;
 }
 
 function getPostUrl(post: Post) {
-	return getBlogPermalink(post) + '/';
+  const url = getBlogPermalink(post);
+  return url.endsWith('/') ? url : url + '/';
 }
 
 function getPostTitle(post: Post) {
-	return post.title || 'Untitled story';
+  return post.title || 'Untitled story';
 }
 
 function getPostDescription(post: Post) {
-	return post.description || 'Read the latest reporting from the newsroom.';
+  return post.description || 'Read the latest reporting from the newsroom.';
 }
-
-const featured = posts[0] ?? null;
-const latest = posts.slice(1, 5);
-const fallbackImage = '/blog-placeholder-1.jpg';
 
 const hero = homepage.hero ?? {};
 const why = homepage.why ?? {};
@@ -62,156 +56,141 @@ const wireFeature = homepage.wireFeature ?? {};
 const coverage = homepage.coverage ?? {};
 const contact = homepage.contact ?? {};
 
-const standards = list(why.standards, [
-	{ label: 'Accuracy', title: 'Verifiable and Corrected', text: 'Every factual claim should be verifiable, and errors found after publication are corrected openly on the record.' },
-	{ label: 'Fairness', title: 'A Right of Response', text: 'Subjects of substantive allegations get a meaningful chance to respond before publication.' },
-	{ label: 'Independence', title: 'Separate From Commercial', text: 'Coverage decisions are made on the merits of the story, not by advertisers or sponsors.' },
-	{ label: 'Transparency', title: 'Clearly Labeled', text: 'News, analysis, opinion, and sponsored content are labeled clearly and kept visibly distinct.' },
-]);
+const featuredPosts = posts.slice(0, 3);
+const fallbackReportImages = [
+  '/brand-assets/83bb832b-c99f-45b5-9bc2-3d615f7d4c6a.jpg',
+  '/brand-assets/48aafe34-9438-4012-8c50-c9a8be1499c7.jpg',
+  '/brand-assets/5971f731-4646-49ca-998c-9d70b5d14e3d.jpg',
+];
 
-const submitPrompts = list(newsroom.prompts, [
-	{ title: 'Submit Your Story', text: 'Got breaking news, a company announcement, local update, event, or noteworthy story?' },
-	{ title: 'Get Featured', text: 'Send us the details and supporting information for editorial consideration.' },
-	{ title: 'Reach More Readers', text: 'Share your news with audiences looking for timely stories and updates.' },
+const standards = list(why.standards, [
+  { label: '01 / Accuracy', title: 'Accuracy ahead of speed', text: 'Every factual claim should be verifiable. We distinguish established facts from commentary, avoid presenting speculation as certainty, and correct material errors when identified.' },
+  { label: '02 / Clarity', title: 'Written for real people', text: 'Our articles are written for readers, not industry insiders. We avoid unnecessary jargon and present information in a straightforward way.' },
+  { label: '03 / Context', title: 'Meaningful context', text: 'Readers deserve content that explains key details and makes complicated topics easier to follow. Reporting, analysis, and opinion stay visibly distinct.' },
 ]);
 
 const coverageTopics = list(coverage.topics, [
-	{ number: '01', title: 'National News & Politics', text: 'Major national developments, political news, public affairs, and stories shaping the conversation across the country.' },
-	{ number: '02', title: 'Business & Economy', text: 'Business developments, economic trends, companies, markets, industries, and the forces affecting consumers and communities.' },
-	{ number: '03', title: 'Technology', text: 'Technology news, AI developments, digital trends, innovation, startups, and the products changing how people live and work.' },
-	{ number: '04', title: 'Health & Science', text: 'Health developments, scientific research, medical advances, wellness topics, and discoveries affecting everyday life.' },
-	{ number: '05', title: 'Lifestyle & Culture', text: 'Travel, entertainment, food, culture, trends, and stories reflecting how people live, work, and spend their time.' },
-	{ number: '06', title: 'Features & Everyday Life', text: 'General-interest stories, practical reporting, community topics, and useful features that put current events into perspective.' },
+  { number: '01', title: 'Business & Economy', text: 'Companies, markets, household economics, and the decisions that reach consumers.' },
+  { number: '02', title: 'Technology', text: 'Products, platforms, and advances changing how people work and communicate.' },
+  { number: '03', title: 'Health & Science', text: 'Research, medical developments, and findings that affect everyday choices.' },
+  { number: '04', title: 'Politics & Policy', text: 'Government, public affairs, and the decisions shaping the national conversation.' },
+  { number: '05', title: 'World', text: 'Developments abroad and the events with consequences that cross borders.' },
+  { number: '06', title: 'Lifestyle & Culture', text: 'Travel, education, culture, and the trends shaping how people live.' },
 ]);
 
-const contactCards = list(contact.cards, [
-	{ title: 'News Submissions', email: 'submit@firstfornews.net', text: 'Send the announcement, the issuing organization, and when it should publish.', accent: true },
-	{ title: 'Corrections', email: 'corrections@firstfornews.net', text: 'Include the article link, the specific error, and the correct information.', accent: false },
-	{ title: 'Partnerships & Office', email: 'info@firstfornews.net', text: 'Advertising, syndication partners, technical issues, and general inquiries.', accent: false },
+const teamCards = list(contact.cards, [
+  { title: 'Michelle Hastings', email: 'Editor-in-Chief', text: 'Leads the newsroom from Baltimore. Fifteen years in editorial leadership, reporting and editing.', accent: true },
+  { title: 'Patrick Alvarez', email: 'Managing Editor', text: 'Runs day-to-day operations from Austin. Owns the editorial calendar and assignments.', accent: false },
+  { title: 'Kevin Manning', email: 'Standards Editor', text: 'Fact-checks sensitive material from Boise and manages the corrections record.', accent: false },
+  { title: 'Angela Simmons', email: 'Business Editor', text: 'Runs the business desk from Milwaukee. Reaches for the underlying data every time.', accent: false },
 ]);
+const teamImages = [
+  '/brand-assets/9b9d565c-4720-4313-8124-1c5b0962c481.jpg',
+  '/brand-assets/a7e46c80-fcbc-4895-958c-9db64571cae0.jpg',
+  '/brand-assets/b7138736-79a8-4f15-8b02-4a2cca5ed7a6.jpg',
+  '/brand-assets/aff9501c-b302-4049-832e-3b9703c1186e.jpg',
+];
 ---
 
-<main class="homepage-template">
-	<section class="homepage-hero homepage-hero--demo" aria-labelledby="homepage-hero-title">
-		<div class="homepage-hero__media">
-			<img src={value(hero.image, '/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg')} alt={value(hero.imageAlt, 'Newsroom editors reviewing national stories')} />
-		</div>
-		<div class="site-wrap">
-			<div class="homepage-hero__content">
-				<p class="homepage-hero__eyebrow">{value(hero.eyebrow, 'More Than the Headline')}</p>
-				<h1 id="homepage-hero-title">{value(hero.title, 'Reporting That Puts the Story in Perspective')}</h1>
-				<p>{value(hero.description, 'First For News brings clarity and context to national developments, business, technology, health, culture, and the issues closest to everyday life.')}</p>
-				<a href="/contact" class="homepage-hero__button">{value(hero.buttonText, 'Submit Your News')}</a>
-			</div>
-		</div>
-	</section>
+<main class="ffn-home">
+  <section class="hero" style={`background-image:url('${value(hero.image, '/brand-assets/c383ae02-84f6-4be0-8a77-47dee93ce41c.jpg')}')`} aria-labelledby="ffn-hero-title">
+    <div class="w">
+      <div class="hero-in">
+        <div class="hero-k"><b>{value(hero.eyebrow, 'The Deep Dive')}</b><i>Featured Story</i></div>
+        <h1 id="ffn-hero-title">{value(hero.title, 'The Story Behind the Headlines That Shape Our World')}</h1>
+        <p class="hero-d">{value(hero.description, 'First For News goes beyond breaking updates to explore the facts, context, and details behind the stories people are talking about.')}</p>
+      </div>
+    </div>
+  </section>
 
-	<section class="editorial-standards" aria-labelledby="editorial-standards-title">
-		<div class="site-wrap editorial-standards__inner">
-			<div class="editorial-standards__copy">
-				<p class="section-eyebrow">{value(why.eyebrow, 'Why First For News')}</p>
-				<h2 id="editorial-standards-title">{value(why.title, 'Reporting built for the general reader.')}</h2>
-				<p>{value(why.paragraphOne, 'First For News is an independent digital news publication serving American readers, covering the events, decisions, and developments that shape daily life in the United States.')}</p>
-				<p>{value(why.paragraphTwo, 'The aim is coverage that is neither watered down for the sake of speed nor bloated for the sake of length, written without unnecessary jargon, and held to a plainly stated set of editorial standards.')}</p>
-			</div>
-			<div class="editorial-standards__grid">
-				{standards.map((item) => (
-					<article class="standard-card">
-						<span>{item.label}</span>
-						<h3>{item.title}</h3>
-						<p>{item.text}</p>
-					</article>
-				))}
-			</div>
-		</div>
-	</section>
+  <section class="rp" aria-labelledby="featured-reporting-title">
+    <div class="w">
+      <div class="eye"><i></i><span>{value(newsroom.subheading, 'Published this week')}</span></div>
+      <h2 class="h2" id="featured-reporting-title">{value(newsroom.heading, 'Featured reporting')}</h2>
+      <div class="rp-g">
+        {featuredPosts.map((post, index) => (
+          <a href={getPostUrl(post)} class="rpi">
+            <div class="rpi-img" style={`background-image:url('${post.heroImage || fallbackReportImages[index % fallbackReportImages.length]}')`}></div>
+            <div class="rpi-c">
+              <div class="rpi-k">{getReferenceLabel(post.category) || 'Featured'}</div>
+              <div class="rpi-h">{getPostTitle(post)}</div>
+              <p class="rpi-x">{getPostDescription(post)}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
 
-	<section class="newsroom-board" aria-labelledby="newsroom-board-title">
-		<div class="site-wrap newsroom-board__inner">
-			<div class="latest-news-list">
-				<div class="section-heading section-heading--compact">
-					<span id="newsroom-board-title">{value(newsroom.heading, 'Latest from the Newsroom')}</span>
-					<span>{value(newsroom.subheading, 'Updated this morning')}</span>
-				</div>
-				{latest.map((post) => (
-					<a href={getPostUrl(post)} class="latest-news-item">
-						<span class="latest-news-item__category">{getReferenceLabel(post.category) || 'News'}</span>
-						<span class="latest-news-item__body">
-							<strong>{getPostTitle(post)}</strong>
-							<em>{getPostDescription(post)}</em>
-						</span>
-					</a>
-				))}
-			</div>
-			<aside class="submit-news-panel" aria-labelledby="submit-news-panel-title">
-				<h2 id="submit-news-panel-title">{value(newsroom.submitHeading, 'Have News to Share?')}</h2>
-				{submitPrompts.map((item) => (
-					<a href={value(newsroom.submitButtonLink, '/contact')} class="submit-news-panel__item">
-						<strong>{item.title}</strong>
-						<span>{item.text}</span>
-					</a>
-				))}
-				<a href={value(newsroom.submitButtonLink, '/contact')} class="submit-news-panel__button">{value(newsroom.submitButtonText, 'Submit Your News')}</a>
-			</aside>
-		</div>
-	</section>
+  <section class="ms" aria-labelledby="mission-title">
+    <div class="w">
+      <div class="ms-in">
+        <div>
+          <div class="eye"><i></i><span>{value(why.eyebrow, 'Our mission')}</span></div>
+          <h2 id="mission-title">{value(why.title, 'More than headlines. Context that holds up.')}</h2>
+        </div>
+        <p class="ms-lead">{value(why.paragraphOne, 'First For News is a general news platform created for readers who want to understand what is happening without wading through unnecessary noise — timely stories, emerging trends, and developments that affect everyday life.')}</p>
+      </div>
+      <div class="ms-slab"><i>&ldquo;</i><p>{value(why.paragraphTwo, 'A headline may capture attention. It rarely tells the whole story.')}</p></div>
+      <div class="ms-g">
+        {standards.map((item) => (
+          <div class="ms-i"><div class="ms-n">{item.label}</div><div class="ms-t">{item.title}</div><p class="ms-x">{item.text}</p></div>
+        ))}
+      </div>
+    </div>
+  </section>
 
-	<section class="wire-feature wire-feature--demo" aria-label="Featured editorial quote">
-		<div class="wire-feature__image">
-			<img src={value(wireFeature.image, '/mockup-assets/4f124e1e-a72e-4a01-956d-84f01ca3d6d1.jpg')} alt={value(wireFeature.imageAlt, 'Editor writing notes beside a laptop')} />
-		</div>
-		<div class="wire-feature__content">
-			<p class="section-eyebrow">{value(wireFeature.eyebrow, 'From the Wire')}</p>
-			<blockquote>{value(wireFeature.quote, 'Every story starts with the same standard: get the facts right, make them verifiable, and correct the record openly when we fall short.')}</blockquote>
-			<div class="wire-feature__byline">
-				<strong>{value(wireFeature.author, 'Amanda Wright')}</strong>
-				<span>{value(wireFeature.byline, 'Editor-in-Chief, First For News Â· Minneapolis Â· Fifteen years in editorial leadership')}</span>
-			</div>
-		</div>
-	</section>
+  <section class="cv" aria-labelledby="coverage-title">
+    <div class="w">
+      <div class="cv-h">
+        <div><div class="eye"><i></i><span>Coverage areas</span></div><h2 class="h2" id="coverage-title">{value(coverage.title, 'What we cover')}</h2></div>
+        <p class="cv-lead">{value(coverage.description, 'Six desks, each staffed by an editor who reads the source material before the story runs.')}</p>
+      </div>
+      <div class="cv-in">
+        <figure class="cv-fig">
+          <div class="cv-img" style="background-image:url('/brand-assets/327816c1-cb4e-4c47-8da2-42877a448f1d.jpg')"></div>
+          <figcaption class="cv-cap"><p>Why does this story matter?</p><span>The question behind all six desks</span></figcaption>
+        </figure>
+        <div class="cv-l">
+          {coverageTopics.map((item) => (
+            <a href="/blog/" class="cvr"><div class="cvr-n">{item.number}</div><div><div class="cvr-t">{item.title}</div><p class="cvr-x">{item.text}</p></div></a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
 
-	<section class="coverage-topics what-we-cover-static" aria-labelledby="coverage-topics-title">
-		<div class="site-wrap what-we-cover-static__wrap">
-			<div class="what-we-cover-static__header">
-				<h2 id="coverage-topics-title">{value(coverage.title, 'What we cover')}</h2>
-				<p>{value(coverage.description, 'First For News reports on the major stories shaping the country while also delivering practical, useful coverage that helps readers understand what is happening in their communities and everyday lives.')}</p>
-			</div>
+  <section class="qt" style={`background-image:url('${value(wireFeature.image, '/brand-assets/28d50137-5e19-405a-81aa-7ad369692f45.jpg')}')`} aria-labelledby="editorial-commitment-title">
+    <div class="w"><div class="qt-in">
+      <div class="qt-m" id="editorial-commitment-title">{value(wireFeature.eyebrow, 'Our Editorial Commitment')}</div>
+      <p class="qt-q">{value(wireFeature.quote, 'We will not just report what happened. We will help you understand what comes next.')}</p>
+      <div class="qt-by"><div class="qt-n">{value(wireFeature.author, 'Michelle Hastings')}</div><div class="qt-r">{value(wireFeature.byline, 'Editor-in-Chief · Fifteen years in editorial leadership at national and regional publications')}</div></div>
+    </div></div>
+  </section>
 
-			<div class="what-we-cover-static__grid">
-				{coverageTopics.map((item) => (
-					<article class="what-we-cover-static__card">
-						<span>{item.number}</span>
-						<h3>{item.title}</h3>
-						<p>{item.text}</p>
-					</article>
-				))}
-			</div>
-		</div>
-	</section>
+  <section class="st" aria-labelledby="standards-title">
+    <div class="w">
+      <div class="eye"><i></i><span>How we work</span></div>
+      <h2 class="h2" id="standards-title">Editorial standards</h2>
+      <div class="st-doc">
+        <div class="st-top"><span>The First For News Standard</span><b>Five rules we do not break</b></div>
+        <div class="st-body">
+          {standards.map((item) => <p class="st-p"><b>{item.title}</b>{item.text}</p>)}
+        </div>
+        <div class="st-sign"><div class="st-sn">Signed — the editors of First For News</div><div class="st-sd">Revised August 2026</div></div>
+      </div>
+    </div>
+  </section>
 
-	<section class="contact-section get-in-touch-static" id="contact-form" aria-labelledby="contact-section-title">
-		<div class="site-wrap get-in-touch-static__wrap">
-			<div class="get-in-touch-static__header">
-				<p class="section-eyebrow">{value(contact.eyebrow, 'Get In Touch')}</p>
-				<h2 id="contact-section-title">{value(contact.title, 'Have news? Send it over.')}</h2>
-				<p>{value(contact.description, 'Submissions, corrections, and partnership inquiries all reach a person on our editorial team.')}</p>
-				<p>{value(contact.note, 'Include the supporting details up front and review moves faster.')}</p>
-			</div>
-
-			<div class="get-in-touch-static__cards">
-				{contactCards.map((item, index) => (
-					<article class:list={['get-in-touch-static__card', item.accent && 'get-in-touch-static__card--accent']}>
-						<span class="get-in-touch-static__icon" aria-hidden="true">
-							{index === 0 && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>}
-							{index === 1 && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>}
-							{index >= 2 && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>}
-						</span>
-						<h3>{item.title}</h3>
-						<a href={'mailto:' + item.email}>{item.email}</a>
-						<p>{item.text}</p>
-					</article>
-				))}
-			</div>
-		</div>
-	</section>
+  <section class="tm" aria-labelledby="team-title">
+    <div class="w">
+      <div class="eye"><i></i><span>{value(contact.eyebrow, 'Our team')}</span></div>
+      <h2 class="h2" id="team-title">{value(contact.title, 'Who does the reporting')}</h2>
+      <div class="tm-g">
+        {teamCards.map((person, index) => (
+          <a href="/our-team/" class="tmi"><img class="tmi-img" src={teamImages[index % teamImages.length]} alt={person.title || ''} /><div class="tmi-b"><div class="tmi-n">{person.title}</div><div class="tmi-r">{person.email}</div><p class="tmi-x">{person.text}</p></div></a>
+        ))}
+      </div>
+    </div>
+  </section>
 </main>

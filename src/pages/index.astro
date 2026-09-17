@@ -4,10 +4,11 @@ import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import FrontPage from '../templates/FrontPage.astro';
 import { getConfig, getPublicPage, listBlogs } from '../lib/data';
 import { islands } from '../lib/islands';
+import * as localHome from '../content/page/home.mdx';
 
 const slug = 'home';
 const page = await getPublicPage(slug);
-const data = page.data?.page;
+const data = (localHome.frontmatter as any) ?? page.data?.page;
 if (!data) return new Response('Not Found', { status: 404 });
 const config = (await getConfig()).data?.config ?? null;
 const posts = await listBlogs();

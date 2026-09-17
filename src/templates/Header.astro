@@ -3,202 +3,44 @@ import { tinaField } from "@tinacms/astro/tina-field";
 import type { CmsConfig } from '../lib/data';
 
 interface Props {
-	config?: CmsConfig | null;
-	navigation?: NavigationDocument | null;
+  config?: CmsConfig | null;
+  navigation?: NavigationDocument | null;
 }
 
 type NavItem = {
-	label?: string | null;
-	href?: string | null;
-	children?: (NavItem | null)[] | null;
+  label?: string | null;
+  href?: string | null;
+  children?: (NavItem | null)[] | null;
 };
 
 type NavigationDocument = {
-	title?: string | null;
-	items?: (NavItem | null)[] | null;
+  title?: string | null;
+  items?: (NavItem | null)[] | null;
 };
 
 const { config, navigation } = Astro.props;
 const seo = config?.seo ?? null;
-const fallbackItems = (config?.nav ?? []).map((item) => ({ label: item?.title, href: item?.link }));
-const menuItems = ((navigation?.items ?? fallbackItems) as NavItem[]).filter((item) => item && item.label);
-const siteTitle = seo?.title || 'Harbor Post';
-const logo = seo?.logo || '/mockup-assets/07018032-b188-4840-96cf-12808f0a2971.png';
-const splashCurrentDate = new Intl.DateTimeFormat('en-US', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-}).format(new Date());
+const siteTitle = seo?.title || 'First For News';
+const logo = seo?.logo || '/brand-assets/a80bca69-bdf7-4a94-80eb-063779debed2.png';
+const menuItems = ((navigation?.items ?? []) as NavItem[]).filter((item) => item && item.label && item.href);
 ---
 
-<input class="site-nav-toggle" id="site-nav-toggle" type="checkbox" aria-label="Toggle navigation menu" />
-<header class="global-header global-header--demo">
-	<div class="global-header__service" aria-hidden="true"></div>
-	<div class="global-header__masthead">
-		<div class="site-wrap global-header__masthead-inner">
-			<a href="/" class="global-header__brand" aria-label={`${siteTitle} home`}>
-				<img class="global-header__logo" src={logo} alt={siteTitle} data-tina-field={seo ? tinaField(seo, "logo") : undefined} />
-			</a>
-
-			<label class="global-header__menu-button" for="site-nav-toggle">
-				<span class="global-header__menu-icon"><i></i><i></i><i></i></span>
-				<span>Menu</span>
-			</label>
-
-			<div class="global-header__date">
-				<span>TODAY</span>
-				<time datetime="2026-08-24">{splashCurrentDate}</time></div>
-		</div>
-	</div>
-	<nav class="global-header__nav" aria-label="Primary menu">
-		<div class="site-wrap global-header__nav-inner">
-			<a class="global-header__home-link" href="/">Home</a>
-			<ul class="global-header__menu-list">
-				{menuItems.length > 0 ? menuItems.map((item) => {
-					const children = ((item.children ?? []) as NavItem[]).filter((child) => child?.label && child?.href);
-					const hasChildren = children.length > 0;
-					return (
-						<li class:list={["global-header__menu-item", { "global-header__menu-item--has-children": hasChildren }]}>
-							<a href={item.href || '#'} class="global-header__menu-link" aria-haspopup={hasChildren ? 'true' : undefined} aria-expanded={hasChildren ? 'false' : undefined} data-tina-field={tinaField(item, "label")}>
-								<span>{item.label}</span>
-								{hasChildren && <span class="global-header__submenu-caret" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><polyline points="6 9 12 15 18 9"></polyline></svg></span>}
-							</a>
-							{hasChildren && (
-								<ul class="global-header__submenu" aria-label={`${item.label} submenu`}>
-									{children.map((child) => (
-										<li><a href={child.href || '#'} data-tina-field={tinaField(child, "label")}>{child.label}</a></li>
-									))}
-								</ul>
-							)}
-						</li>
-					);
-				}) : (
-					<li class="global-header__menu-item"><a class="global-header__menu-link" href="/blog">Blog</a></li>
-				)}
-			</ul>
-		</div>
-	</nav>
-<!-- First For News desktop nav restore toggle START -->
-<script is:inline>
-(function () {
-  function ready(fn) {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-    else fn();
-  }
-
-  ready(function () {
-    var header = document.querySelector('.global-header') || document.querySelector('header');
-    if (!header) return;
-
-    var mq = window.matchMedia('(max-width: 1200px)');
-    var navSelectors = [
-      '.global-header__nav',
-      '.global-header__menu-wrap',
-      '.global-header__mobile-panel',
-      '.global-header__nav-list',
-      '.global-header__menu',
-      '.global-header__menu-list'
-    ];
-
-    function nodes() {
-      var out = [];
-      navSelectors.forEach(function (sel) {
-        Array.prototype.forEach.call(header.querySelectorAll(sel), function (el) {
-          if (out.indexOf(el) === -1) out.push(el);
-        });
-      });
-      return out;
-    }
-
-    function mainToggle() {
-      return header.querySelector('.global-header__menu-button, .global-header__menu-toggle, .global-header__mobile-toggle, .global-header__toggle, label[for="site-nav-toggle"], button[aria-label="Menu"], button[aria-label="menu"], button[aria-controls]');
-    }
-
-    function clearInlineNavDisplay() {
-      nodes().forEach(function (el) {
-        el.style.removeProperty('display');
-        el.style.removeProperty('flex-direction');
-      });
-    }
-
-    function setMobileOpen(open) {
-      if (!mq.matches) {
-        header.classList.remove('is-menu-open');
-        header.removeAttribute('data-menu-open');
-        clearInlineNavDisplay();
-        var desktopToggle = mainToggle();
-        if (desktopToggle) desktopToggle.setAttribute('aria-expanded', 'false');
-        return;
-      }
-
-      header.classList.toggle('is-menu-open', open);
-      header.setAttribute('data-menu-open', open ? 'true' : 'false');
-      var toggle = mainToggle();
-      if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-
-      nodes().forEach(function (el) {
-        if (open) {
-          if (el.classList.contains('global-header__nav-list') || el.classList.contains('global-header__menu') || el.classList.contains('global-header__menu-list')) {
-            el.style.setProperty('display', 'flex', 'important');
-            el.style.flexDirection = 'column';
-          } else {
-            el.style.setProperty('display', 'block', 'important');
-          }
-        } else {
-          el.style.setProperty('display', 'none', 'important');
-        }
-      });
-    }
-
-    function closeSubmenus() {
-      Array.prototype.forEach.call(header.querySelectorAll('.global-header__nav-item.is-open, .global-header__menu-item.is-open'), function (item) {
-        item.classList.remove('is-open');
-      });
-      Array.prototype.forEach.call(header.querySelectorAll('.global-header__menu-link[aria-expanded="true"]'), function (link) {
-        if (!link.matches('.global-header__menu-button, .global-header__menu-toggle, .global-header__mobile-toggle, .global-header__toggle')) {
-          link.setAttribute('aria-expanded', 'false');
-        }
-      });
-    }
-
-    setMobileOpen(false);
-
-    var toggle = mainToggle();
-    if (toggle) {
-      toggle.addEventListener('click', function (event) {
-        if (!mq.matches) return;
-        event.preventDefault();
-        event.stopPropagation();
-        var willOpen = !header.classList.contains('is-menu-open');
-        setMobileOpen(willOpen);
-        if (!willOpen) closeSubmenus();
-      });
-    }
-
-    Array.prototype.forEach.call(header.querySelectorAll('.global-header__menu-link[aria-haspopup="true"], .global-header__menu-link[aria-expanded]'), function (link) {
-      if (link === toggle || link.matches('.global-header__menu-button, .global-header__menu-toggle, .global-header__mobile-toggle, .global-header__toggle')) return;
-      var next = link.nextElementSibling;
-      var hasSubmenu = next && (next.classList.contains('global-header__submenu') || next.classList.contains('global-header__dropdown') || next.tagName === 'UL');
-      if (!hasSubmenu) return;
-      link.setAttribute('aria-expanded', 'false');
-      link.addEventListener('click', function (event) {
-        if (!mq.matches) return;
-        event.preventDefault();
-        event.stopPropagation();
-        var item = link.closest('.global-header__nav-item, .global-header__menu-item, li');
-        var open = link.getAttribute('aria-expanded') === 'true';
-        link.setAttribute('aria-expanded', open ? 'false' : 'true');
-        if (item) item.classList.toggle('is-open', !open);
-      });
-    });
-
-    function onResize() { setMobileOpen(header.classList.contains('is-menu-open') && mq.matches); }
-    if (mq.addEventListener) mq.addEventListener('change', onResize);
-    else if (mq.addListener) mq.addListener(onResize);
-    window.addEventListener('resize', onResize);
-  });
-})();
-</script>
-<!-- First For News desktop nav restore toggle END -->
+<header class="mh" data-brand-header>
+  <input class="ntog" id="ntog" type="checkbox" aria-label="Toggle navigation menu" />
+  <div class="w">
+    <div class="mh-in">
+      <a href="/" class="mh-logo-link" aria-label={`${siteTitle} home`}>
+        <img src={logo} alt={siteTitle} data-tina-field={seo ? tinaField(seo, 'logo') : undefined} />
+      </a>
+      <label class="brg" for="ntog">
+        <span class="brg-b" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Menu</span>
+      </label>
+      <nav class="mnav" aria-label={navigation?.title || 'Primary menu'}>
+        {menuItems.map((item) => (
+          <a href={item.href || '#'} data-tina-field={tinaField(item, 'label')}>{item.label}</a>
+        ))}
+      </nav>
+    </div>
+  </div>
 </header>

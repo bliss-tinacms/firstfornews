@@ -2,32 +2,24 @@
   "title": "Footer Menu",
   "items": [
     {
-      "label": "Privacy",
-      "href": "/privacy-policy/"
+      "label": "Home",
+      "href": "/"
     },
     {
-      "label": "Terms",
-      "href": "/terms-of-use/"
+      "label": "About Us",
+      "href": "/about/"
     },
     {
-      "label": "Cookie",
-      "href": "/cookie-policy/"
+      "label": "Our Team",
+      "href": "/our-team/"
     },
     {
-      "label": "AI",
-      "href": "/ai-policy/"
+      "label": "Contact Us",
+      "href": "/contact/"
     },
     {
-      "label": "DMCA",
-      "href": "/dmca-policy/"
-    },
-    {
-      "label": "Sponsored",
-      "href": "/sponsored-content-policy/"
-    },
-    {
-      "label": "Sitemap",
-      "href": "/sitemap/"
+      "label": "Blog",
+      "href": "/blog/"
     }
   ]
 }

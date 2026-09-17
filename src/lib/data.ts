@@ -93,23 +93,12 @@ export async function getConfig() {
 
 
 async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
-	if (relativePath === 'header.json') {
-		return {
-			data: {
-				navigation: {
-					title: 'Header Navigation',
-					items: [
-						{ label: 'Business', href: '/blog/category/business/' },
-						{ label: 'Technology', href: '/blog/category/technology/' },
-						{ label: 'Health', href: '/blog/category/health/' },
-						{ label: 'Politics', href: '/blog/category/politics/' },
-						{ label: 'World', href: '/blog/category/world/' },
-						{ label: 'Lifestyle', href: '/blog/category/lifestyle/' },
-						{ label: 'Featured', href: '/blog/category/featured/' },
-					],
-				},
-			},
-		} as any;
+	try {
+		const filePath = join(process.cwd(), 'src', 'content', 'navigation', relativePath);
+		const navigation = JSON.parse(readFileSync(filePath, 'utf8'));
+		if (navigation?.items) return { data: { navigation } } as any;
+	} catch (_error) {
+		// Fall through to Tina Cloud/generated client.
 	}
 
 	const query = `query Navigation($relativePath: String!) {
