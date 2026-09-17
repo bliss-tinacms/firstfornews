@@ -1,4 +1,5 @@
 ---
+import { tinaField } from '@tinacms/astro/tina-field';
 import { getBlogPermalink } from '../lib/permalinks';
 import type { CmsBlog, CmsConfig } from '../lib/data';
 
@@ -8,13 +9,24 @@ interface Props {
   posts: Post[];
   config?: CmsConfig | null;
   data?: any;
+  editData?: any;
 }
 
-const { posts, data } = Astro.props;
+const { posts, data, editData } = Astro.props;
 const homepageBlocks = Array.isArray(data?.blocks) ? data.blocks : [];
+const editHomepageBlocks = Array.isArray(editData?.blocks) ? editData.blocks : [];
 const isHomepageTemplateBlock = (block: any) =>
   block?._template === 'homepageTemplate' || block?.__typename === 'PageBlocksHomepageTemplate';
 const homepage = homepageBlocks.find(isHomepageTemplateBlock) ?? data?.homepage ?? {};
+const editHomepage = editHomepageBlocks.find(isHomepageTemplateBlock) ?? editData?.homepage ?? homepage;
+
+function tf(node: any, key: string) {
+  try {
+    return node ? tinaField(node, key) : undefined;
+  } catch (_error) {
+    return undefined;
+  }
+}
 
 function value<T>(input: T | null | undefined, fallback: T): T {
   return input === null || input === undefined || input === '' ? fallback : input;
@@ -55,6 +67,12 @@ const newsroom = homepage.newsroom ?? {};
 const wireFeature = homepage.wireFeature ?? {};
 const coverage = homepage.coverage ?? {};
 const contact = homepage.contact ?? {};
+const editHero = editHomepage.hero ?? hero;
+const editWhy = editHomepage.why ?? why;
+const editNewsroom = editHomepage.newsroom ?? newsroom;
+const editWireFeature = editHomepage.wireFeature ?? wireFeature;
+const editCoverage = editHomepage.coverage ?? coverage;
+const editContact = editHomepage.contact ?? contact;
 
 const featuredPosts = posts.slice(0, 3);
 const fallbackReportImages = [
@@ -101,20 +119,20 @@ const teamImages = [
 ---
 
 <main class="ffn-home">
-  <section class="hero" style={`background-image:url('${value(hero.image, '/brand-assets/c383ae02-84f6-4be0-8a77-47dee93ce41c.jpg')}')`} aria-labelledby="ffn-hero-title">
+  <section class="hero" style={`background-image:url('${value(hero.image, '/brand-assets/c383ae02-84f6-4be0-8a77-47dee93ce41c.jpg')}')`} aria-labelledby="ffn-hero-title" data-tina-field={tf(editHero, 'image')}>
     <div class="w">
       <div class="hero-in">
-        <div class="hero-k"><b>{value(hero.eyebrow, 'The Deep Dive')}</b><i>Featured Story</i></div>
-        <h1 id="ffn-hero-title">{value(hero.title, 'The Story Behind the Headlines That Shape Our World')}</h1>
-        <p class="hero-d">{value(hero.description, 'First For News goes beyond breaking updates to explore the facts, context, and details behind the stories people are talking about.')}</p>
+        <div class="hero-k"><b data-tina-field={tf(editHero, 'eyebrow')}>{value(hero.eyebrow, 'The Deep Dive')}</b><i>Featured Story</i></div>
+        <h1 id="ffn-hero-title" data-tina-field={tf(editHero, 'title')}>{value(hero.title, 'The Story Behind the Headlines That Shape Our World')}</h1>
+        <p class="hero-d" data-tina-field={tf(editHero, 'description')}>{value(hero.description, 'First For News goes beyond breaking updates to explore the facts, context, and details behind the stories people are talking about.')}</p>
       </div>
     </div>
   </section>
 
   <section class="rp" aria-labelledby="featured-reporting-title">
     <div class="w">
-      <div class="eye"><i></i><span>{value(newsroom.subheading, 'Published this week')}</span></div>
-      <h2 class="h2" id="featured-reporting-title">{value(newsroom.heading, 'Featured reporting')}</h2>
+      <div class="eye"><i></i><span data-tina-field={tf(editNewsroom, 'subheading')}>{value(newsroom.subheading, 'Published this week')}</span></div>
+      <h2 class="h2" id="featured-reporting-title" data-tina-field={tf(editNewsroom, 'heading')}>{value(newsroom.heading, 'Featured reporting')}</h2>
       <div class="rp-g">
         {featuredPosts.map((post, index) => (
           <a href={getPostUrl(post)} class="rpi">
@@ -134,16 +152,17 @@ const teamImages = [
     <div class="w">
       <div class="ms-in">
         <div>
-          <div class="eye"><i></i><span>{value(why.eyebrow, 'Our mission')}</span></div>
-          <h2 id="mission-title">{value(why.title, 'More than headlines. Context that holds up.')}</h2>
+          <div class="eye"><i></i><span data-tina-field={tf(editWhy, 'eyebrow')}>{value(why.eyebrow, 'Our mission')}</span></div>
+          <h2 id="mission-title" data-tina-field={tf(editWhy, 'title')}>{value(why.title, 'More than headlines. Context that holds up.')}</h2>
         </div>
-        <p class="ms-lead">{value(why.paragraphOne, 'First For News is a general news platform created for readers who want to understand what is happening without wading through unnecessary noise — timely stories, emerging trends, and developments that affect everyday life.')}</p>
+        <p class="ms-lead" data-tina-field={tf(editWhy, 'paragraphOne')}>{value(why.paragraphOne, 'First For News is a general news platform created for readers who want to understand what is happening without wading through unnecessary noise — timely stories, emerging trends, and developments that affect everyday life.')}</p>
       </div>
-      <div class="ms-slab"><i>&ldquo;</i><p>{value(why.paragraphTwo, 'A headline may capture attention. It rarely tells the whole story.')}</p></div>
+      <div class="ms-slab"><i>&ldquo;</i><p data-tina-field={tf(editWhy, 'paragraphTwo')}>{value(why.paragraphTwo, 'A headline may capture attention. It rarely tells the whole story.')}</p></div>
       <div class="ms-g">
-        {standards.map((item) => (
-          <div class="ms-i"><div class="ms-n">{item.label}</div><div class="ms-t">{item.title}</div><p class="ms-x">{item.text}</p></div>
-        ))}
+        {standards.map((item, index) => {
+          const editItem = editWhy?.standards?.[index] ?? item;
+          return <div class="ms-i"><div class="ms-n" data-tina-field={tf(editItem, 'label')}>{item.label}</div><div class="ms-t" data-tina-field={tf(editItem, 'title')}>{item.title}</div><p class="ms-x" data-tina-field={tf(editItem, 'text')}>{item.text}</p></div>;
+        })}
       </div>
     </div>
   </section>
@@ -151,8 +170,8 @@ const teamImages = [
   <section class="cv" aria-labelledby="coverage-title">
     <div class="w">
       <div class="cv-h">
-        <div><div class="eye"><i></i><span>Coverage areas</span></div><h2 class="h2" id="coverage-title">{value(coverage.title, 'What we cover')}</h2></div>
-        <p class="cv-lead">{value(coverage.description, 'Six desks, each staffed by an editor who reads the source material before the story runs.')}</p>
+        <div><div class="eye"><i></i><span>Coverage areas</span></div><h2 class="h2" id="coverage-title" data-tina-field={tf(editCoverage, 'title')}>{value(coverage.title, 'What we cover')}</h2></div>
+        <p class="cv-lead" data-tina-field={tf(editCoverage, 'description')}>{value(coverage.description, 'Six desks, each staffed by an editor who reads the source material before the story runs.')}</p>
       </div>
       <div class="cv-in">
         <figure class="cv-fig">
@@ -160,19 +179,20 @@ const teamImages = [
           <figcaption class="cv-cap"><p>Why does this story matter?</p><span>The question behind all six desks</span></figcaption>
         </figure>
         <div class="cv-l">
-          {coverageTopics.map((item) => (
-            <a href="/blog/" class="cvr"><div class="cvr-n">{item.number}</div><div><div class="cvr-t">{item.title}</div><p class="cvr-x">{item.text}</p></div></a>
-          ))}
+          {coverageTopics.map((item, index) => {
+            const editItem = editCoverage?.topics?.[index] ?? item;
+            return <a href="/blog/" class="cvr"><div class="cvr-n" data-tina-field={tf(editItem, 'number')}>{item.number}</div><div><div class="cvr-t" data-tina-field={tf(editItem, 'title')}>{item.title}</div><p class="cvr-x" data-tina-field={tf(editItem, 'text')}>{item.text}</p></div></a>;
+          })}
         </div>
       </div>
     </div>
   </section>
 
-  <section class="qt" style={`background-image:url('${value(wireFeature.image, '/brand-assets/28d50137-5e19-405a-81aa-7ad369692f45.jpg')}')`} aria-labelledby="editorial-commitment-title">
+  <section class="qt" style={`background-image:url('${value(wireFeature.image, '/brand-assets/28d50137-5e19-405a-81aa-7ad369692f45.jpg')}')`} aria-labelledby="editorial-commitment-title" data-tina-field={tf(editWireFeature, 'image')}>
     <div class="w"><div class="qt-in">
-      <div class="qt-m" id="editorial-commitment-title">{value(wireFeature.eyebrow, 'Our Editorial Commitment')}</div>
-      <p class="qt-q">{value(wireFeature.quote, 'We will not just report what happened. We will help you understand what comes next.')}</p>
-      <div class="qt-by"><div class="qt-n">{value(wireFeature.author, 'Michelle Hastings')}</div><div class="qt-r">{value(wireFeature.byline, 'Editor-in-Chief · Fifteen years in editorial leadership at national and regional publications')}</div></div>
+      <div class="qt-m" id="editorial-commitment-title" data-tina-field={tf(editWireFeature, 'eyebrow')}>{value(wireFeature.eyebrow, 'Our Editorial Commitment')}</div>
+      <p class="qt-q" data-tina-field={tf(editWireFeature, 'quote')}>{value(wireFeature.quote, 'We will not just report what happened. We will help you understand what comes next.')}</p>
+      <div class="qt-by"><div class="qt-n" data-tina-field={tf(editWireFeature, 'author')}>{value(wireFeature.author, 'Michelle Hastings')}</div><div class="qt-r" data-tina-field={tf(editWireFeature, 'byline')}>{value(wireFeature.byline, 'Editor-in-Chief · Fifteen years in editorial leadership at national and regional publications')}</div></div>
     </div></div>
   </section>
 
@@ -192,12 +212,13 @@ const teamImages = [
 
   <section class="tm" aria-labelledby="team-title">
     <div class="w">
-      <div class="eye"><i></i><span>{value(contact.eyebrow, 'Our team')}</span></div>
-      <h2 class="h2" id="team-title">{value(contact.title, 'Who does the reporting')}</h2>
+      <div class="eye"><i></i><span data-tina-field={tf(editContact, 'eyebrow')}>{value(contact.eyebrow, 'Our team')}</span></div>
+      <h2 class="h2" id="team-title" data-tina-field={tf(editContact, 'title')}>{value(contact.title, 'Who does the reporting')}</h2>
       <div class="tm-g">
-        {teamCards.map((person, index) => (
-          <a href="/our-team/" class="tmi"><img class="tmi-img" src={teamImages[index % teamImages.length]} alt={person.title || ''} /><div class="tmi-b"><div class="tmi-n">{person.title}</div><div class="tmi-r">{person.email}</div><p class="tmi-x">{person.text}</p></div></a>
-        ))}
+        {teamCards.map((person, index) => {
+          const editPerson = editContact?.cards?.[index] ?? person;
+          return <a href="/our-team/" class="tmi"><img class="tmi-img" src={teamImages[index % teamImages.length]} alt={person.title || ''} /><div class="tmi-b"><div class="tmi-n" data-tina-field={tf(editPerson, 'title')}>{person.title}</div><div class="tmi-r" data-tina-field={tf(editPerson, 'email')}>{person.email}</div><p class="tmi-x" data-tina-field={tf(editPerson, 'text')}>{person.text}</p></div></a>;
+        })}
       </div>
     </div>
   </section>

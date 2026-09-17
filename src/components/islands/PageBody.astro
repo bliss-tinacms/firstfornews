@@ -1,6 +1,9 @@
 ---
 import Blocks from '../blocks/Blocks.astro';
 import AboutMockup17Block from '../blocks/AboutMockup17Block.astro';
+import FrontPage from '../../templates/FrontPage.astro';
+import { getConfig, listBlogs } from '../../lib/data';
+import * as localHome from '../../content/page/home.mdx';
 
 const { data, config = null } = Astro.props;
 const pageBlocks = Array.isArray(data?.blocks) ? data.blocks : [];
@@ -17,13 +20,24 @@ const isOurTeamMockup17Block = (block) =>
   block?._template === 'ourTeamMockup17' ||
   block?.__typename === 'PageBlocksOurTeamMockup17';
 const ourTeamMockup17Block = pageBlocks.find(isOurTeamMockup17Block);
-const showPageTitle = Boolean(data?.title && data?._sys?.filename !== 'home' && !aboutMockup17Block && !contactMockup17Block && !ourTeamMockup17Block);
+const homepageTemplateBlock = pageBlocks.find((block) => block?._template === 'homepageTemplate' || block?.__typename === 'PageBlocksHomepageTemplate');
+const isHomePage = Boolean(data?._sys?.filename === 'home' || data?.permalink === '/' || homepageTemplateBlock);
+const frontPageData = (localHome.frontmatter as any) ?? data;
+const frontPagePosts = isHomePage ? await listBlogs() : [];
+const frontPageConfig = isHomePage ? ((await getConfig()).data?.config ?? config) : config;
+const showPageTitle = Boolean(data?.title && data?._sys?.filename !== 'home' && !aboutMockup17Block && !contactMockup17Block && !ourTeamMockup17Block && !homepageTemplateBlock);
 ---
 
 {data && (
   <>
-    {showPageTitle && <h1 class="single-page-title">{data.title}</h1>}
-    {aboutMockup17Block && <AboutMockup17Block data={aboutMockup17Block} />}
-    {regularBlocks.length > 0 && <Blocks data={{ ...data, blocks: regularBlocks }} config={config} />}
+    {isHomePage ? (
+      <FrontPage posts={frontPagePosts} config={frontPageConfig} data={frontPageData} editData={data} />
+    ) : (
+      <>
+        {showPageTitle && <h1 class="single-page-title">{data.title}</h1>}
+        {aboutMockup17Block && <AboutMockup17Block data={aboutMockup17Block} />}
+        {regularBlocks.length > 0 && <Blocks data={{ ...data, blocks: regularBlocks }} config={config} />}
+      </>
+    )}
   </>
 )}

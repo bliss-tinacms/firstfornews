@@ -2,13 +2,15 @@
 import Base from '../layouts/Base.astro';
 import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import FrontPage from '../templates/FrontPage.astro';
-import { getConfig, getPublicPage, listBlogs } from '../lib/data';
+import { getConfig, getPage, getPublicPage, listBlogs } from '../lib/data';
 import { islands } from '../lib/islands';
 import * as localHome from '../content/page/home.mdx';
 
 const slug = 'home';
 const page = await getPublicPage(slug);
+const editPage = await getPage(slug);
 const data = (localHome.frontmatter as any) ?? page.data?.page;
+const editData = editPage.data?.page ?? page.data?.page ?? data;
 if (!data) return new Response('Not Found', { status: 404 });
 const config = (await getConfig()).data?.config ?? null;
 const posts = await listBlogs();
@@ -28,6 +30,6 @@ const description = seo?.metaDescription || config?.seo?.description || 'Indepen
 	nofollow={seo?.nofollow || false}
 >
 	<TinaIsland name="page" wrapper={islands.page.wrapper} params={{ slug }} primary>
-		<FrontPage posts={posts} config={config} data={data} />
+		<FrontPage posts={posts} config={config} data={data} editData={editData} />
 	</TinaIsland>
 </Base>
