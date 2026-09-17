@@ -28,11 +28,10 @@ function getReferenceKey(reference: unknown) {
 }
 
 const currentCategoryKey = getReferenceKey(data.category);
-const sameCategoryPosts = allPosts
+const relatedPosts = allPosts
   .filter((post) => post._sys.filename !== documentSlug)
-  .filter((post) => currentCategoryKey && getReferenceKey(post.category) === currentCategoryKey);
-const fallbackPosts = allPosts.filter((post) => post._sys.filename !== documentSlug);
-const relatedPosts = (sameCategoryPosts.length > 0 ? sameCategoryPosts : fallbackPosts).slice(0, 3);
+  .filter((post) => currentCategoryKey && getReferenceKey(post.category) === currentCategoryKey)
+  .slice(0, 3);
 
 const seo = data.seo ?? null;
 const title = seo?.metaTitle || data.title || '';

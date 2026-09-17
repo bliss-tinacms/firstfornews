@@ -1,0 +1,24 @@
+---
+import { tinaField } from '@tinacms/astro/tina-field';
+import type { CmsUser } from '../../lib/data';
+
+interface Props {
+	user?: CmsUser | null;
+}
+
+const { user = null } = Astro.props;
+const authorName = user?.name || 'Author';
+const initials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'FN';
+---
+
+<header class="author-archive__header">
+	<div class="author-archive__photo-wrap" data-tina-field={user ? tinaField(user, 'avatar') : undefined}>
+		{user?.avatar ? <img src={user.avatar} alt={authorName} width={112} height={112} class="author-archive__photo" /> : <span class="author-archive__placeholder" aria-hidden="true">{initials}</span>}
+	</div>
+	<div>
+		<p class="author-archive__label">Author Archive</p>
+		<h1 data-tina-field={user ? tinaField(user, 'name') : undefined}>{authorName}</h1>
+		{user?.role && <p class="author-archive__role" data-tina-field={tinaField(user, 'role')}>{user.role}</p>}
+		{user?.bio && <p class="author-archive__bio" data-tina-field={tinaField(user, 'bio')}>{user.bio}</p>}
+	</div>
+</header>

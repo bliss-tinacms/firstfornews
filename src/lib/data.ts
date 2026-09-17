@@ -238,7 +238,31 @@ async function getLiveUser(slug: string) {
 	return requestWithMetadata(client.queries.user({ relativePath }));
 }
 
+export const getEditableUser = (slug: string) => {
+	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
+	return requestWithMetadata(client.queries.user({ relativePath }), { priority: 'primary' });
+};
+
 export const getUser = (slug: string) => getLiveUser(slug);
+
+export const getEditableCategory = (slug: string) => {
+	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
+	return requestWithMetadata(client.queries.category({ relativePath }), { priority: 'primary' });
+};
+
+export async function getCategory(slug: string) {
+	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
+	const query = `query Category($relativePath: String!) {
+		category(relativePath: $relativePath) {
+			title
+			description
+			_sys { filename }
+		}
+	}`;
+	const liveCategory = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.category);
+	if (liveCategory) return { data: { category: liveCategory } } as any;
+	return requestWithMetadata(client.queries.category({ relativePath }));
+}
 
 export async function listPages() {
 	const query = `query PageConnection {
@@ -313,6 +337,7 @@ export type CmsConfig = Awaited<ReturnType<typeof getConfig>>['data']['config'];
 export type CmsPage = Awaited<ReturnType<typeof getPage>>['data']['page'];
 export type CmsBlog = Awaited<ReturnType<typeof getBlog>>['data']['blog'];
 export type CmsUser = Awaited<ReturnType<typeof getUser>>['data']['user'];
+export type CmsCategory = Awaited<ReturnType<typeof getCategory>>['data']['category'];
 
 export type PageBlock = NonNullable<NonNullable<CmsPage['blocks']>[number]>;
 export type PageBlockTypename = PageBlock['__typename'];

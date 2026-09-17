@@ -1,4 +1,6 @@
 ---
+import { statSync } from 'node:fs';
+import { join } from 'node:path';
 import { getBlogPermalink } from '../../lib/permalinks';
 import TinaMarkdown from '@tinacms/astro/TinaMarkdown.astro';
 import { tinaField } from '@tinacms/astro/tina-field';
@@ -107,6 +109,16 @@ function getTocItems(body: unknown) {
 		.filter(Boolean) as Array<{ title: string; id: string }>;
 }
 
+function getFallbackPublishedDate(post?: CmsBlog | null) {
+	if (!post?._sys?.filename) return new Date();
+	try {
+		const stat = statSync(join(process.cwd(), 'src', 'content', 'blog', `${post._sys.filename}.mdx`));
+		return stat.mtime;
+	} catch (_error) {
+		return new Date();
+	}
+}
+
 const postAuthor = data ? getAuthor(data.author) : null;
 const author = defaultAuthor || postAuthor;
 const authorName = getReferenceLabel(defaultAuthor) || getReferenceLabel(postAuthor) || getReferenceLabel(data?.author) || 'Newsroom Staff';
@@ -114,7 +126,7 @@ const authorSlug = getReferenceSlug(data?.author) || getReferenceSlug(author);
 const authorArchiveUrl = authorSlug ? `/blog/author/${authorSlug}/` : '/blog/';
 const authorInitials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'FF';
 const categoryLabel = getReferenceLabel(data?.category) || 'Article';
-const publishedDate = data?.pubDate ? new Date(data.pubDate) : null;
+const publishedDate = data?.pubDate ? new Date(data.pubDate) : getFallbackPublishedDate(data);
 const shareUrl = data ? getPostUrl(data) : '/blog/';
 const shareTitle = data?.title || 'First For News';
 const tocItems = getTocItems(data?.body);
@@ -189,11 +201,11 @@ const heroImageAlt = (() => {
 						</div>
 					)}
 					<div class="rc">
-						<div class="rc-t">Share this report</div>
+						<div class="rc-t">Share this story</div>
 						<div class="sh">
-							<a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer"><span>Share on Facebook</span></a>
-							<a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer"><span>Post on X</span></a>
-							<a href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`}><span>Email this story</span></a>
+							<a href={shareUrl} data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg><span>Copy Link</span></a>
+							<a href="mailto:contact@firstfornews.net"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"></path><path d="m4 7 8 6 8-6"></path></svg><span>Email Us</span></a>
+							<a href="/contact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v10H8l-3 3z"></path></svg><span>Send a Tip</span></a>
 						</div>
 					</div>
 					<div class="rc">

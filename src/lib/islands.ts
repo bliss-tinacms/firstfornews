@@ -7,13 +7,15 @@
 import type { IslandRegistry } from '@tinacms/astro/experimental';
 import type { QueryResult } from '@tinacms/astro/data';
 
-import type { BlogQuery, ConfigQuery, PageQuery } from '../../tina/__generated__/types';
-import type { CmsBlog, CmsConfig, CmsPage } from './data';
+import type { BlogQuery, CategoryQuery, ConfigQuery, PageQuery, UserQuery } from '../../tina/__generated__/types';
+import type { CmsBlog, CmsCategory, CmsConfig, CmsPage, CmsUser } from './data';
 import PageBody from '../components/islands/PageBody.astro';
 import BlogBody from '../components/islands/BlogBody.astro';
+import AuthorArchiveHeader from '../components/islands/AuthorArchiveHeader.astro';
+import CategoryArchiveHeader from '../components/islands/CategoryArchiveHeader.astro';
 import Header from '../templates/Header.astro';
 import Footer from '../templates/Footer.astro';
-import { getConfig, getEditableBlog, getEditablePage } from './data';
+import { getConfig, getEditableBlog, getEditableCategory, getEditablePage, getEditableUser } from './data';
 
 export const islands: IslandRegistry = {
 	page: {
@@ -30,6 +32,22 @@ export const islands: IslandRegistry = {
 		wrapper: { tag: 'article' },
 		propsFromData: (data) => ({
 			data: (data as QueryResult<BlogQuery>).data?.blog as CmsBlog | undefined,
+		}),
+	},
+	author: {
+		fetch: (_request, params) => getEditableUser(params.get('slug') ?? 'admin'),
+		component: AuthorArchiveHeader,
+		wrapper: { tag: 'div' },
+		propsFromData: (data) => ({
+			user: (data as QueryResult<UserQuery>).data?.user as CmsUser | undefined,
+		}),
+	},
+	category: {
+		fetch: (_request, params) => getEditableCategory(params.get('slug') ?? ''),
+		component: CategoryArchiveHeader,
+		wrapper: { tag: 'div' },
+		propsFromData: (data) => ({
+			category: (data as QueryResult<CategoryQuery>).data?.category as CmsCategory | undefined,
 		}),
 	},
 	global: {

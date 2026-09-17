@@ -1,7 +1,10 @@
 ---
 import Base from '../../../layouts/Base.astro';
+import TinaIsland from '@tinacms/astro/TinaIsland.astro';
+import AuthorArchiveHeader from '../../../components/islands/AuthorArchiveHeader.astro';
 import FormattedDate from '../../../components/FormattedDate.astro';
 import { getConfig, listBlogs, type CmsBlog } from '../../../lib/data';
+import { islands } from '../../../lib/islands';
 import { getBlogPermalink } from '../../../lib/permalinks';
 
 export const prerender = false;
@@ -33,23 +36,16 @@ const author = getAuthor(posts[0].author);
 const authorName = getReferenceLabel(posts[0]?.author) || 'Author';
 const title = authorName + ' Articles | ' + (config?.seo?.title || 'First For News');
 const description = author?.bio || 'Read the latest articles published by ' + authorName + '.';
-const initials = authorName.split(/s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'SN';
+const initials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'SN';
+const authorDocumentSlug = author?._sys?.filename || slug;
 ---
 
 <Base title={title} description={description}>
   <main class="author-archive">
     <div class="site-wrap">
-      <header class="author-archive__header">
-        <div class="author-archive__photo-wrap">
-          {author?.avatar ? <img src={author.avatar} alt={authorName} width={112} height={112} class="author-archive__photo" /> : <span class="author-archive__placeholder" aria-hidden="true">{initials}</span>}
-        </div>
-        <div>
-          <p class="author-archive__label">Author Archive</p>
-          <h1>{authorName}</h1>
-          {author?.role && <p class="author-archive__role">{author.role}</p>}
-          {author?.bio && <p class="author-archive__bio">{author.bio}</p>}
-        </div>
-      </header>
+      <TinaIsland name="author" wrapper={islands.author.wrapper} params={{ slug: authorDocumentSlug }} primary>
+        <AuthorArchiveHeader user={author} />
+      </TinaIsland>
       <section class="author-archive__posts" aria-label={authorName + ' articles'}>
         {posts.map((post) => (
           <a href={getPostUrl(post)} class="author-archive-card">

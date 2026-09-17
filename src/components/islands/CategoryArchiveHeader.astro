@@ -1,0 +1,35 @@
+---
+import { tinaField } from '@tinacms/astro/tina-field';
+import type { CmsCategory } from '../../lib/data';
+
+interface Props {
+	category?: CmsCategory | null;
+	fallbackTitle?: string;
+}
+
+const { category = null, fallbackTitle = 'Category' } = Astro.props;
+const title = category?.title || fallbackTitle;
+---
+
+<header class="ah">
+	<div class="crumb">
+		<div class="archive-w">
+			<div class="crumb-in">
+				<a href="/blog/">Blog</a>
+				<i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i>
+				<a href="/blog/category/">Categories</a>
+				<i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i>
+				<span data-tina-field={category ? tinaField(category, 'title') : undefined}>{title}</span>
+			</div>
+		</div>
+	</div>
+	<div class="archive-w">
+		<div class="ah-body">
+			<div>
+				<div class="ah-kick"><i></i><span>Category Archive</span></div>
+				<h1 data-tina-field={category ? tinaField(category, 'title') : undefined}>{title}</h1>
+				{category?.description && <p data-tina-field={tinaField(category, 'description')}>{category.description}</p>}
+			</div>
+		</div>
+	</div>
+</header>

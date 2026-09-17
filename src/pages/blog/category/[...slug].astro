@@ -1,6 +1,9 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import { getConfig, listBlogs, type CmsBlog } from '../../../lib/data';
+import TinaIsland from '@tinacms/astro/TinaIsland.astro';
+import CategoryArchiveHeader from '../../../components/islands/CategoryArchiveHeader.astro';
+import { getConfig, listBlogs, type CmsBlog, type CmsCategory } from '../../../lib/data';
+import { islands } from '../../../lib/islands';
 import { getBlogPermalink } from '../../../lib/permalinks';
 
 export const prerender = false;
@@ -34,13 +37,13 @@ function getAuthorName(reference: unknown) { return labelFromReference(reference
 function getPostUrl(post: CmsBlog) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
 function categoryFileMap() {
   const modules = import.meta.glob('../../../content/category/*.json', { eager: true });
-  const map = new Map<string, string>();
+  const map = new Map<string, { label: string; filename: string }>();
   for (const [filePath, mod] of Object.entries(modules)) {
     const filename = filePath.split('/').pop()?.replace(/\.json$/i, '') || '';
     const data = ((mod as any).default || mod || {}) as { title?: string; name?: string };
     const label = String(data.title || data.name || titleCase(filename));
     const slug = slugify(filename || label);
-    if (slug) map.set(slug, label);
+    if (slug) map.set(slug, { label, filename });
   }
   return map;
 }
@@ -52,7 +55,10 @@ const allPosts = (await listBlogs()).filter((post) => slugFromReference(post.cat
 const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
 const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
 const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
-const archiveTitle = labelFromReference(allPosts[0]?.category) || categories.get(parsed.slug) || titleCase(parsed.slug) || 'Category';
+const categoryEntry = categories.get(parsed.slug);
+const categoryFromPosts = allPosts[0]?.category && typeof allPosts[0].category === 'object' ? allPosts[0].category as CmsCategory : null;
+const archiveTitle = labelFromReference(allPosts[0]?.category) || categoryEntry?.label || titleCase(parsed.slug) || 'Category';
+const categoryDocumentSlug = categoryEntry?.filename || categoryFromPosts?._sys?.filename || archiveTitle;
 if (!parsed.slug) return new Response('Not Found', { status: 404 });
 const basePath = '/blog/category/' + parsed.slug;
 const hasPosts = posts.length > 0;
@@ -62,27 +68,9 @@ const description = hasPosts ? 'Read the latest ' + archiveTitle + ' articles fr
 
 <Base title={seoTitle} description={description}>
   <main class="archive-template archive-template--category">
-    <header class="ah">
-      <div class="crumb">
-        <div class="archive-w">
-          <div class="crumb-in">
-            <a href="/blog/">Blog</a>
-            <i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i>
-            <a href="/blog/category/">Categories</a>
-            <i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i>
-            <span>{archiveTitle}</span>
-          </div>
-        </div>
-      </div>
-      <div class="archive-w">
-        <div class="ah-body">
-          <div>
-            <div class="ah-kick"><i></i><span>Category Archive</span></div>
-            <h1>{archiveTitle}</h1>
-          </div>
-        </div>
-      </div>
-    </header>
+    <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryDocumentSlug }} primary>
+      <CategoryArchiveHeader category={categoryFromPosts} fallbackTitle={archiveTitle} />
+    </TinaIsland>
 
     <section class="grid-s">
       <div class="archive-w">
