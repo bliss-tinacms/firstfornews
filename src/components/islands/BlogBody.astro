@@ -138,27 +138,29 @@ const heroImageAlt = (() => {
 {data && (
 	<>
 		<header class="ah">
-			<div class="w ah-in">
-				{categoryLabel && (
-					<div data-tina-field={tinaField(data, 'category')} class="ah-k">
-						<b>{categoryLabel}</b>
-					</div>
-				)}
-				{data.title && <h1 data-tina-field={tinaField(data, 'title')}>{data.title}</h1>}
-				<div class="ah-by">
-					<a href={authorArchiveUrl} aria-label={`View ${authorName} archive`}>
-						{author?.avatar ? (
-							<img src={author.avatar} alt={authorName} width={52} height={52} class="ah-av" />
-						) : (
-							<span class="ah-av post-author-box__placeholder" aria-hidden="true">{authorInitials}</span>
-						)}
-					</a>
-					<div class="ah-au" data-tina-field={tinaField(data, 'author')}>
-						<div class="ah-an">BY <a href={authorArchiveUrl}>{authorName}</a></div>
-					</div>
-					<div class="ah-dt">
-						{publishedDate && <span data-tina-field={tinaField(data, 'pubDate')}><FormattedDate date={publishedDate} /></span>}
-						{data.updatedDate && <><br /><span data-tina-field={tinaField(data, 'updatedDate')}>Updated <FormattedDate date={new Date(data.updatedDate)} /></span></>}
+			<div class="w">
+				<div class="ah-in">
+					{categoryLabel && (
+						<div data-tina-field={tinaField(data, 'category')} class="ah-k">
+							<b>{categoryLabel}</b>
+						</div>
+					)}
+					{data.title && <h1 data-tina-field={tinaField(data, 'title')}>{data.title}</h1>}
+					<div class="ah-by">
+						<a href={authorArchiveUrl} aria-label={`View ${authorName} archive`}>
+							{author?.avatar ? (
+								<img src={author.avatar} alt={authorName} width={52} height={52} class="ah-av" />
+							) : (
+								<span class="ah-av post-author-box__placeholder" aria-hidden="true">{authorInitials}</span>
+							)}
+						</a>
+						<div class="ah-au" data-tina-field={tinaField(data, 'author')}>
+							<div class="ah-an">By <a href={authorArchiveUrl}>{authorName}</a></div>
+						</div>
+						<div class="ah-dt">
+							{publishedDate && <span data-tina-field={tinaField(data, 'pubDate')}><FormattedDate date={publishedDate} /></span>}
+							{data.updatedDate && <><br /><span data-tina-field={tinaField(data, 'updatedDate')}>Updated <FormattedDate date={new Date(data.updatedDate)} /></span></>}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -207,9 +209,13 @@ const heroImageAlt = (() => {
 							<a href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`}><span>Email this story</span></a>
 						</div>
 					</div>
-					<div class="rc err">
+					<div class="rc">
 						<div class="rc-t">Spotted an error?</div>
-						<div class="corr-b">Tell the newsroom what needs correcting and include the article title or URL.</div>
+						<div class="rc-b">
+							<a href="/contact" class="rr">
+								<div class="rr-h">Send the article link, the specific error, and the correct information →</div>
+							</a>
+						</div>
 					</div>
 				</aside>
 
@@ -247,8 +253,8 @@ const heroImageAlt = (() => {
 {data && relatedPosts.length > 0 && (
 	<section id="more-stories" class="mo" aria-labelledby="related-articles-heading">
 		<div class="w">
-			<div class="eye"><i></i><span>{categoryLabel}</span></div>
-			<h2 class="h2" id="related-articles-heading">More reporting</h2>
+			<div class="eye"><i></i><span>Keep reading</span></div>
+			<div class="h2" id="related-articles-heading">More in {categoryLabel}</div>
 			<div class="mo-g">
 				{relatedPosts.slice(0, 3).map((post) => (
 					<a href={getPostUrl(post)} class="mi">
