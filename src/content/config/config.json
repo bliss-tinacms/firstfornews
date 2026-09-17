@@ -4,8 +4,8 @@
     "description": "Read independent U.S. news, analysis, and reporting from First For News on politics, business, technology, health, culture, lifestyle, and more.",
     "siteOwner": "First For News",
     "logo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png",
-    "favicon": "https://res.cloudinary.com/qwdyyii2/image/upload/v1788782745/favicon.png",
-    "footerLogo": "/Splash-Newswire-Logo-White.png"
+    "favicon": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789664635/firstfornews/favicon.png",
+    "footerLogo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png"
   },
   "contactForm": {
     "formspreeEndpoint": "https://formspree.io/f/xppwzoep",
