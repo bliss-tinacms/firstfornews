@@ -35,7 +35,8 @@ const favicon = config?.seo?.favicon || config?.favicon || '/favicon.svg';
 			image={image}
 			ogTitle={ogTitle}
 			ogDescription={ogDescription}
-			canonicalUrl={canonicalUrl}
+			canonicalUrl={canonicalUrl}
+
 			noindex={noindex}
 			nofollow={nofollow}
 		
@@ -44,6 +45,7 @@ const favicon = config?.seo?.favicon || config?.favicon || '/favicon.svg';
 		{headerCode && <Fragment set:html={headerCode} />}
 	</head>
 	<body>
+		<div class="tr"></div>
 		<TinaIsland name="global" wrapper={islands.global.wrapper}>
 			<Header config={config} navigation={headerNavigation} />
 		</TinaIsland>

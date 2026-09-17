@@ -78,6 +78,14 @@ const coverageTopics = list(coverage.topics, [
   { number: '06', title: 'Lifestyle & Culture', text: 'Travel, education, culture, and the trends shaping how people live.' },
 ]);
 
+const editorialStandards = [
+  { title: 'Accuracy', text: 'Every factual claim should be verifiable, supported by named sources or public records. Errors discovered after publication are corrected on the record.' },
+  { title: 'Attribution', text: 'Quoted persons are identified by name and role. Studies, records, and other reporting are credited and linked. Anonymity is never granted retroactively.' },
+  { title: 'Fairness', text: 'People and organizations covered receive a meaningful opportunity to respond before publication. Where the facts are clear, we report them regardless of preference.' },
+  { title: 'Independence', text: 'Editorial coverage is not influenced by advertising or sponsorship. Sponsors do not review, approve, or modify reporting before publication.' },
+  { title: 'Labeling', text: 'News is presented straight, analysis interprets it, and opinion reflects its writer. The three are tagged distinctly and visibly distinguishable at a glance.' },
+];
+
 const teamCards = list(contact.cards, [
   { title: 'Michelle Hastings', email: 'Editor-in-Chief', text: 'Leads the newsroom from Baltimore. Fifteen years in editorial leadership, reporting and editing.', accent: true },
   { title: 'Patrick Alvarez', email: 'Managing Editor', text: 'Runs day-to-day operations from Austin. Owns the editorial calendar and assignments.', accent: false },
@@ -175,7 +183,7 @@ const teamImages = [
       <div class="st-doc">
         <div class="st-top"><span>The First For News Standard</span><b>Five rules we do not break</b></div>
         <div class="st-body">
-          {standards.map((item) => <p class="st-p"><b>{item.title}</b>{item.text}</p>)}
+          {editorialStandards.map((item) => <p class="st-p"><b>{item.title}</b>{item.text}</p>)}
         </div>
         <div class="st-sign"><div class="st-sn">Signed — the editors of First For News</div><div class="st-sd">Revised August 2026</div></div>
       </div>
