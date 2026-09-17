@@ -25,17 +25,17 @@ function getBranch() {
 }
 
 function corsHeaders(request: Request) {
-  const origin = request.headers.get('origin') || 'https://www.splashnewswire.com';
+  const origin = request.headers.get('origin') || 'https://firstfornews.net';
   const allowed = new Set([
-    'https://www.splashnewswire.com',
-    'https://splashnewswire.com',
+    'https://firstfornews.net',
+    'https://firstfornews.net',
     'http://localhost:4321',
   ]);
 
   return {
     'Access-Control-Allow-Origin': allowed.has(origin)
       ? origin
-      : 'https://www.splashnewswire.com',
+      : 'https://firstfornews.net',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-KEY',
     'Access-Control-Max-Age': '86400',

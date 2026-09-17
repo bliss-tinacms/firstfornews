@@ -11,4 +11,4 @@ C:\Users\ADMIN\Desktop\Astro\tina-blog\
 After replacing, run:
 pnpm exec tinacms build --skip-cloud-checks -c "astro build"
 
-Then create/upload your normal splash-node-update.zip including full dist/ and these changed files.
+Then create/upload your normal firstfornews-node-update.zip including full dist/ and these changed files.

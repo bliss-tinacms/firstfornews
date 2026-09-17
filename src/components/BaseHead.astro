@@ -19,7 +19,7 @@ interface Props {
 const {
 	title,
 	description,
-	image = 'https://www.splashnewswire.com/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg',
+	image = 'https://firstfornews.net/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg',
 	ogTitle,
 	ogDescription,
 	canonicalUrl,
@@ -27,7 +27,7 @@ const {
 	nofollow = false,
 	favicon = '/favicon.svg',
 } = Astro.props;
-const HERMES_PRODUCTION_SITE_URL = 'https://www.splashnewswire.com';
+const HERMES_PRODUCTION_SITE_URL = 'https://firstfornews.net';
 function resolveCanonicalUrl(value?: string | URL | null) {
 	const raw = value ? value.toString() : Astro.url.pathname;
 	const url = new URL(raw, HERMES_PRODUCTION_SITE_URL);
@@ -36,7 +36,7 @@ function resolveCanonicalUrl(value?: string | URL | null) {
 		return new URL(url.pathname, HERMES_PRODUCTION_SITE_URL);
 	}
 	url.protocol = 'https:';
-	url.hostname = 'www.splashnewswire.com';
+	url.hostname = 'firstfornews.net';
 	url.port = '';
 	url.search = '';
 	url.hash = '';

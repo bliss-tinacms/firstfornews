@@ -99,8 +99,8 @@ const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
 const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
 const archiveTitle = labelFromReference(allPosts[0]?.author) || Astro.props.archiveTitle || 'Author';
 const basePath = '/author/' + parsed.slug;
-const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'Splash Newswire');
-const description = 'Read the latest articles by ' + archiveTitle + ' from Splash Newswire.';
+const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
+const description = 'Read the latest articles by ' + archiveTitle + ' from First For News.';
 ---
 
 <Base title={seoTitle} description={description}>

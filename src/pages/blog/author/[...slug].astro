@@ -31,7 +31,7 @@ const posts = (await listBlogs()).filter((post) => getReferenceSlug(post.author)
 if (!posts.length) return new Response('Not Found', { status: 404 });
 const author = getAuthor(posts[0].author);
 const authorName = getReferenceLabel(posts[0]?.author) || 'Author';
-const title = authorName + ' Articles | ' + (config?.seo?.title || 'Splash Newswire');
+const title = authorName + ' Articles | ' + (config?.seo?.title || 'First For News');
 const description = author?.bio || 'Read the latest articles published by ' + authorName + '.';
 const initials = authorName.split(/s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'SN';
 ---

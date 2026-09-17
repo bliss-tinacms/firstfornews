@@ -1780,7 +1780,7 @@
 }
 /* HERMES_DEMO_HEADER_MATCH_END */
 
-/* === Splash Newswire brand guide fix START === */
+/* === First For News brand guide fix START === */
 /* Source: mockup-17-harbor-post-standalone_1.html */
 
 :root{
@@ -1946,9 +1946,9 @@ h1,h2,h3,.bl-h,.wc-h h2,.wc-t,.nq-mark,.nq-q,.nl-h span:first-child{font-family:
   .hh-d,.hh p{font-size:17px;line-height:1.6;}
   .hh-cta,.hh a[class*="cta"],.hero-cta{font-size:12px;padding:17px 28px;}
 }
-/* === Splash Newswire brand guide fix END === */
+/* === First For News brand guide fix END === */
 
-/* === Splash Newswire submenu-only titlecase fix START === */
+/* === First For News submenu-only titlecase fix START === */
 /* Only submenu/dropdown links: no parent/top-level menu styling here. */
 .hood-menu a,
 .hood-menu > a,
@@ -1984,9 +1984,9 @@ header [class*="dropdown"] li > a{
   font-variant:normal !important;
   font-variant-caps:normal !important;
 }
-/* === Splash Newswire submenu-only titlecase fix END === */
+/* === First For News submenu-only titlecase fix END === */
 
-/* === Splash Newswire real submenu svg caret START === */
+/* === First For News real submenu svg caret START === */
 /* Actual markup from DevTools:
    .global-header__menu-link > .global-header__submenu-caret
    Demo SVG is 11px with rounded stroke polyline. */
@@ -2036,15 +2036,15 @@ header [class*="dropdown"] li > a{
 .global-header__menu-link[aria-expanded="true"] .global-header__submenu-caret svg{
   transform:rotate(180deg) !important;
 }
-/* === Splash Newswire real submenu svg caret END === */
+/* === First For News real submenu svg caret END === */
 
-/* === Splash Newswire submenu caret top offset START === */
+/* === First For News submenu caret top offset START === */
 .global-header__submenu-caret{
   top:2px !important;
 }
-/* === Splash Newswire submenu caret top offset END === */
+/* === First For News submenu caret top offset END === */
 
-/* === Splash Newswire mobile menu exact demo START === */
+/* === First For News mobile menu exact demo START === */
 @media (max-width:1080px){
   /* Mobile/tabled opened nav background and vertical stack */
   .hood,
@@ -2229,9 +2229,9 @@ header [class*="dropdown"] li > a{
     padding:13px 2px !important;
   }
 }
-/* === Splash Newswire mobile menu exact demo END === */
+/* === First For News mobile menu exact demo END === */
 
-/* === Splash Newswire mobile menu remove side lines final START === */
+/* === First For News mobile menu remove side lines final START === */
 @media (max-width:1200px){
   /* Kill the left/right vertical edge lines seen in the mobile/tablet screenshot. */
   .hood,
@@ -2326,9 +2326,9 @@ header [class*="dropdown"] li > a{
     box-shadow:none !important;
   }
 }
-/* === Splash Newswire mobile menu remove side lines final END === */
+/* === First For News mobile menu remove side lines final END === */
 
-/* === Splash Newswire mobile nav rows final START === */
+/* === First For News mobile nav rows final START === */
 @media (max-width:1200px){
   /* Reset the actual nav list rows so Home/current item cannot be styled differently. */
   .global-header__nav-list,
@@ -2449,9 +2449,9 @@ header [class*="dropdown"] li > a{
     border-bottom:1px solid #C9D5DB !important;
   }
 }
-/* === Splash Newswire mobile nav rows final END === */
+/* === First For News mobile nav rows final END === */
 
-/* === Splash Newswire home link simple fix START === */
+/* === First For News home link simple fix START === */
 @media (max-width:1200px){
   .global-header__home-link{
     display: flex !important;
@@ -2481,9 +2481,9 @@ header [class*="dropdown"] li > a{
     outline: 0 !important;
   }
 }
-/* === Splash Newswire home link simple fix END === */
+/* === First For News home link simple fix END === */
 
-/* === Splash Newswire desktop nav restore mobile toggle scoped START === */
+/* === First For News desktop nav restore mobile toggle scoped START === */
 /* Desktop: nav must show normally. JS also clears inline display styles above 1200px. */
 @media (min-width:1201px){
   .global-header__nav{
@@ -2520,9 +2520,9 @@ header [class*="dropdown"] li > a{
     gap:0 !important;
   }
 }
-/* === Splash Newswire desktop nav restore mobile toggle scoped END === */
+/* === First For News desktop nav restore mobile toggle scoped END === */
 
-/* === Splash Newswire footer exact demo repair START === */
+/* === First For News footer exact demo repair START === */
 :root{--navy:#0E2C3D;--line2:#1B4054;--rust:#B4531C;--ser:'Bitter',serif;--san:'Barlow',sans-serif}
 .foot{background:var(--navy) !important;color:#fff !important;position:relative !important;font-family:var(--san) !important;margin:0 !important;padding:0 !important}
 .foot .w{max-width:1260px !important;margin:0 auto !important;padding:0 36px !important;box-sizing:border-box !important}
@@ -2545,13 +2545,13 @@ header [class*="dropdown"] li > a{
 .foot-legal a:hover{color:#8FC4DE !important}
 @media(max-width:1080px){.foot-hero{grid-template-columns:1fr !important}.fh-l{padding:52px 0 40px !important;border-right:none !important;border-bottom:1px solid var(--line2) !important}.fh-r{padding:40px 0 52px !important}.fh-p{max-width:none !important}}
 @media(max-width:700px){.foot .w{padding:0 18px !important}.foot-btm{align-items:flex-start !important;flex-direction:column !important}.foot-legal{gap:14px 18px !important}}
-/* === Splash Newswire footer exact demo repair END === */
+/* === First For News footer exact demo repair END === */
 
-/* === Splash Newswire footer logo upload field START === */
+/* === First For News footer logo upload field START === */
 .fh-logo{max-height:52px !important;width:auto !important;display:block !important;margin:0 0 26px !important;object-fit:contain !important;}
-/* === Splash Newswire footer logo upload field END === */
+/* === First For News footer logo upload field END === */
 
-/* === Splash Newswire cover touch sections demo match START === */
+/* === First For News cover touch sections demo match START === */
 /* WHAT WE COVER â€” exact demo styling */
 .wc{
   background:#fff !important;
@@ -2784,9 +2784,9 @@ header [class*="dropdown"] li > a{
   .cch{padding:26px 22px 24px !important;min-height:0 !important;}
   .cch-v{white-space:normal !important;}
 }
-/* === Splash Newswire cover touch sections demo match END === */
+/* === First For News cover touch sections demo match END === */
 
-/* === Splash Newswire From the Wire exact demo correction START === */
+/* === First For News From the Wire exact demo correction START === */
 .nq{
   background:#14577A !important;
   border-bottom:1px solid #0F4260 !important;
@@ -2924,9 +2924,9 @@ header [class*="dropdown"] li > a{
   .nq-q{font-size:22px !important;}
   .nq-mark{font-size:58px !important;margin-bottom:22px !important;max-width:70px !important;}
 }
-/* === Splash Newswire From the Wire exact demo correction END === */
+/* === First For News From the Wire exact demo correction END === */
 
-/* === Splash Newswire From the Wire real-class demo fix START === */
+/* === First For News From the Wire real-class demo fix START === */
 /* Real live classes from DevTools: .wire-feature-demo, not .nq */
 .wire-feature-demo{
   display:grid !important;
@@ -3087,9 +3087,9 @@ header [class*="dropdown"] li > a{
   .wire-feature-demo blockquote > *{font-size:22px !important;}
   .wire-feature-demo blockquote::before{font-size:58px !important;height:54px !important;max-width:70px !important;}
 }
-/* === Splash Newswire From the Wire real-class demo fix END === */
+/* === First For News From the Wire real-class demo fix END === */
 
-/* === Splash Newswire wire eyebrow quote unicode escape START === */
+/* === First For News wire eyebrow quote unicode escape START === */
 .wire-feature--demo .section-eyebrow{
   position:relative !important;
 }
@@ -3104,9 +3104,9 @@ header [class*="dropdown"] li > a{
   line-height:.6 !important;
   color:#e8873f !important;
 }
-/* === Splash Newswire wire eyebrow quote unicode escape END === */
+/* === First For News wire eyebrow quote unicode escape END === */
 
-/* === Splash Newswire Why Harbor Post demo v2 START === */
+/* === First For News Why Harbor Post demo v2 START === */
 .acct{
   background:#fff !important;
   color:#0E2C3D !important;
@@ -3227,7 +3227,7 @@ header [class*="dropdown"] li > a{
   .ai:nth-child(n+3){border-bottom:1px solid #C9D5DB !important;}
   .ai:last-child{border-bottom:none !important;}
 }
-/* === Splash Newswire Why Harbor Post demo v2 END === */
+/* === First For News Why Harbor Post demo v2 END === */
 
 /* === FORCE Why Harbor Post demo important START === */
 /* Very specific selectors so this wins over existing section/card styling */
@@ -4591,7 +4591,7 @@ html body section.get-in-touch-static .get-in-touch-static__card p{
 /* === Splash tablet/mobile actual layout repair START === */
 /* Actual classes only. Fix cramped tablet/mobile layouts. */
 
-/* -------- Editorial standards / Why Splash Newswire -------- */
+/* -------- Editorial standards / Why First For News -------- */
 @media (max-width: 1024px){
   html body section.editorial-standards{
     padding:0 !important;

@@ -1130,7 +1130,7 @@ var UserCollection = {
   format: "json",
   ui: {
     router({ document }) {
-      return `/users/${document._sys.filename}`;
+      return `/blog/author/${document._sys.filename}/`;
     }
   },
   fields: [

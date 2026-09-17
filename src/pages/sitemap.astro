@@ -19,7 +19,7 @@ async function getLiveSitemapEntries() {
     process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
     process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
     process.env.PUBLIC_TINA_CONTENT_API_URL,
-    'https://www.splashnewswire.com/tina-content-proxy',
+    'https://firstfornews.net/tina-content-proxy',
   ].filter(Boolean) as string[];
 
   for (const endpoint of endpoints) {
@@ -48,8 +48,8 @@ const liveSitemap = await getLiveSitemapEntries();
 const pages = liveSitemap?.pages ?? await listPages();
 const posts = liveSitemap?.posts ?? await listBlogs();
 
-const title = 'Sitemap | Splash Newswire';
-const description = 'Browse the pages and latest reporting published by Splash Newswire.';
+const title = 'Sitemap | First For News';
+const description = 'Browse the pages and latest reporting published by First For News.';
 
 function cleanTitle(value: unknown, fallback = 'Untitled') {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
@@ -118,7 +118,7 @@ const updated = new Date();
       <div class="sitemap-wrap">
         <p class="sitemap-eyebrow">Site index</p>
         <h1 id="sitemap-title">Sitemap</h1>
-        <p>Browse all public pages and published stories from Splash Newswire.</p>
+        <p>Browse all public pages and published stories from First For News.</p>
         <div class="sitemap-stats" aria-label="Sitemap totals">
           <span><strong>{pageLinks.length}</strong> Pages</span>
           <span><strong>{postLinks.length}</strong> Stories</span>

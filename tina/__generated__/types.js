@@ -10,7 +10,6 @@ export const BlogPartsFragmentDoc = gql`
   __typename
   viewPostShortcut
   title
-  permalink
   description
   seo {
     __typename
@@ -84,7 +83,6 @@ export const PagePartsFragmentDoc = gql`
   __typename
   viewPageShortcut
   title
-  permalink
   seo {
     __typename
     metaTitle
@@ -866,7 +864,7 @@ const generateRequester = (client) => {
 export const ExperimentalGetTinaClient = () => getSdk(
   generateRequester(
     createClient({
-      url: "https://www.splashnewswire.com/tina-content-proxy",
+      url: "http://localhost:4001/graphql",
       queries
     })
   )

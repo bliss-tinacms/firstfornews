@@ -61,7 +61,7 @@ async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
 		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://www.splashnewswire.com/tina-content-proxy',
+		'https://firstfornews.net/tina-content-proxy',
 	].filter(Boolean) as string[];
 
 	for (const endpoint of endpoints) {
@@ -122,7 +122,7 @@ async function getLivePage(slug: string) {
 		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://www.splashnewswire.com/tina-content-proxy',
+		'https://firstfornews.net/tina-content-proxy',
 	].filter(Boolean) as string[];
 
 	for (const endpoint of endpoints) {
@@ -169,7 +169,7 @@ async function getLiveUser(slug: string) {
 		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		'https://www.splashnewswire.com/tina-content-proxy',
+		'https://firstfornews.net/tina-content-proxy',
 	].filter(Boolean) as string[];
 
 	for (const endpoint of endpoints) {

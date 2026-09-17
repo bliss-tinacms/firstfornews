@@ -30,7 +30,7 @@ function parseArchiveParam(value?: string) {
   return { slug: parts.join('/'), page: 1 };
 }
 function pagePath(basePath: string, page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
-function getAuthorName(reference: unknown) { return labelFromReference(reference) || 'Splash Newswire Staff'; }
+function getAuthorName(reference: unknown) { return labelFromReference(reference) || 'First For News Staff'; }
 function getPostUrl(post: CmsBlog) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
 function categoryFileMap() {
   const modules = import.meta.glob('../../../content/category/*.json', { eager: true });
@@ -56,8 +56,8 @@ const archiveTitle = labelFromReference(allPosts[0]?.category) || categories.get
 if (!parsed.slug) return new Response('Not Found', { status: 404 });
 const basePath = '/blog/category/' + parsed.slug;
 const hasPosts = posts.length > 0;
-const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'Splash Newswire');
-const description = hasPosts ? 'Read the latest ' + archiveTitle + ' articles from Splash Newswire.' : 'Articles in the ' + archiveTitle + ' category will be published soon on Splash Newswire.';
+const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
+const description = hasPosts ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.';
 ---
 
 <Base title={seoTitle} description={description}>

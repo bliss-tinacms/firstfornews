@@ -22,7 +22,7 @@ const { config, navigation } = Astro.props;
 const currentYear = new Date().getFullYear();
 const footerMenuItems = ((navigation?.items ?? []) as NavItem[]).filter((item) => item && item.label && item.href);
 const seo = config?.seo ?? null;
-const siteTitle = seo?.title || 'Splash Newswire';
+const siteTitle = seo?.title || 'First For News';
 const footerLogo = seo?.footerLogo || seo?.logo || '';
 ---
 
@@ -50,7 +50,7 @@ const footerLogo = seo?.footerLogo || seo?.logo || '';
       <div class="fh-r">
         <div class="fh-eye">Have news to share?</div>
         <p class="fh-h">Put Your Story on Our Radar</p>
-        <p class="fh-x">Send your announcement, story tip, or noteworthy update to the Splash Newswire editorial team for review and editorial consideration.</p>
+        <p class="fh-x">Send your announcement, story tip, or noteworthy update to the First For News editorial team for review and editorial consideration.</p>
         <a href="/contact" class="fh-cta">Submit your news</a>
       </div>
     </div>
@@ -58,7 +58,7 @@ const footerLogo = seo?.footerLogo || seo?.logo || '';
 
   <div class="w">
     <div class="foot-btm">
-      <p>&copy; {currentYear} Splash Newswire. Your news, everywhere it matters.</p>
+      <p>&copy; {currentYear} First For News. Your news, everywhere it matters.</p>
       <nav class="foot-legal" aria-label={navigation?.title || 'Footer menu'}>
         {footerMenuItems.map((item) => (
           <a href={item.href || '#'} data-tina-field={tinaField(item, "label")}>{item.label}</a>

@@ -1,8 +1,8 @@
 {
   "seo": {
-    "title": "Splash Newswire",
-    "description": "Read independent U.S. news, analysis, and reporting from Splash Newswire on politics, business, technology, health, culture, lifestyle, and more.",
-    "siteOwner": "Splash Newswire",
+    "title": "First For News",
+    "description": "Read independent U.S. news, analysis, and reporting from First For News on politics, business, technology, health, culture, lifestyle, and more.",
+    "siteOwner": "First For News",
     "logo": "/Splash-Newswire-Logo-Medium.png",
     "favicon": "https://res.cloudinary.com/qwdyyii2/image/upload/v1788782745/favicon.png",
     "footerLogo": "/Splash-Newswire-Logo-White.png"
@@ -13,7 +13,7 @@
     "description": "Story tips, correction requests, contributor inquiries, and general reader correspondence all reach a person on the newsroom staff.",
     "buttonText": "Send to the newsroom",
     "note": "Read by a person during business hours. We reply to what we can pursue, and nothing runs on a single source.",
-    "subject": "Splash Newswire contact form submission"
+    "subject": "First For News contact form submission"
   },
   "codeInjection": {
     "headerCode": "",
