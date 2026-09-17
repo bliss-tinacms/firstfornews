@@ -2,70 +2,32 @@
   "title": "Header Navigation",
   "items": [
     {
-      "label": "About",
-      "href": "/about"
+      "label": "Business",
+      "href": "/blog/category/business/"
     },
     {
-      "label": "Trending",
-      "href": "#",
-      "children": [
-        {
-          "label": "National News",
-          "href": "/blog/category/news/"
-        },
-        {
-          "label": "Politics",
-          "href": "/blog/category/politics/"
-        },
-        {
-          "label": "Business",
-          "href": "/blog/category/business/"
-        },
-        {
-          "label": "Economy",
-          "href": "/blog/category/economy/"
-        },
-        {
-          "label": "Technology",
-          "href": "/blog/category/technology/"
-        },
-        {
-          "label": "Health",
-          "href": "/blog/category/health/"
-        },
-        {
-          "label": "Science",
-          "href": "/blog/category/science/"
-        },
-        {
-          "label": "Lifestyle",
-          "href": "/blog/category/lifestyle/"
-        },
-        {
-          "label": "Culture",
-          "href": "/blog/category/culture/"
-        },
-        {
-          "label": "Featured",
-          "href": "/blog/category/featured/"
-        }
-      ]
+      "label": "Technology",
+      "href": "/blog/category/technology/"
     },
     {
-      "label": "Our Team",
-      "href": "/our-team"
+      "label": "Health",
+      "href": "/blog/category/health/"
     },
     {
-      "label": "Editorial Guidelines",
-      "href": "/editorial-guidelines/"
+      "label": "Politics",
+      "href": "/blog/category/politics/"
     },
     {
-      "label": "Blog",
-      "href": "/blog"
+      "label": "World",
+      "href": "/blog/category/world/"
     },
     {
-      "label": "Contact",
-      "href": "/contact"
+      "label": "Lifestyle",
+      "href": "/blog/category/lifestyle/"
+    },
+    {
+      "label": "Featured",
+      "href": "/blog/category/featured/"
     }
   ]
 }

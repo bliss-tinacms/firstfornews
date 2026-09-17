@@ -93,6 +93,25 @@ export async function getConfig() {
 
 
 async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
+	if (relativePath === 'header.json') {
+		return {
+			data: {
+				navigation: {
+					title: 'Header Navigation',
+					items: [
+						{ label: 'Business', href: '/blog/category/business/' },
+						{ label: 'Technology', href: '/blog/category/technology/' },
+						{ label: 'Health', href: '/blog/category/health/' },
+						{ label: 'Politics', href: '/blog/category/politics/' },
+						{ label: 'World', href: '/blog/category/world/' },
+						{ label: 'Lifestyle', href: '/blog/category/lifestyle/' },
+						{ label: 'Featured', href: '/blog/category/featured/' },
+					],
+				},
+			},
+		} as any;
+	}
+
 	const query = `query Navigation($relativePath: String!) {
 		navigation(relativePath: $relativePath) {
 			title
