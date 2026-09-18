@@ -17,6 +17,7 @@ import matter from 'gray-matter';
 import type { TinaRichTextContent } from '@tinacms/astro';
 import { requestWithMetadata } from '@tinacms/astro/data';
 import client from '../../tina/__generated__/client';
+import { BlogDocument, CategoryDocument, ConfigDocument, PageDocument, UserDocument } from '../../tina/__generated__/types';
 
 function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null, key = 'permalink') {
 	if (!slug) return null;
@@ -89,6 +90,29 @@ async function fetchLiveTina<T>(query: string, variables?: Record<string, unknow
 	return null;
 }
 
+async function fetchLiveTinaResult<TData>(query: string, variables?: Record<string, unknown>) {
+	for (const endpoint of tinaProxyEndpoints()) {
+		try {
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ query, variables }),
+				cache: 'no-store',
+			});
+			if (!response.ok) continue;
+			const json = await response.json();
+			if (json?.data) return { data: json.data as TData, query, variables: variables ?? {} };
+		} catch (_error) {
+			// Fall back to generated Tina client below.
+		}
+	}
+	return null;
+}
+
+function liveOrGenerated<TData>(query: string, variables: Record<string, unknown>, generated: () => Promise<any>) {
+	return fetchLiveTinaResult<TData>(query, variables).then((live) => live ?? generated());
+}
+
 export async function getConfig() {
 	const query = `query Config($relativePath: String!) {
 		config(relativePath: $relativePath) {
@@ -138,8 +162,9 @@ export const getPage = (slug: string) =>
 
 export const getEditablePage = (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
+	const variables = { relativePath };
 	const localPage = slug === 'home' || relativePath === 'home.mdx' ? readLocalPageFrontmatter(relativePath) : null;
-	const source = client.queries.page({ relativePath }).then((result) => {
+	const source = liveOrGenerated(PageDocument, variables, () => client.queries.page(variables)).then((result) => {
 		if (!localPage) return result;
 		return {
 			...result,
@@ -192,7 +217,8 @@ export const getPublicPage = (slug: string) => getLivePage(slug);
 
 export const getEditableBlog = (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
-	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
+	const variables = { relativePath };
+	return requestWithMetadata(liveOrGenerated(BlogDocument, variables, () => client.queries.blog(variables)), { priority: 'primary' });
 };
 
 export async function getBlog(slug: string) {
@@ -241,14 +267,16 @@ async function getLiveUser(slug: string) {
 
 export const getEditableUser = (slug: string) => {
 	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
-	return requestWithMetadata(client.queries.user({ relativePath }), { priority: 'primary' });
+	const variables = { relativePath };
+	return requestWithMetadata(liveOrGenerated(UserDocument, variables, () => client.queries.user(variables)), { priority: 'primary' });
 };
 
 export const getUser = (slug: string) => getLiveUser(slug);
 
 export const getEditableCategory = (slug: string) => {
 	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
-	return requestWithMetadata(client.queries.category({ relativePath }), { priority: 'primary' });
+	const variables = { relativePath };
+	return requestWithMetadata(liveOrGenerated(CategoryDocument, variables, () => client.queries.category(variables)), { priority: 'primary' });
 };
 
 export async function getCategory(slug: string) {

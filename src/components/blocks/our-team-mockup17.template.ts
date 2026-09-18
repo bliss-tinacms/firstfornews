@@ -13,7 +13,6 @@ export const ourTeamMockup17BlockSchema = {
       { name: 'people', label: 'Leadership People', type: 'object', list: true, fields: [
         { name: 'name', label: 'Name', type: 'string' }, { name: 'role', label: 'Role', type: 'string' }, { name: 'location', label: 'Location', type: 'string' },
         { name: 'image', label: 'Photo', type: 'image' }, { name: 'imageAlt', label: 'Photo Alt Text', type: 'string' }, { name: 'bio', label: 'Bio', type: 'string', ui: { component: 'textarea' } },
-        { name: 'experience', label: 'Footer Chip 1', type: 'string' }, { name: 'focus', label: 'Footer Chip 2', type: 'string' },
       ]},
     ]},
     { type: 'object', name: 'seniorStaff', label: 'Senior Editorial Staff Section', fields: [
@@ -21,7 +20,6 @@ export const ourTeamMockup17BlockSchema = {
       { name: 'people', label: 'Staff Cards', type: 'object', list: true, fields: [
         { name: 'name', label: 'Name', type: 'string' }, { name: 'role', label: 'Role', type: 'string' }, { name: 'location', label: 'Location', type: 'string' },
         { name: 'image', label: 'Photo', type: 'image' }, { name: 'imageAlt', label: 'Photo Alt Text', type: 'string' }, { name: 'bio', label: 'Bio', type: 'string', ui: { component: 'textarea' } },
-        { name: 'experience', label: 'Footer Chip 1', type: 'string' }, { name: 'focus', label: 'Footer Chip 2', type: 'string' },
       ]},
     ]},
   ],
