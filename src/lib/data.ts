@@ -123,12 +123,13 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 }
 
 function tinaProxyEndpoints() {
+	// Do not SSR-fetch this same Passenger app's public /tina-content-proxy.
+	// Self-fetching the live domain during page render can deadlock/timeout under cPanel Passenger.
+	// Public pages should use generated/local source fallbacks; Tina preview/editor metadata uses
+	// getEditable* loaders via requestWithMetadata.
 	const endpoints = [
-		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-		process.env.PUBLIC_TINA_CONTENT_API_URL,
-		process.env.SITE_URL ? `${process.env.SITE_URL.replace(/\/$/, '')}/tina-content-proxy` : null,
-		'https://firstfornews.net/tina-content-proxy',
+		process.env.TINA_UPSTREAM_CONTENT_API_URL,
+		process.env.TINA_DIRECT_CONTENT_API_URL,
 	].filter(Boolean) as string[];
 	return Array.from(new Set(endpoints));
 }

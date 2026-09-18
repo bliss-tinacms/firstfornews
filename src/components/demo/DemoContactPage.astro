@@ -7,8 +7,15 @@ const hero = block?.hero || {};
 const formSection = block?.formSection || {};
 const inboxes = block?.inboxes || {};
 const requests = block?.requests || {};
-const inboxCards = Array.isArray(inboxes?.cards) ? inboxes.cards : [];
-const requestCards = Array.isArray(requests?.cards) ? requests.cards : [];
+const inboxCards = Array.isArray(inboxes?.cards) && inboxes.cards.length ? inboxes.cards : [
+  { title: 'The Newsroom', description: 'Story tips, correction requests, letters to the editor, contributor pitches, and other correspondence intended for the editorial team.', email: 'editorial@firstfornews.net', note: 'If your tip concerns a sensitive matter, please indicate at the top of your message whether you want to speak on the record, on background, or off the record. The publication honors any arrangement it accepts, but the terms must be settled before the information is conveyed.' },
+  { title: 'General Inquiries', description: 'Advertising and partnership inquiries, technical issues with the site, newsletter and account questions, and general reader correspondence.', email: 'info@firstfornews.net', note: 'This inbox is staffed during U.S. business hours and typically responds within two business days.' },
+];
+const requestCards = Array.isArray(requests?.cards) && requests.cards.length ? requests.cards : [
+  { title: 'Corrections', text: 'If you have identified a factual error in a published piece, send the article URL, the specific error, and the corrected information to the editorial inbox listed above.' },
+  { title: 'DMCA & Legal Notices', text: 'Copyright takedown notices, counter-notifications, and other legal correspondence reach the publication through the editorial address.' },
+  { title: 'Letters to the Editor', text: 'Letters written for publication as reader correspondence should be flagged as such in the subject line.' },
+];
 const formAction = formSection.formAction || config?.contactForm?.formspreeEndpoint || '';
 const t = (value: unknown, fallback: string) => String(value || fallback);
 ---
@@ -47,11 +54,15 @@ const t = (value: unknown, fallback: string) => String(value || fallback);
     <div class="eye"><i></i><span data-tina-field={inboxes ? tinaField(inboxes, 'eyebrow') : undefined}>{t(inboxes.eyebrow, 'Where to write')}</span></div>
     <h2 class="h2" data-tina-field={inboxes ? tinaField(inboxes, 'title') : undefined}>{t(inboxes.title, 'The two inboxes')}</h2>
     <div class="ad">
-      {(inboxCards.length ? inboxCards : [
-        { title: 'The Newsroom', description: 'Story tips, correction requests, letters to the editor, contributor pitches, and other correspondence intended for the editorial team.', email: 'editorial@firstfornews.net', note: 'If your tip concerns a sensitive matter, please indicate at the top of your message whether you want to speak on the record, on background, or off the record.' },
-        { title: 'General Inquiries', description: 'Advertising and partnership inquiries, technical issues with the site, newsletter and account questions, and general reader correspondence.', email: 'info@firstfornews.net', note: 'This inbox is staffed during U.S. business hours and typically responds within two business days.' },
-      ]).map((card: any) => (
-        <article class="adi"><div class="adi-k">{card.title === 'The Newsroom' ? 'Monitored by the editors' : 'U.S. business hours'}</div><h3 data-tina-field={tinaField(card, 'title')}>{card.title}</h3><a href={`mailto:${card.email}`} data-tina-field={tinaField(card, 'email')}>{card.email}</a><p data-tina-field={tinaField(card, 'description')}>{card.description}</p><p data-tina-field={tinaField(card, 'note')}>{card.note}</p></article>
+      {inboxCards.map((card: any) => (
+        <article class="adi">
+          <div class="adi-top"><span data-tina-field={tinaField(card, 'title')}>{card.title}</span><b>{card.title === 'The Newsroom' ? 'Monitored by the editors' : 'U.S. business hours'}</b></div>
+          <div class="adi-b">
+            <a class="adi-a" href={`mailto:${card.email}`} data-tina-field={tinaField(card, 'email')}>{card.email}</a>
+            <p class="adi-x" data-tina-field={tinaField(card, 'description')}>{card.description}</p>
+            <p class="adi-note" data-tina-field={tinaField(card, 'note')}>{card.note}</p>
+          </div>
+        </article>
       ))}
     </div>
   </div></section>
@@ -59,15 +70,20 @@ const t = (value: unknown, fallback: string) => String(value || fallback);
   <section class="sc"><div class="w">
     <div class="eye"><i></i><span data-tina-field={requests ? tinaField(requests, 'eyebrow') : undefined}>{t(requests.eyebrow, 'Specific requests')}</span></div>
     <h2 class="h2" data-tina-field={requests ? tinaField(requests, 'title') : undefined}>{t(requests.title, 'How to route your message')}</h2>
-    <p class="sec-lead" data-tina-field={requests ? tinaField(requests, 'intro') : undefined}>{t(requests.intro, 'Corrections, legal notices, and letters follow their own process. Flagging yours correctly gets it handled faster.')}</p>
-    <div class="rti">
-      {(requestCards.length ? requestCards : [
-        { title: 'Corrections', text: 'If you have identified a factual error in a published piece, send the article URL, the specific error, and the corrected information.' },
-        { title: 'DMCA & Legal Notices', text: 'Copyright takedown notices, counter-notifications, and other legal correspondence reach the publication through the editorial address.' },
-        { title: 'Letters to the Editor', text: 'Letters written for publication as reader correspondence should be flagged as such in the subject line.' },
-      ]).map((card: any) => <article><h3 data-tina-field={tinaField(card, 'title')}>{card.title}</h3><p data-tina-field={tinaField(card, 'text')}>{card.text}</p></article>)}
+    <p class="fm-sub" data-tina-field={requests ? tinaField(requests, 'intro') : undefined}>{t(requests.intro, 'Corrections, legal notices, and letters follow their own process. Flagging yours correctly gets it handled faster.')}</p>
+    <div class="rt">
+      {requestCards.map((card: any) => (
+        <article class="rti">
+          <h3 class="rti-h" data-tina-field={tinaField(card, 'title')}><i></i>{card.title}</h3>
+          <p class="rti-x" data-tina-field={tinaField(card, 'text')}>{card.text}</p>
+        </article>
+      ))}
     </div>
   </div></section>
 
-  <section class="sc dark"><div class="w"><h2 class="h2">Who answers for the coverage</h2><a class="btn" href="/our-team/">Meet the Editors →</a></div></section>
+  <section class="cl"><div class="w"><div class="cl-in">
+    <h2>Who answers for the coverage</h2>
+    <p>Meet the editors responsible for the publication standards, corrections record, and daily coverage decisions.</p>
+    <a class="cl-cta" href="/our-team/">Meet the Editors →</a>
+  </div></div></section>
 </main>
