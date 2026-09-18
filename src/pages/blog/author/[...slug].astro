@@ -38,12 +38,22 @@ const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * P
 const editableAuthor = (await getUser(parsed.slug || 'admin')).data?.user ?? null;
 const authorObject = allPosts.find((post) => post.author && typeof post.author === 'object')?.author ?? editableAuthor;
 const archiveTitle = editableAuthor?.name || labelFromReference(authorObject) || 'Author';
-const title = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
-const description = editableAuthor?.bio || 'Read the latest articles published by ' + archiveTitle + '.';
+const authorSeo = (editableAuthor as any)?.seo || (authorObject as any)?.seo || null;
+const title = authorSeo?.metaTitle || archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
+const description = authorSeo?.metaDescription || editableAuthor?.bio || 'Read the latest articles published by ' + archiveTitle + '.';
 const basePath = '/blog/author/' + parsed.slug;
 ---
 
-<Base title={title} description={description}>
+<Base
+  title={title}
+  description={description}
+  image={authorSeo?.ogImage || editableAuthor?.avatar || undefined}
+  ogTitle={authorSeo?.ogTitle || title}
+  ogDescription={authorSeo?.ogDescription || description}
+  canonicalUrl={authorSeo?.canonicalUrl || basePath + '/'}
+  noindex={authorSeo?.noindex || false}
+  nofollow={authorSeo?.nofollow || false}
+>
   <TinaIsland name="author" wrapper={islands.author.wrapper} params={{ slug: parsed.slug || 'admin' }} primary>
     <DemoAuthorArchive archiveTitle={archiveTitle} author={editableAuthor || authorObject} posts={posts} currentPage={currentPage} totalPages={totalPages} basePath={basePath} />
   </TinaIsland>

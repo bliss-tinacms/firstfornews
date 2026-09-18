@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import DemoAuthorArchive from '../../components/demo/DemoAuthorArchive.astro';
-import { getConfig, listBlogs, type CmsBlog } from '../../lib/data';
+import { getConfig, getUser, listBlogs, type CmsBlog } from '../../lib/data';
 import { getBlogPermalink } from '../../lib/permalinks';
 
 const POSTS_PER_PAGE = 30;

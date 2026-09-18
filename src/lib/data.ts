@@ -11,7 +11,7 @@
  * is the source of truth; regen with `tinacms dev` and everything
  * downstream updates.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
@@ -57,16 +57,61 @@ function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null,
 	return null;
 }
 
-function readLocalPageFrontmatter(slug?: string | null) {
+function readLocalFrontmatter(collection: 'blog' | 'page', slug?: string | null) {
 	if (!slug) return null;
 	const filename = slug.endsWith('.mdx') ? slug : slug + '.mdx';
 	for (const root of localContentRoots()) {
 		try {
-			const filePath = join(root, 'src', 'content', 'page', filename);
+			const filePath = join(root, 'src', 'content', collection, filename);
 			const parsed = matter(readFileSync(filePath, 'utf8'));
-			return parsed.data && Object.keys(parsed.data).length ? parsed.data : null;
+			if (!parsed.data || !Object.keys(parsed.data).length) continue;
+			return {
+				...parsed.data,
+				body: parsed.content || undefined,
+				_sys: { filename: filename.replace(/\.mdx$/, '') },
+			};
 		} catch (_error) {
 			// Try the next possible app root.
+		}
+	}
+	return null;
+}
+
+function readLocalPageFrontmatter(slug?: string | null) {
+	return readLocalFrontmatter('page', slug);
+}
+
+function readLocalBlogFrontmatter(slug?: string | null) {
+	return readLocalFrontmatter('blog', slug);
+}
+
+function readLocalJson(collection: 'category' | 'user' | 'config' | 'navigation', slug?: string | null) {
+	if (!slug) return null;
+	const filename = slug.endsWith('.json') ? slug : slug + '.json';
+	for (const root of localContentRoots()) {
+		try {
+			const filePath = join(root, 'src', 'content', collection, filename);
+			const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
+			return { ...parsed, _sys: { filename: filename.replace(/\.json$/, '') } };
+		} catch (_error) {
+			// Try the next possible app root.
+		}
+	}
+	return null;
+}
+
+function listLocalFrontmatter(collection: 'blog' | 'page') {
+	for (const root of localContentRoots()) {
+		try {
+			const dir = join(root, 'src', 'content', collection);
+			return readdirSync(dir)
+				.filter((file) => file.endsWith('.mdx'))
+				.flatMap((file) => {
+					const doc = readLocalFrontmatter(collection, file);
+					return doc ? [hydratePermalink(collection, doc as any)] : [];
+				});
+		} catch (_error) {
+			// Try next root.
 		}
 	}
 	return null;
@@ -291,6 +336,9 @@ export async function getBlog(slug: string) {
 			_sys { filename }
 		}
 	}`;
+	const localBlog = readLocalBlogFrontmatter(relativePath);
+	if (localBlog) return { data: { blog: hydratePermalink('blog', localBlog as any) } } as any;
+
 	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
 	if (liveBlog) return { data: { blog: liveBlog } } as any;
 	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
@@ -306,9 +354,13 @@ async function getLiveUser(slug: string) {
 			avatar
 			bio
 			email
+			seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
 			_sys { filename }
 		}
 	}`;
+
+	const localUser = readLocalJson('user', relativePath);
+	if (localUser) return { data: { user: localUser } } as any;
 
 	const liveUser = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.user);
 	if (liveUser) return { data: { user: liveUser } } as any;
@@ -336,9 +388,13 @@ export async function getCategory(slug: string) {
 		category(relativePath: $relativePath) {
 			title
 			description
+			seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
 			_sys { filename }
 		}
 	}`;
+	const localCategory = readLocalJson('category', relativePath);
+	if (localCategory) return { data: { category: localCategory } } as any;
+
 	const liveCategory = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.category);
 	if (liveCategory) return { data: { category: liveCategory } } as any;
 	return requestWithMetadata(client.queries.category({ relativePath }));
@@ -357,6 +413,9 @@ export async function listPages() {
 			}
 		}
 	}`;
+	const localPages = listLocalFrontmatter('page');
+	if (localPages) return localPages as any;
+
 	const livePages = await fetchLiveTina(query, undefined, (json) => json?.data?.pageConnection?.edges);
 	if (Array.isArray(livePages)) {
 		return livePages
@@ -389,6 +448,15 @@ export async function listBlogs() {
 			}
 		}
 	}`;
+	const localBlogs = listLocalFrontmatter('blog');
+	if (localBlogs) {
+		return (localBlogs as any[]).sort((a, b) => {
+			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
+			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
+			return bd - ad;
+		});
+	}
+
 	const liveBlogs = await fetchLiveTina(query, undefined, (json) => json?.data?.blogConnection?.edges);
 	const nodes = Array.isArray(liveBlogs)
 		? liveBlogs.flatMap((edge) => (edge?.node ? [edge.node] : []))

@@ -1,113 +1,98 @@
 ---
-const { data = {}, config = null } = Astro.props;
-const hero = data.hero ?? {};
-const formSection = data.formSection ?? {};
-const inboxes = data.inboxes ?? {};
-const requests = data.requests ?? {};
-const inboxCards = Array.isArray(inboxes.cards) ? inboxes.cards : [];
-const requestCards = Array.isArray(requests.cards) ? requests.cards : [];
+const { config = null } = Astro.props;
 async function getLiveGlobalFormspreeEndpoint() {
   const fallback = config?.contactForm?.formspreeEndpoint || '';
-  const query = `query ContactFormEndpoint {
-    config(relativePath: "config.json") {
-      contactForm { formspreeEndpoint }
-    }
-  }`;
-
-  const endpoints = [
-    process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-    process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-    process.env.PUBLIC_TINA_CONTENT_API_URL,
-    'https://firstfornews.net/tina-content-proxy',
-  ].filter(Boolean);
-
+  const query = `query ContactFormEndpoint { config(relativePath: "config.json") { contactForm { formspreeEndpoint } } }`;
+  const endpoints = [process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL, process.env.TINA_PUBLIC_TINA_CONTENT_API_URL, process.env.PUBLIC_TINA_CONTENT_API_URL, 'https://firstfornews.net/tina-content-proxy'].filter(Boolean);
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query }),
-        cache: 'no-store',
-      });
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }), cache: 'no-store' });
       if (!response.ok) continue;
       const json = await response.json();
       const value = json?.data?.config?.contactForm?.formspreeEndpoint;
       if (typeof value === 'string' && value.trim()) return value.trim();
-    } catch (_error) {
-      // keep fallback below
-    }
+    } catch (_error) {}
   }
-
   return fallback;
 }
-
-const globalFormspreeEndpoint = await getLiveGlobalFormspreeEndpoint();
-const formAction = globalFormspreeEndpoint || formSection.formAction || '';
+const formAction = await getLiveGlobalFormspreeEndpoint();
 const formMethod = formAction ? 'POST' : undefined;
-const buttonText = (formSection.buttonText || 'Send message').replace(/\s*(â†’|Ã¢â€ â€™|Ã‚â€ â€™|ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢)\s*$/g, '');
 ---
-<section class="contact-template">
-  <header class="contact-ph"><div class="contact-w">
-    <div class="contact-ph-kick"><i></i><span>{hero.eyebrow}</span></div>
-    <h1>{hero.headline}</h1>
-    <p class="contact-ph-lede">{hero.lede}</p>
-  </div></header>
-
-  <section class="contact-main"><div class="contact-w"><div class="contact-main-in">
-    <div class="contact-fm">
-      <div class="contact-fm-eye"><i></i><span>{formSection.eyebrow}</span></div>
-      <h2>{formSection.title}</h2>
-      <p class="contact-fm-x">{formSection.description}</p>
-      <form action={formAction || undefined} method={formMethod} accept-charset="UTF-8">
-        {formSection.subject && <input type="hidden" name="_subject" value={formSection.subject} />}
-        <input type="text" name="_gotcha" class="contact-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <div class="contact-f3">
-          <div class="contact-frow"><label class="contact-flab" for="contact-full-name">Full Name <b>*</b></label><input class="contact-finp" id="contact-full-name" name="full_name" type="text" placeholder="Your full name" autocomplete="name" required /></div>
-          <div class="contact-frow"><label class="contact-flab" for="contact-email">Email <b>*</b></label><input class="contact-finp" id="contact-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required /></div>
-          <div class="contact-frow"><label class="contact-flab" for="contact-phone">Phone</label><input class="contact-finp" id="contact-phone" name="phone" type="tel" placeholder="(000) 000-0000" autocomplete="tel" /></div>
-        </div>
-        <div class="contact-frow"><label class="contact-flab" for="contact-message">Message <b>*</b></label><textarea class="contact-finp" id="contact-message" name="message" placeholder="What happened, who is involved, and any documents you can share" required></textarea></div>
-        <button class="contact-fbtn" type={formAction ? 'submit' : 'button'}>{buttonText}</button>
-        <p class="contact-fnote">{formSection.note}</p>
-      </form>
+<section class="ffn-demo ffn-demo-contact">
+<!-- PAGE HEAD -->
+<header class="ph"><div class="w"><div class="ph-in">
+  <div class="ph-k"><b>Contact Us</b></div>
+  <h1>Get in Touch.</h1>
+  <p class="ph-d">Have a question, a story tip, or something to share? Send us a message and the right person will get back to you.</p>
+</div></div></header>
+<!-- CONTACT FORM -->
+<section class="sc"><div class="w">
+  <div class="eye"><i></i><span>Send a message</span></div>
+  <h2 class="h2">Write to the newsroom</h2>
+  <p class="fm-lead">A person reads every message that arrives here.</p>
+  <p class="fm-sub">Use this form for story tips, corrections, letters to the editor, or general questions. If your message concerns a sensitive matter, state at the top whether you are on the record, on background, or off the record — before you tell us anything.</p>
+  <form class="fm-f" onsubmit="return false">
+    <div class="fm-top"><span>Contact Form</span><b>Story tips · Corrections · Letters · General</b></div>
+    <div class="fm-b">
+      <div class="f3">
+        <div class="fr"><label class="fl" for="f-name">Full Name <b>*</b></label><input class="fi" id="f-name" type="text" placeholder="Your full name" required="required"></div>
+        <div class="fr"><label class="fl" for="f-email">Email <b>*</b></label><input class="fi" id="f-email" type="email" placeholder="you@example.com" required="required"></div>
+        <div class="fr"><label class="fl" for="f-phone">Phone</label><input class="fi" id="f-phone" type="tel" placeholder="(000) 000-0000"></div>
+      </div>
+      <div class="fr"><label class="fl" for="f-msg">Message <b>*</b></label><textarea class="fi" id="f-msg" placeholder="What happened, who is involved, and any documents you can share" required="required"></textarea></div>
     </div>
-
-    <aside class="contact-side">
-      <div class="contact-side-eye">{inboxes.eyebrow}</div>
-      <h2>{inboxes.title}</h2>
-      {inboxCards.map((item) => (
-        <div class="contact-ch">
-          <div class="contact-ch-t">{item.title}</div>
-          <p class="contact-ch-x">{item.description}</p>
-          {item.email && <a href={'mailto:' + item.email} class="contact-ch-a">{item.email}</a>}
-          <p class="contact-ch-note">{item.note}</p>
-        </div>
-      ))}
-    </aside>
-  </div></div></section>
-
-  <section class="contact-nt"><div class="contact-w">
-    <div class="contact-nt-h">
-      <div class="contact-nt-eye"><i></i><span>{requests.eyebrow}</span><i></i></div>
-      <h2>{requests.title}</h2>
-      <p>{requests.intro}</p>
+    <div class="fm-foot">
+      <p class="fn">Fields marked <b>*</b> are required. Read during U.S. business hours. Do not use a work account if your message is sensitive.</p>
+      <button class="fb" type="submit">Send to the newsroom</button>
     </div>
-    <div class="contact-nt-g">
-      {requestCards.map((item) => (
-        <article class="contact-nc">
-          <div class="contact-nc-i" aria-hidden="true">
-            {item.icon === 'document' ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-            ) : item.icon === 'mail' ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6 12 13 2 6"/></svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-            )}
-          </div>
-          <div class="contact-nc-t">{item.title}</div>
-          <p class="contact-nc-x">{item.text}</p>
-        </article>
-      ))}
+  </form>
+</div></section>
+<!-- TWO ADDRESSES -->
+<section class="sc alt"><div class="w">
+  <div class="eye"><i></i><span>Where to write</span></div>
+  <h2 class="h2">The two inboxes</h2>
+  <div class="ad">
+    <div class="adi">
+      <div class="adi-top"><span>The Newsroom</span><b>Monitored by the editors</b></div>
+      <div class="adi-b">
+        <a href="mailto:editorial@firstfornews.net" class="adi-a">editorial@firstfornews.net</a>
+        <p class="adi-x">Story tips, correction requests, letters to the editor, contributor pitches, and other correspondence intended for the editorial team.</p>
+        <p class="adi-note">If your tip concerns a sensitive matter, please indicate at the top of your message whether you want to speak on the record, on background, or off the record. The publication honors any arrangement it accepts, but the terms must be settled before the information is conveyed.</p>
+      </div>
     </div>
-  </div></section>
+    <div class="adi">
+      <div class="adi-top"><span>General Inquiries</span><b>U.S. business hours</b></div>
+      <div class="adi-b">
+        <a href="mailto:info@firstfornews.net" class="adi-a">info@firstfornews.net</a>
+        <p class="adi-x">Advertising and partnership inquiries, technical issues with the site, newsletter and account questions, and general reader correspondence.</p>
+        <p class="adi-note">This inbox is staffed during U.S. business hours and typically responds within two business days.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+<!-- ROUTING -->
+<section class="sc"><div class="w">
+  <div class="eye"><i></i><span>Specific requests</span></div>
+  <h2 class="h2">How to route your message</h2>
+  <div class="rt">
+    <article class="rti">
+      <div class="rti-h"><i></i>Corrections</div>
+      <p class="rti-x">If you have identified a factual error in a published piece, please send the article URL, the specific error, and the corrected information to <a href="mailto:editorial@firstfornews.net">editorial@firstfornews.net</a>. Verified corrections are handled promptly and appended to the affected article with a dated correction note.</p>
+    </article>
+    <article class="rti">
+      <div class="rti-h"><i></i>Letters to the Editor</div>
+      <p class="rti-x">Letters written for publication as reader correspondence should be flagged as such in the subject line. Published letters carry the writer's name and city. The publication reserves the right to edit for length and clarity, with the writer's consent.</p>
+    </article>
+    <article class="rti">
+      <div class="rti-h"><i></i>DMCA &amp; Legal Notices</div>
+      <p class="rti-x">Copyright takedown notices, counter-notifications, and other legal correspondence reach the publication through the editorial address. The DMCA Policy page describes the elements a valid notice must include.</p>
+    </article>
+  </div>
+</div></section>
+<!-- CLOSING -->
+<section class="cl"><div class="w"><div class="cl-in">
+  <h2>Who answers for the coverage</h2>
+  <p>Every story passes through the editors listed on our team page. They decide what runs, hold the corrections record, and answer for what the publication publishes.</p>
+  <a href="/our-team/" class="cl-cta">Meet the editors →</a>
+</div></div></section>
 </section>

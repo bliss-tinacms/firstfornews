@@ -110,8 +110,9 @@ if (view === 'not-found') {
       categoryDocumentSlug: categoryEntry.filename || categoryFromPosts?._sys?.filename || archiveTitle,
       basePath: '/' + parsed.slug,
       hasPosts: posts.length > 0,
-      seoTitle: archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News'),
-      description: allCategoryPosts.length > 0 ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.',
+      seo: (categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo || null,
+      seoTitle: ((categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo)?.metaTitle || archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News'),
+      description: ((categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo)?.metaDescription || categoryEntry.data?.description || (allCategoryPosts.length > 0 ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.'),
     };
   }
 }
@@ -176,7 +177,7 @@ if (view === 'not-found') {
     description={pageDescription}
     image={pageData.seo?.ogImage || undefined}
     ogTitle={pageData.seo?.ogTitle || pageTitle}
-    ogDescription={pageData.seo?.metaDescription || pageDescription}
+    ogDescription={pageData.seo?.ogDescription || pageData.seo?.metaDescription || pageDescription}
     canonicalUrl={pageData.seo?.canonicalUrl || undefined}
     noindex={pageData.seo?.noindex || false}
     nofollow={pageData.seo?.nofollow || false}
@@ -188,7 +189,16 @@ if (view === 'not-found') {
 )}
 
 {view === 'category' && categoryContext && (
-  <Base title={categoryContext.seoTitle} description={categoryContext.description}>
+  <Base
+    title={categoryContext.seoTitle}
+    description={categoryContext.description}
+    image={categoryContext.seo?.ogImage || undefined}
+    ogTitle={categoryContext.seo?.ogTitle || categoryContext.seoTitle}
+    ogDescription={categoryContext.seo?.ogDescription || categoryContext.description}
+    canonicalUrl={categoryContext.seo?.canonicalUrl || categoryContext.basePath + '/'}
+    noindex={categoryContext.seo?.noindex || false}
+    nofollow={categoryContext.seo?.nofollow || false}
+  >
     <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryContext.categoryDocumentSlug }} primary>
       <DemoCategoryArchive archiveTitle={categoryContext.archiveTitle} posts={categoryContext.posts} currentPage={categoryContext.currentPage} totalPages={categoryContext.totalPages} basePath={categoryContext.basePath} category={categoryContext.categoryFromPosts} />
     </TinaIsland>

@@ -107,6 +107,11 @@ const faviconType = faviconLower.endsWith('.png')
 <meta property="og:image" content={new URL(image, Astro.url)} />
 
 <!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={socialTitle} />
+<meta name="twitter:description" content={socialDescription} />
+<meta name="twitter:image" content={new URL(image, Astro.url)} />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={socialTitle} />

@@ -1,4 +1,5 @@
 import type { Collection } from "tinacms";
+import { seoFields } from "../fields/seo";
 
 export const CategoryCollection: Collection = {
   name: "category",
@@ -26,5 +27,6 @@ export const CategoryCollection: Collection = {
         component: "textarea",
       },
     },
+    seoFields,
   ],
 };
