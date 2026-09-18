@@ -13,46 +13,63 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import type { TinaRichTextContent } from '@tinacms/astro';
 import { requestWithMetadata } from '@tinacms/astro/data';
 import client from '../../tina/__generated__/client';
 import { BlogDocument, CategoryDocument, ConfigDocument, PageDocument, UserDocument } from '../../tina/__generated__/types';
 
+function localContentRoots() {
+	const roots = [
+		process.cwd(),
+		process.env.PASSENGER_APP_ROOT,
+		process.env.APP_ROOT,
+		fileURLToPath(new URL('../../..', import.meta.url)),
+		fileURLToPath(new URL('../..', import.meta.url)),
+	].filter(Boolean) as string[];
+	return Array.from(new Set(roots));
+}
+
 function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null, key = 'permalink') {
 	if (!slug) return null;
-	try {
-		const filePath = join(process.cwd(), 'src', 'content', collection, slug + '.mdx');
-		const text = readFileSync(filePath, 'utf8');
-		const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-		if (!match) return null;
-		const lines = match[1].split(/\r?\n/);
-		for (const line of lines) {
-			const found = line.match(new RegExp('^' + key + '\\s*:\\s*(.*)$'));
-			if (found) {
-				let value = found[1].trim();
-				if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-					value = value.slice(1, -1);
+	for (const root of localContentRoots()) {
+		try {
+			const filePath = join(root, 'src', 'content', collection, slug + '.mdx');
+			const text = readFileSync(filePath, 'utf8');
+			const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+			if (!match) continue;
+			const lines = match[1].split(/\r?\n/);
+			for (const line of lines) {
+				const found = line.match(new RegExp('^' + key + '\\s*:\\s*(.*)$'));
+				if (found) {
+					let value = found[1].trim();
+					if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+						value = value.slice(1, -1);
+					}
+					return value || null;
 				}
-				return value || null;
 			}
+		} catch (_error) {
+			// Try the next possible app root.
 		}
-	} catch (_error) {
-		return null;
 	}
 	return null;
 }
 
 function readLocalPageFrontmatter(slug?: string | null) {
 	if (!slug) return null;
-	try {
-		const filename = slug.endsWith('.mdx') ? slug : slug + '.mdx';
-		const filePath = join(process.cwd(), 'src', 'content', 'page', filename);
-		const parsed = matter(readFileSync(filePath, 'utf8'));
-		return parsed.data && Object.keys(parsed.data).length ? parsed.data : null;
-	} catch (_error) {
-		return null;
+	const filename = slug.endsWith('.mdx') ? slug : slug + '.mdx';
+	for (const root of localContentRoots()) {
+		try {
+			const filePath = join(root, 'src', 'content', 'page', filename);
+			const parsed = matter(readFileSync(filePath, 'utf8'));
+			return parsed.data && Object.keys(parsed.data).length ? parsed.data : null;
+		} catch (_error) {
+			// Try the next possible app root.
+		}
 	}
+	return null;
 }
 
 function hydratePermalink<T extends { _sys?: { filename?: string | null } | null; permalink?: string | null }>(collection: 'blog' | 'page', node: T): T {

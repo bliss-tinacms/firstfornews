@@ -4,6 +4,7 @@ import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import FrontPage from '../templates/FrontPage.astro';
 import { getConfig, getEditablePage, getPublicPage, listBlogs } from '../lib/data';
 import { islands } from '../lib/islands';
+import * as localHome from '../content/page/home.mdx';
 
 const slug = 'home';
 const page = await getPublicPage(slug);
@@ -13,8 +14,9 @@ const editData = editPage.data?.page ?? data;
 if (!data) return new Response('Not Found', { status: 404 });
 const config = (await getConfig()).data?.config ?? null;
 const posts = await listBlogs();
-const seo = data.seo ?? null;
-const title = seo?.metaTitle || data.seoTitle || config?.seo?.title || 'Harbor Post';
+const sourceHome = localHome.frontmatter as any;
+const seo = sourceHome?.seo ?? data.seo ?? null;
+const title = seo?.metaTitle || sourceHome?.seoTitle || data.seoTitle || config?.seo?.title || 'Harbor Post';
 const description = seo?.metaDescription || config?.seo?.description || 'Independent local reporting for the harbor counties.';
 ---
 
