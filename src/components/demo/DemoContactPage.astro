@@ -13,10 +13,17 @@ const inboxes = inboxesBlock?.cards?.length ? inboxesBlock.cards : [
   { title: 'General Inquiries', meta: 'U.S. business hours', email: 'info@firstfornews.net', description: 'Advertising and partnership inquiries, technical issues with the site, newsletter and account questions, and general reader correspondence.' },
 ];
 const requestCards = requests?.cards?.length ? requests.cards : [
-  { title: 'Corrections', text: 'If you have identified a factual error in a published piece, please send the article URL, the specific error, and the corrected information to editorial@firstfornews.net.' },
+  { title: 'Corrections', text: 'If you have identified a factual error in a published piece, please send the article URL, the specific error, and the corrected information to the editorial inbox listed above.' },
   { title: 'Letters to the Editor', text: 'Letters written for publication as reader correspondence should be flagged as such in the subject line.' },
   { title: 'DMCA & Legal Notices', text: 'Copyright takedown notices, counter-notifications, and other legal correspondence reach the publication through the editorial address.' },
 ];
+function emailParts(email = '') {
+  const [local = '', domain = ''] = String(email).split('@');
+  return { local, domain };
+}
+function safeContactText(text = '') {
+  return String(text).replace(/editorial@firstfornews\.net/gi, 'the editorial inbox listed above');
+}
 ---
 
 <main class="ffn-demo ffn-demo-contact">
@@ -52,7 +59,7 @@ const requestCards = requests?.cards?.length ? requests.cards : [
     <h2 class="h2" data-tina-field={inboxesBlock ? tinaField(inboxesBlock, 'title') : undefined}>{inboxesBlock.title || 'The two inboxes'}</h2>
     <div class="ad">
       {inboxes.map((card: any, index: number) => (
-        <div class="adi" data-tina-field={inboxesBlock?.cards?.[index] ? tinaField(inboxesBlock.cards[index]) : undefined}><div class="adi-top"><span>{card.title}</span><b>{card.meta || card.note || 'U.S. business hours'}</b></div><div class="adi-b"><a href={`mailto:${card.email}`} class="adi-a">{card.email}</a><p class="adi-x">{card.description || card.text}</p>{card.note && <p class="adi-note">{card.note}</p>}</div></div>
+        <div class="adi" data-tina-field={inboxesBlock?.cards?.[index] ? tinaField(inboxesBlock.cards[index]) : undefined}><div class="adi-top"><span>{card.title}</span><b>{card.meta || card.note || 'U.S. business hours'}</b></div><div class="adi-b"><div class="adi-a" aria-label={`${emailParts(card.email).local} at ${emailParts(card.email).domain}`}>{emailParts(card.email).local}<span aria-hidden="true">@</span>{emailParts(card.email).domain}</div><p class="adi-x">{card.description || card.text}</p>{card.note && <p class="adi-note">{card.note}</p>}</div></div>
       ))}
     </div>
   </div></section>
@@ -62,7 +69,7 @@ const requestCards = requests?.cards?.length ? requests.cards : [
     <h2 class="h2" data-tina-field={requests ? tinaField(requests, 'title') : undefined}>{requests.title || 'How to route your message'}</h2>
     {requests.intro && <p class="fm-sub" data-tina-field={tinaField(requests, 'intro')}>{requests.intro}</p>}
     <div class="rt">
-      {requestCards.map((card: any, index: number) => <div class="rti" data-tina-field={requests?.cards?.[index] ? tinaField(requests.cards[index]) : undefined}><div class="rti-h">{card.title}</div><p class="rti-x">{card.text}</p></div>)}
+      {requestCards.map((card: any, index: number) => <div class="rti" data-tina-field={requests?.cards?.[index] ? tinaField(requests.cards[index]) : undefined}><div class="rti-h">{card.title}</div><p class="rti-x">{safeContactText(card.text)}</p></div>)}
     </div>
   </div></section>
 
