@@ -120,6 +120,7 @@ union BlogAuthor = User
 type Blog implements Node & Document {
   viewPostShortcut: String
   title: String!
+  permalink: String
   description: String
   seo: BlogSeo
   pubDate: String
@@ -192,6 +193,7 @@ input BlogBodyFilter {
 input BlogFilter {
   viewPostShortcut: StringFilter
   title: StringFilter
+  permalink: StringFilter
   description: StringFilter
   seo: BlogSeoFilter
   pubDate: DatetimeFilter
@@ -608,6 +610,7 @@ union PageBlocks = PageBlocksHomepageTemplate | PageBlocksAboutMockup17 | PageBl
 type Page implements Node & Document {
   viewPageShortcut: String
   title: String!
+  permalink: String
   seo: PageSeo
   blocks: [PageBlocks]
   id: ID!
@@ -1004,6 +1007,7 @@ input PageBlocksFilter {
 input PageFilter {
   viewPageShortcut: StringFilter
   title: StringFilter
+  permalink: StringFilter
   seo: PageSeoFilter
   blocks: PageBlocksFilter
 }
@@ -1125,6 +1129,7 @@ type ConfigContactLinks {
 }
 
 type Config implements Node & Document {
+  favicon: String
   seo: ConfigSeo
   contactForm: ConfigContactForm
   codeInjection: ConfigCodeInjection
@@ -1165,6 +1170,7 @@ input ConfigContactLinksFilter {
 }
 
 input ConfigFilter {
+  favicon: ImageFilter
   seo: ConfigSeoFilter
   contactForm: ConfigContactFormFilter
   codeInjection: ConfigCodeInjectionFilter
@@ -1236,6 +1242,7 @@ input BlogSeoMutation {
 input BlogMutation {
   viewPostShortcut: String
   title: String
+  permalink: String
   description: String
   seo: BlogSeoMutation
   pubDate: String
@@ -1636,6 +1643,7 @@ input PageBlocksMutation {
 input PageMutation {
   viewPageShortcut: String
   title: String
+  permalink: String
   seo: PageSeoMutation
   blocks: [PageBlocksMutation]
 }
@@ -1694,6 +1702,7 @@ input ConfigContactLinksMutation {
 }
 
 input ConfigMutation {
+  favicon: String
   seo: ConfigSeoMutation
   contactForm: ConfigContactFormMutation
   codeInjection: ConfigCodeInjectionMutation

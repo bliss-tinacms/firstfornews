@@ -2,6 +2,7 @@ fragment BlogParts on Blog {
   __typename
   viewPostShortcut
   title
+  permalink
   description
   seo {
     __typename
@@ -73,6 +74,7 @@ fragment PageParts on Page {
   __typename
   viewPageShortcut
   title
+  permalink
   seo {
     __typename
     metaTitle
@@ -417,6 +419,7 @@ fragment NavigationParts on Navigation {
 
 fragment ConfigParts on Config {
   __typename
+  favicon
   seo {
     __typename
     title
