@@ -71,6 +71,7 @@ export const BlogCollection: Collection = {
   fields: [
     viewFrontendField("blog"),
     { type: "string", name: "title", label: "Title", isTitle: true, required: true },
+    { name: "permalink", label: "Permalink", type: "string", description: "Optional custom public URL path. Leave blank to use the filename/slug." },
 
     { name: "description", label: "Description", type: "string" },
     seoFields,

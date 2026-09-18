@@ -15,6 +15,12 @@ export const GlobalConfigCollection: Collection = {
   },
   fields: [
     {
+      name: "favicon",
+      label: "Favicon",
+      type: "image",
+      description: "Legacy top-level favicon field kept for TinaCloud schema compatibility. Prefer Site Identity & SEO → Favicon for editing.",
+    },
+    {
       name: "seo",
       label: "Site Identity & SEO",
       type: "object",
