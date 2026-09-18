@@ -7,12 +7,13 @@ function postUrl(post: any) { const url = getBlogPermalink(post); return url.end
 function pagePath(page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
 const bio = author?.bio || `${archiveTitle} writes and edits coverage for First For News.`;
 const avatar = author?.avatar || '';
+const role = author?.role || '';
 ---
 
 <main class="ffn-demo ffn-demo-author">
   <header class="ah"><div class="w"><div class="ah-in">
     {avatar ? <img class="ah-img" src={avatar} alt={archiveTitle} data-tina-field={author ? tinaField(author, 'avatar') : undefined} /> : <div class="ah-img demo-img"></div>}
-    <div><div class="ah-k"><b>Author</b></div><h1 data-tina-field={author ? tinaField(author, 'name') : undefined}>{archiveTitle}</h1><p class="ah-b" data-tina-field={author ? tinaField(author, 'bio') : undefined}>{bio}</p></div>
+    <div><div class="ah-k"><b>Author</b></div><h1 data-tina-field={author ? tinaField(author, 'name') : undefined}>{archiveTitle}</h1>{role && <div class="ah-r" data-tina-field={author ? tinaField(author, 'role') : undefined}>{role}</div>}<p class="ah-b" data-tina-field={author ? tinaField(author, 'bio') : undefined}>{bio}</p></div>
   </div></div></header>
   <section class="lg"><div class="w"><div class="lg-h"><div class="eye"><i></i><span>Most recent first</span></div><div class="h2">Stories by {archiveTitle}</div></div>
     <div>
