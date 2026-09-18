@@ -1,69 +1,34 @@
 ---
 import Base from '../layouts/Base.astro';
-import { listBlogs, listPages, getConfig } from '../lib/data';
+import { listBlogs, listPages } from '../lib/data';
 import { getBlogPermalink, getPageRouteSlug } from '../lib/permalinks';
 
 export const prerender = false;
 
-async function getLiveSitemapEntries() {
-  const query = `query SitemapEntries {
-    pageConnection {
-      edges { node { title permalink seo { noindex } _sys { filename } } }
-    }
-    blogConnection {
-      edges { node { title permalink pubDate seo { noindex } _sys { filename } } }
-    }
-  }`;
-
-  const endpoints = [
-    process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
-    process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
-    process.env.PUBLIC_TINA_CONTENT_API_URL,
-    'https://firstfornews.net/tina-content-proxy',
-  ].filter(Boolean) as string[];
-
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query }),
-        cache: 'no-store',
-      });
-      if (!response.ok) continue;
-      const json = await response.json();
-      const pages = json?.data?.pageConnection?.edges?.flatMap((edge: any) => edge?.node ? [edge.node] : []) ?? [];
-      const posts = json?.data?.blogConnection?.edges?.flatMap((edge: any) => edge?.node ? [edge.node] : []) ?? [];
-      if (pages.length || posts.length) return { pages, posts };
-    } catch (_error) {
-      // Fall back to generated client list below.
-    }
-  }
-
-  return null;
-}
-
-const config = (await getConfig()).data?.config ?? null;
-const liveSitemap = await getLiveSitemapEntries();
-const pages = liveSitemap?.pages ?? await listPages();
-const posts = liveSitemap?.posts ?? await listBlogs();
+const pages = await listPages();
+const posts = await listBlogs();
 
 const title = 'Sitemap | First For News';
-const description = 'Browse the pages and latest reporting published by First For News.';
+const description = 'Browse the public pages and latest reporting published by First For News.';
 
 function cleanTitle(value: unknown, fallback = 'Untitled') {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
-function normalizeUrl(value: string) {
+function withTrailingSlash(value: string) {
   if (!value || value === '/') return '/';
-  return value.startsWith('/') ? value : '/' + value;
+  const normalized = value.startsWith('/') ? value : '/' + value;
+  return normalized.endsWith('/') ? normalized : normalized + '/';
 }
 
 function pageUrl(page: any) {
   const filename = page?._sys?.filename || '';
   if (filename === 'home') return '/';
-  return normalizeUrl(getPageRouteSlug(page) || filename) + '/';
+  return withTrailingSlash(getPageRouteSlug(page) || filename);
+}
+
+function postUrl(post: any) {
+  return withTrailingSlash(getBlogPermalink(post));
 }
 
 function isHiddenPage(page: any) {
@@ -85,7 +50,7 @@ function isHiddenPost(post: any) {
 const pageLinks = pages
   .filter((page) => !isHiddenPage(page))
   .map((page) => ({
-    title: cleanTitle(page.title || page.seoTitle, page?._sys?.filename || 'Page'),
+    title: cleanTitle(page.title || page.seoTitle || page.seo?.metaTitle, page?._sys?.filename || 'Page'),
     url: pageUrl(page),
   }))
   .sort((a, b) => {
@@ -97,13 +62,14 @@ const pageLinks = pages
 const postLinks = posts
   .filter((post) => !isHiddenPost(post))
   .map((post) => ({
-    title: cleanTitle(post.title, post?._sys?.filename || 'Story'),
-    url: getBlogPermalink(post) + '/',
+    title: cleanTitle(post.title || post.seo?.metaTitle, post?._sys?.filename || 'Story'),
+    url: postUrl(post),
     date: post.pubDate ? new Date(post.pubDate) : null,
   }))
   .sort((a, b) => Number(b.date || 0) - Number(a.date || 0));
 
 const totalLinks = pageLinks.length + postLinks.length;
+const latestPost = postLinks[0] ?? null;
 const updated = new Date();
 ---
 
@@ -112,57 +78,93 @@ const updated = new Date();
   description={description}
   ogTitle={title}
   ogDescription={description}
+  canonicalUrl="/sitemap/"
 >
-  <main class="sitemap-template" aria-labelledby="sitemap-title">
-    <section class="sitemap-hero">
-      <div class="sitemap-wrap">
-        <p class="sitemap-eyebrow">Site index</p>
-        <h1 id="sitemap-title">Sitemap</h1>
-        <p>Browse all public pages and published stories from First For News.</p>
-        <div class="sitemap-stats" aria-label="Sitemap totals">
-          <span><strong>{pageLinks.length}</strong> Pages</span>
-          <span><strong>{postLinks.length}</strong> Stories</span>
-          <span><strong>{totalLinks}</strong> Total links</span>
+  <main class="ffn-demo ffn-demo-sitemap" aria-labelledby="sitemap-title">
+    <header class="ph sitemap-ph">
+      <div class="w">
+        <div class="ph-in sitemap-ph__in">
+          <div class="ph-k"><b>Site index</b></div>
+          <h1 id="sitemap-title">Sitemap</h1>
+          <p class="ph-d">A clean index of First For News public pages and published reporting, pulled dynamically from the Tina content collections.</p>
+          <div class="sitemap-metrics" aria-label="Sitemap totals">
+            <span><strong>{pageLinks.length}</strong> Pages</span>
+            <span><strong>{postLinks.length}</strong> Stories</span>
+            <span><strong>{totalLinks}</strong> Total links</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="sc sitemap-intro">
+      <div class="w sitemap-intro__grid">
+        <div>
+          <div class="eye"><i></i><span>Dynamic directory</span></div>
+          <h2 class="h2">Pages and reporting from the live backend</h2>
+        </div>
+        <div class="sitemap-note">
+          <p>This sitemap uses the same Tina-backed page and post loaders as the public website. When editors publish or hide pages and stories, this index follows the live content data.</p>
+          <p class="sitemap-note__meta">Last checked by the page render: <time datetime={updated.toISOString()}>{updated.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>{latestPost ? ` · Latest story: ${latestPost.title}` : ''}</p>
         </div>
       </div>
     </section>
 
-    <section class="sitemap-body">
-      <div class="sitemap-wrap sitemap-grid">
-        <section class="sitemap-group" aria-labelledby="sitemap-pages-title">
-          <div class="sitemap-group__header">
-            <p>Pages</p>
-            <h2 id="sitemap-pages-title">Website pages</h2>
+    <section class="sc alt sitemap-directory">
+      <div class="w sitemap-grid">
+        <section class="sitemap-panel" aria-labelledby="sitemap-pages-title">
+          <div class="sitemap-panel__top">
+            <span>Pages</span>
+            <b>{pageLinks.length} links</b>
           </div>
-          {pageLinks.length > 0 ? (
-            <ul class="sitemap-list">
-              {pageLinks.map((item) => (
-                <li><a href={item.url}>{item.title}</a></li>
-              ))}
-            </ul>
-          ) : (
-            <p class="sitemap-empty">No public pages found.</p>
-          )}
+          <div class="sitemap-panel__body">
+            <div class="eye"><i></i><span>Public pages</span></div>
+            <h2 id="sitemap-pages-title" class="h2">Website pages</h2>
+            {pageLinks.length > 0 ? (
+              <ul class="sitemap-list">
+                {pageLinks.map((item, index) => (
+                  <li>
+                    <span class="sitemap-list__number">{String(index + 1).padStart(2, '0')}</span>
+                    <a href={item.url}>{item.title}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="sitemap-empty">No public pages found.</p>
+            )}
+          </div>
         </section>
 
-        <section class="sitemap-group" aria-labelledby="sitemap-posts-title">
-          <div class="sitemap-group__header">
-            <p>Stories</p>
-            <h2 id="sitemap-posts-title">Published reporting</h2>
+        <section class="sitemap-panel" aria-labelledby="sitemap-posts-title">
+          <div class="sitemap-panel__top">
+            <span>Stories</span>
+            <b>{postLinks.length} links</b>
           </div>
-          {postLinks.length > 0 ? (
-            <ul class="sitemap-list sitemap-list--posts">
-              {postLinks.map((item) => (
-                <li>
-                  <a href={item.url}>{item.title}</a>
-                  {item.date && <time datetime={item.date.toISOString()}>{item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p class="sitemap-empty">No published stories found.</p>
-          )}
+          <div class="sitemap-panel__body">
+            <div class="eye"><i></i><span>Published reporting</span></div>
+            <h2 id="sitemap-posts-title" class="h2">Latest stories</h2>
+            {postLinks.length > 0 ? (
+              <ul class="sitemap-list sitemap-list--posts">
+                {postLinks.map((item, index) => (
+                  <li>
+                    <span class="sitemap-list__number">{String(index + 1).padStart(2, '0')}</span>
+                    <a href={item.url}>{item.title}</a>
+                    {item.date && <time datetime={item.date.toISOString()}>{item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</time>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="sitemap-empty">No published stories found.</p>
+            )}
+          </div>
         </section>
+      </div>
+    </section>
+
+    <section class="cl sitemap-cta">
+      <div class="w cl-in">
+        <h2>Keep reading First For News</h2>
+        <p>Return to the homepage for the latest reporting, public updates, and editorial highlights.</p>
+        <a class="cl-cta" href="/">Back to the homepage <span>→</span></a>
       </div>
     </section>
   </main>
