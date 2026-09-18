@@ -87,10 +87,19 @@ function readLocalBlogFrontmatter(slug?: string | null) {
 
 function readLocalJson(collection: 'category' | 'user' | 'config' | 'navigation', slug?: string | null) {
 	if (!slug) return null;
-	const filename = slug.endsWith('.json') ? slug : slug + '.json';
+	const requested = slug.endsWith('.json') ? slug : slug + '.json';
 	for (const root of localContentRoots()) {
 		try {
-			const filePath = join(root, 'src', 'content', collection, filename);
+			const dir = join(root, 'src', 'content', collection);
+			let filename = requested;
+			try {
+				const requestedLower = requested.toLowerCase();
+				const matched = readdirSync(dir).find((file) => file.toLowerCase() === requestedLower);
+				if (matched) filename = matched;
+			} catch (_error) {
+				// Fall back to requested filename.
+			}
+			const filePath = join(dir, filename);
 			const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
 			return { ...parsed, _sys: { filename: filename.replace(/\.json$/, '') } };
 		} catch (_error) {
@@ -207,6 +216,9 @@ function liveOrGenerated<TData>(query: string, variables: Record<string, unknown
 }
 
 export async function getConfig() {
+	const localConfig = readLocalJson('config', 'config.json');
+	if (localConfig) return { data: { config: localConfig } } as any;
+
 	const query = `query Config($relativePath: String!) {
 		config(relativePath: $relativePath) {
 			seo { title description siteOwner logo favicon footerLogo }
@@ -255,23 +267,18 @@ export const getPage = (slug: string) =>
 
 export const getEditablePage = (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
-	const variables = { relativePath };
-	const localPage = slug === 'home' || relativePath === 'home.mdx' ? readLocalPageFrontmatter(relativePath) : null;
-	const source = liveOrGenerated(PageDocument, variables, () => client.queries.page(variables)).then((result) => {
-		if (!localPage) return result;
-		return {
-			...result,
-			data: {
-				...result.data,
-				page: {
-					...(result.data?.page ?? {}),
-					...localPage,
-					_sys: result.data?.page?._sys ?? { filename: relativePath.replace(/\.mdx$/, '') },
-				},
-			},
-		};
-	});
-	return requestWithMetadata(source, { priority: 'primary' });
+	// Editor/sidebar data MUST come from the generated Tina client query so
+	// requestWithMetadata can attach the form/schema metadata. Do not use
+	// public/live/local fallbacks here; those are for public rendering only.
+	const localPage = readLocalPageFrontmatter(relativePath);
+	if (localPage) {
+		return requestWithMetadata(Promise.resolve({
+			data: { page: localPage as any },
+			query: PageDocument,
+			variables: { relativePath },
+		}), { priority: 'primary' });
+	}
+	return requestWithMetadata(client.queries.page({ relativePath }), { priority: 'primary' });
 };
 
 async function getLivePage(slug: string) {
@@ -325,8 +332,15 @@ export const getPublicPage = (slug: string) => getLivePage(slug);
 
 export const getEditableBlog = (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
-	const variables = { relativePath };
-	return requestWithMetadata(liveOrGenerated(BlogDocument, variables, () => client.queries.blog(variables)), { priority: 'primary' });
+	const localBlog = readLocalBlogFrontmatter(relativePath);
+	if (localBlog) {
+		return requestWithMetadata(Promise.resolve({
+			data: { blog: hydratePermalink('blog', localBlog as any) },
+			query: BlogDocument,
+			variables: { relativePath },
+		}), { priority: 'primary' });
+	}
+	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 };
 
 export async function getBlog(slug: string) {
@@ -380,16 +394,30 @@ async function getLiveUser(slug: string) {
 
 export const getEditableUser = (slug: string) => {
 	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
-	const variables = { relativePath };
-	return requestWithMetadata(liveOrGenerated(UserDocument, variables, () => client.queries.user(variables)), { priority: 'primary' });
+	const localUser = readLocalJson('user', relativePath);
+	if (localUser) {
+		return requestWithMetadata(Promise.resolve({
+			data: { user: localUser as any },
+			query: UserDocument,
+			variables: { relativePath },
+		}), { priority: 'primary' });
+	}
+	return requestWithMetadata(client.queries.user({ relativePath }), { priority: 'primary' });
 };
 
 export const getUser = (slug: string) => getLiveUser(slug);
 
 export const getEditableCategory = (slug: string) => {
 	const relativePath = slug.endsWith('.json') ? slug : `${slug}.json`;
-	const variables = { relativePath };
-	return requestWithMetadata(liveOrGenerated(CategoryDocument, variables, () => client.queries.category(variables)), { priority: 'primary' });
+	const localCategory = readLocalJson('category', relativePath);
+	if (localCategory) {
+		return requestWithMetadata(Promise.resolve({
+			data: { category: localCategory as any },
+			query: CategoryDocument,
+			variables: { relativePath },
+		}), { priority: 'primary' });
+	}
+	return requestWithMetadata(client.queries.category({ relativePath }), { priority: 'primary' });
 };
 
 export async function getCategory(slug: string) {
