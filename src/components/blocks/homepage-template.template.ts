@@ -8,10 +8,9 @@ export const homepageTemplateBlockSchema = {
           label: 'Hero Section',
           fields: [
             { name: 'eyebrow', label: 'Eyebrow', type: 'string' },
-            { name: 'featuredLabel', label: 'Featured Story Label', type: 'string' },
             { name: 'title', label: 'Headline', type: 'string' },
             { name: 'description', label: 'Description', type: 'string', ui: { component: 'textarea' } },
-            { name: 'buttonText', label: 'Button Text', type: 'string' },
+            { name: 'buttonText', label: 'Featured Story Label', type: 'string' },
             { name: 'buttonLink', label: 'Button Link', type: 'string' },
             { name: 'image', label: 'Hero Image', type: 'image' },
             { name: 'imageAlt', label: 'Hero Image Alt Text', type: 'string' },
