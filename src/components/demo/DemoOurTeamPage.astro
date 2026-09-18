@@ -2,27 +2,37 @@
 import { tinaField } from '@tinacms/astro/tina-field';
 const { data } = Astro.props;
 const block = Array.isArray(data?.blocks) ? data.blocks[0] : null;
-const people = block?.leadership?.people || [
-  { name: 'Michelle Hastings', role: 'Editor-in-Chief', location: 'Baltimore', bio: 'Michelle leads the newsroom from Baltimore. Her career spans more than fifteen years in editorial leadership at national and regional publications, with a background that includes both reporting and editing.', image: '/Ryan-Marshall.jpg' },
+const hero = block?.hero || {};
+const leadership = block?.leadership || {};
+const seniorStaff = block?.seniorStaff || {};
+const people = [...(leadership.people || []), ...(seniorStaff.people || [])];
+const fallbackPeople = [
+  { name: 'Michelle Hastings', role: 'Editor-in-Chief', location: 'Baltimore', bio: 'Michelle leads the newsroom from Baltimore. Her career spans more than fifteen years in editorial leadership at national and regional publications, with a background that includes both reporting and editing.' },
   { name: 'Patrick Alvarez', role: 'Managing Editor', location: 'Austin', bio: 'Patrick manages the day-to-day operations of the newsroom. He is responsible for the editorial calendar, story assignments, and the flow of publication across the desks.' },
   { name: 'Angela Simmons', role: 'Business Editor', location: 'Milwaukee', bio: 'Angela runs the business and economy desk. Her reporting career includes more than a decade covering business, finance, and household economics.' },
   { name: 'Kevin Manning', role: 'Standards Editor', location: 'Boise', bio: 'Kevin oversees the publication standards program, handles fact-checking on sensitive material, manages the corrections record, and serves as the stylebook authority.' },
 ];
+const roster = people.length ? people : fallbackPeople;
+function personField(index: number) {
+  const leadershipCount = leadership.people?.length || 0;
+  if (index < leadershipCount) return leadership.people[index];
+  return seniorStaff.people?.[index - leadershipCount];
+}
 ---
 
 <main class="ffn-demo ffn-demo-team">
   <header class="ph"><div class="w"><div class="ph-in">
-    <div class="ph-k"><b>Our Team</b></div>
-    <h1>The editors behind the coverage.</h1>
-    <p class="ph-d">Every story on First for News passes through the people below. They decide what runs, hold the corrections record, and answer for what the publication publishes.</p>
+    <div class="ph-k"><b data-tina-field={hero ? tinaField(hero, 'eyebrow') : undefined}>{hero.eyebrow || 'Our Team'}</b></div>
+    <h1 data-tina-field={hero ? tinaField(hero, 'headline') : undefined}>{hero.headline || 'The editors behind the coverage.'}</h1>
+    <p class="ph-d" data-tina-field={hero ? tinaField(hero, 'lede') : undefined}>{hero.lede || 'Every story on First for News passes through the people below. They decide what runs, hold the corrections record, and answer for what the publication publishes.'}</p>
   </div></div></header>
 
   <section class="sc"><div class="w">
-    <div class="eye"><i></i><span>Editorial leadership</span></div>
-    <h2 class="h2">Who runs the newsroom</h2>
+    <div class="eye"><i></i><span data-tina-field={leadership ? tinaField(leadership, 'eyebrow') : undefined}>{leadership.eyebrow || 'Editorial leadership'}</span></div>
+    <h2 class="h2" data-tina-field={leadership ? tinaField(leadership, 'title') : undefined}>{leadership.title || 'Who runs the newsroom'}</h2>
     <div class="rs">
-      {people.map((person: any, index: number) => (
-        <article class="rsi" data-tina-field={block?.leadership?.people?.[index] ? tinaField(block.leadership.people[index]) : undefined}>
+      {roster.map((person: any, index: number) => (
+        <article class="rsi" data-tina-field={personField(index) ? tinaField(personField(index)) : undefined}>
           {person.image ? <img class="rsi-img" src={person.image} alt={person.imageAlt || person.name} /> : <div class="rsi-img demo-img" aria-hidden="true"></div>}
           <div>
             <div class="rsi-hd"><div class="rsi-n">{person.name}</div><div class="rsi-r">{person.role}</div></div>
@@ -34,5 +44,5 @@ const people = block?.leadership?.people || [
     </div>
   </div></section>
 
-  <section class="cl"><div class="w"><div class="cl-in"><div><h2>Found an error? Tell an editor.</h2><p>If an article contains a factual error, readers are encouraged to contact us with specific details and supporting information.</p></div><a href="/contact/" class="cl-cta">Contact the newsroom</a></div></div></section>
+  {seniorStaff?.title && <section class="cl"><div class="w"><div class="cl-in"><div><h2 data-tina-field={tinaField(seniorStaff, 'title')}>{seniorStaff.title}</h2><p data-tina-field={seniorStaff ? tinaField(seniorStaff, 'eyebrow') : undefined}>{seniorStaff.eyebrow || 'Senior editorial staff'}</p></div><a href="/contact/" class="cl-cta">Contact the newsroom</a></div></div></section>}
 </main>

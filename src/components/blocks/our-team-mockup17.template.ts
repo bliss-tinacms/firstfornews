@@ -1,6 +1,6 @@
 export const ourTeamMockup17BlockSchema = {
   name: 'ourTeamMockup17',
-  label: 'Our Team Page - Mockup 17',
+  label: 'Our Team Page Template Sections',
   fields: [
     { type: 'object', name: 'hero', label: 'Hero Section', fields: [
       { name: 'eyebrow', label: 'Eyebrow', type: 'string' },

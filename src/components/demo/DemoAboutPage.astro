@@ -3,15 +3,20 @@ import { tinaField } from '@tinacms/astro/tina-field';
 const { data } = Astro.props;
 const block = Array.isArray(data?.blocks) ? data.blocks[0] : null;
 const hero = block?.hero || {};
-const coverageItems = block?.coverage?.items || [
-  { title: 'Business', text: 'Decisions in business can influence communities, employers, and the cost of everyday life.' },
-  { title: 'Technology', text: 'Advances in technology can affect how people work, communicate, and spend their time.' },
-  { title: 'Health', text: 'Developments in health and science shape the choices people make about their own care.' },
-  { title: 'Culture & Education', text: 'Changes in culture and education reach classrooms, households, and public conversation.' },
-  { title: 'Travel & Lifestyle', text: 'Practical topics that inform how people plan, spend, and live day to day.' },
-  { title: 'Emerging Topics', text: 'Developing conversations and subjects that are only beginning to draw attention.' },
+const purpose = block?.purpose || {};
+const standards = block?.standardsSection || {};
+const coverage = block?.coverage || {};
+const independence = block?.independence || {};
+const newsroom = block?.newsroom || {};
+const coverageItems = coverage?.items?.length ? coverage.items : [
+  { title: 'Business', text: 'Decisions in business can influence communities, employers, and the cost of everyday life.', link: '/business/' },
+  { title: 'Technology', text: 'Advances in technology can affect how people work, communicate, and spend their time.', link: '/technology/' },
+  { title: 'Health', text: 'Developments in health and science shape the choices people make about their own care.', link: '/health/' },
+  { title: 'Culture & Education', text: 'Changes in culture and education reach classrooms, households, and public conversation.', link: '/lifestyle/' },
+  { title: 'Travel & Lifestyle', text: 'Practical topics that inform how people plan, spend, and live day to day.', link: '/lifestyle/' },
+  { title: 'Emerging Topics', text: 'Developing conversations and subjects that are only beginning to draw attention.', link: '/blog/' },
 ];
-const principles = [
+const principles = standards?.items?.length ? standards.items.map((item: any, index: number) => ({ ...item, number: item.number || String(index + 1).padStart(2, '0') })) : [
   'Put accuracy ahead of speed',
   'Use clear and direct language',
   'Provide meaningful context whenever possible',
@@ -19,63 +24,63 @@ const principles = [
   'Correct material errors when they are identified',
   'Avoid misleading, exaggerated, or sensational presentation',
   'Respect the difference between reporting, analysis, and opinion',
-];
+].map((title, index) => ({ number: String(index + 1).padStart(2, '0'), title }));
 ---
 
 <main class="ffn-demo ffn-demo-about">
   <header class="ph"><div class="w"><div class="ph-in">
-    <div class="ph-k"><b data-tina-field={block?.hero ? tinaField(block.hero, 'eyebrow') : undefined}>About Us</b></div>
-    <h1 data-tina-field={block?.hero ? tinaField(block.hero, 'headline') : undefined}>News without the noise.</h1>
-    <p class="ph-d" data-tina-field={block?.hero ? tinaField(block.hero, 'lede') : undefined}>First for News is a general news platform created for readers who want to understand what is happening without wading through unnecessary noise. We cover timely stories, emerging trends, practical topics, and noteworthy developments that affect everyday life.</p>
+    <div class="ph-k"><b data-tina-field={hero ? tinaField(hero, 'eyebrow') : undefined}>{hero.eyebrow || 'About Us'}</b></div>
+    <h1 data-tina-field={hero ? tinaField(hero, 'headline') : undefined}>{hero.headline || 'News without the noise.'}</h1>
+    <p class="ph-d" data-tina-field={hero ? tinaField(hero, 'lede') : undefined}>{hero.lede || 'First for News is a general news platform created for readers who want to understand what is happening without wading through unnecessary noise.'}</p>
   </div></div></header>
 
   <section id="connected" class="sc"><div class="w">
-    <div class="eye"><i></i><span>Why we exist</span></div>
+    <div class="eye"><i></i><span data-tina-field={purpose ? tinaField(purpose, 'eyebrow') : undefined}>{purpose.eyebrow || 'Why we exist'}</span></div>
     <div class="pr2">
-      <div class="pr2-l"><h2 class="h2">News that keeps you connected</h2></div>
+      <div class="pr2-l"><h2 class="h2" data-tina-field={purpose ? tinaField(purpose, 'title') : undefined}>{purpose.title || 'News that keeps you connected'}</h2></div>
       <div class="pr2-r">
-        <p>Our goal is simple: help readers discover relevant information quickly while providing enough context to understand why each story matters.</p>
-        <p>The world moves quickly, and important stories can emerge at any moment. First for News brings together coverage from a broad range of subjects, giving readers one convenient place to explore the issues and ideas shaping the day.</p>
-        <p>From major developments to stories that may not receive widespread attention, we aim to highlight information that is timely, interesting, and useful. Our broad editorial scope allows us to serve readers with different interests while maintaining a clear and accessible approach to news.</p>
+        <p data-tina-field={purpose ? tinaField(purpose, 'paragraphOne') : undefined}>{purpose.paragraphOne || 'Our goal is simple: help readers discover relevant information quickly while providing enough context to understand why each story matters.'}</p>
+        {purpose.pullquote && <div class="slab" data-tina-field={tinaField(purpose, 'pullquote')}><i>“</i><p>{purpose.pullquote}</p></div>}
+        <p data-tina-field={purpose ? tinaField(purpose, 'paragraphTwo') : undefined}>{purpose.paragraphTwo || 'The world moves quickly, and important stories can emerge at any moment.'}</p>
       </div>
     </div>
   </div></section>
 
   <section id="headlines" class="sc alt"><div class="w">
-    <div class="eye"><i></i><span>Written for real people</span></div>
+    <div class="eye"><i></i><span>{independence.eyebrow || 'Written for real people'}</span></div>
     <div class="pr2">
-      <div class="pr2-l"><h2 class="h2">More than headlines</h2></div>
+      <div class="pr2-l"><h2 class="h2" data-tina-field={independence ? tinaField(independence, 'title') : undefined}>{independence.title || 'More than headlines'}</h2></div>
       <div class="pr2-r">
-        <p>A headline may capture attention, but it rarely tells the whole story. We believe readers deserve content that offers context, explains key details, and makes complicated topics easier to follow.</p>
+        <p data-tina-field={independence ? tinaField(independence, 'paragraphOne') : undefined}>{independence.paragraphOne || 'A headline may capture attention, but it rarely tells the whole story.'}</p>
         <div class="slab"><i>“</i><p>Our articles are written for real people, not industry insiders.</p></div>
-        <p>We avoid unnecessary jargon and focus on presenting information in a straightforward way. Whether a reader is catching up on recent events or learning about a subject for the first time, our content is designed to provide a helpful starting point.</p>
+        <p data-tina-field={independence ? tinaField(independence, 'paragraphTwo') : undefined}>{independence.paragraphTwo || 'We avoid unnecessary jargon and focus on presenting information in a straightforward way.'}</p>
       </div>
     </div>
   </div></section>
 
   <section id="approach" class="sc"><div class="w">
-    <div class="eye"><i></i><span>How we work</span></div>
-    <h2 class="h2">Our editorial approach</h2>
+    <div class="eye"><i></i><span data-tina-field={standards ? tinaField(standards, 'eyebrow') : undefined}>{standards.eyebrow || 'How we work'}</span></div>
+    <h2 class="h2" data-tina-field={standards ? tinaField(standards, 'title') : undefined}>{standards.title || 'Our editorial approach'}</h2>
     <div class="pl">
-      {principles.map((item, index) => <div class="pli"><div class="pli-n">{String(index + 1).padStart(2, '0')}</div><div class="pli-t">{item}</div></div>)}
+      {principles.map((item: any, index: number) => <div class="pli" data-tina-field={standards?.items?.[index] ? tinaField(standards.items[index]) : undefined}><div class="pli-n">{item.number || String(index + 1).padStart(2, '0')}</div><div class="pli-t">{item.title}</div></div>)}
     </div>
-    <p class="pl-note">First for News values accuracy, clarity, relevance, and fairness. We strive to review information carefully, distinguish established facts from commentary, and update the record when a material error is identified.</p>
+    {standards.intro && <p class="pl-note" data-tina-field={tinaField(standards, 'intro')}>{standards.intro}</p>}
   </div></section>
 
   <section id="coverage" class="sc alt"><div class="w">
-    <div class="eye"><i></i><span>Covering a changing world</span></div>
-    <h2 class="h2">What we cover</h2>
+    <div class="eye"><i></i><span data-tina-field={coverage ? tinaField(coverage, 'eyebrow') : undefined}>{coverage.eyebrow || 'Covering a changing world'}</span></div>
+    <h2 class="h2" data-tina-field={coverage ? tinaField(coverage, 'title') : undefined}>{coverage.title || 'What we cover'}</h2>
     <div class="cvg">
-      {coverageItems.map((item: any) => <a class="cvi" href={item.link || '/blog/'}><div class="cvi-t">{item.title}</div><p class="cvi-x">{item.text}</p></a>)}
+      {coverageItems.map((item: any, index: number) => <a class="cvi" href={item.link || '/blog/'} data-tina-field={coverage?.items?.[index] ? tinaField(coverage.items[index]) : undefined}><div class="cvi-t">{item.title}</div><p class="cvi-x">{item.text}</p></a>)}
     </div>
-    <p class="pl-note">News is not limited to one subject. That is why First for News takes a wide-ranging approach — exploring stories across multiple areas while focusing on their relevance to everyday readers.</p>
+    {coverage.intro && <p class="pl-note" data-tina-field={tinaField(coverage, 'intro')}>{coverage.intro}</p>}
   </div></section>
 
   <section class="sc"><div class="w">
-    <div class="eye"><i></i><span>What you can expect</span></div>
-    <h2 class="h2">Our commitment to readers</h2>
-    <div class="cd"><div class="cd-top"><span>Reader Commitment</span><b>Transparency and accountability</b></div><div class="cd-body"><p><b>Your time</b> The trust of our readers matters. We work to create content that is informative, readable, and worth their time.</p><p><b>Corrections</b> If an article contains a material error, we correct the record and keep the correction visible.</p></div></div>
+    <div class="eye"><i></i><span data-tina-field={newsroom ? tinaField(newsroom, 'eyebrow') : undefined}>{newsroom.eyebrow || 'What you can expect'}</span></div>
+    <h2 class="h2" data-tina-field={newsroom ? tinaField(newsroom, 'title') : undefined}>{newsroom.title || 'Our commitment to readers'}</h2>
+    <div class="cd"><div class="cd-top"><span>Reader Commitment</span><b>Transparency and accountability</b></div><div class="cd-body"><p data-tina-field={newsroom ? tinaField(newsroom, 'intro') : undefined}>{newsroom.intro || 'The trust of our readers matters. We work to create content that is informative, readable, and worth their time.'}</p></div></div>
   </div></section>
 
-  <section class="cl"><div class="w"><div class="cl-in"><div><h2>Stay informed with First for News</h2><p>First for News is built for curious readers who want a clearer view of the stories unfolding around them.</p></div><a href="/blog/" class="cl-cta">Read the latest</a></div></div></section>
+  <section class="cl"><div class="w"><div class="cl-in"><div><h2>{newsroom.title || 'Stay informed with First for News'}</h2><p>{newsroom.intro || 'First for News is built for curious readers who want a clearer view of the stories unfolding around them.'}</p></div><a href="/blog/" class="cl-cta">Read the latest</a></div></div></section>
 </main>

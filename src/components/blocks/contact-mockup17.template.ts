@@ -1,6 +1,6 @@
 export const contactMockup17BlockSchema = {
   name: 'contactMockup17',
-  label: 'Contact Page - Mockup 17',
+  label: 'Contact Page Template Sections',
   fields: [
     {
       type: 'object',

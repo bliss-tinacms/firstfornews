@@ -1,6 +1,6 @@
 export const aboutMockup17BlockSchema = {
   name: 'aboutMockup17',
-  label: 'About Page - Mockup 17',
+  label: 'About Page Template Sections',
   fields: [
     {
       type: 'object',
