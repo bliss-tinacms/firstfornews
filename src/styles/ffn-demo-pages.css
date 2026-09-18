@@ -298,3 +298,8 @@ article h1{font-family:var(--dsp);font-size:48px;font-weight:800;text-transform:
 /* Author archive role line. */
 .ffn-demo .ah-r{display:inline-flex;margin:6px 0 16px;background:var(--org);color:var(--blk);font-family:var(--cnd);font-size:15px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;padding:7px 11px;border:2px solid var(--blk)}
 @media(max-width:640px){.ffn-demo .ah-r{font-size:13px;margin-bottom:12px}}
+
+/* Category archive bottom spacing before site footer/prefooter. */
+.ffn-demo-category .lg{padding-bottom:90px}
+.ffn-demo-category .empty-archive{margin-top:28px}
+@media(max-width:640px){.ffn-demo-category .lg{padding-bottom:72px}.ffn-demo-category .empty-archive{margin-top:22px}}
