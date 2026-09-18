@@ -1,0 +1,25 @@
+---
+import { getBlogPermalink } from '../../lib/permalinks';
+import { labelFromReference, getAuthorName } from './DemoHelpers';
+const { archiveTitle = 'Business', posts = [], currentPage = 1, totalPages = 1, basePath = '/business' } = Astro.props;
+const lead = posts[0];
+const rest = posts.slice(1);
+function postUrl(post: any) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
+function pagePath(page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
+---
+
+<main class="ffn-demo ffn-demo-category">
+  <header class="ch"><div class="w"><div class="ch-in"><div class="ch-k"><b>Category</b></div><h1>{archiveTitle}</h1></div></div></header>
+  {lead && (
+    <section class="ld"><div class="w"><a href={postUrl(lead)} class="ld-a">
+      {lead.heroImage ? <div class="ld-img" style={`background-image:url(${lead.heroImage})`}></div> : <div class="ld-img demo-img"></div>}
+      <div class="ld-c"><span class="ld-k">Lead Story</span><div class="ld-h">{lead.title}</div>{lead.description && <p class="ld-x">{lead.description}</p>}<div class="ld-b">{getAuthorName(lead.author)} · {labelFromReference(lead.category, archiveTitle)}</div></div>
+    </a></div></section>
+  )}
+  <section class="lg"><div class="w"><div class="lg-h"><div class="eye"><i></i><span>Most recent first</span></div><div class="h2">More in {archiveTitle}</div></div>
+    <div>
+      {rest.map((post: any) => <a href={postUrl(post)} class="si">{post.heroImage ? <img class="si-img" src={post.heroImage} alt="" /> : <div class="si-img demo-img"></div>}<div><div class="si-k">{labelFromReference(post.category, archiveTitle)}</div><div class="si-h">{post.title}</div>{post.description && <p class="si-x">{post.description}</p>}<div class="si-b">{getAuthorName(post.author)}</div></div></a>)}
+    </div>
+  </div></section>
+  {totalPages > 1 && <nav class="pg" aria-label="Archive pagination"><div class="w"><a class="nx" href={pagePath(Math.max(1,currentPage-1))}>Prev</a>{Array.from({ length: Math.min(totalPages, 4) }).map((_, i) => { const p=i+1; return <a class={p===currentPage?'on':''} href={pagePath(p)}>{p}</a>; })}<span class="gap">…</span><a class="nx" href={pagePath(Math.min(totalPages,currentPage+1))}>Next →</a></div></nav>}
+</main>

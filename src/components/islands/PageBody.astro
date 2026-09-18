@@ -1,43 +1,42 @@
 ---
 import Blocks from '../blocks/Blocks.astro';
-import AboutMockup17Block from '../blocks/AboutMockup17Block.astro';
 import FrontPage from '../../templates/FrontPage.astro';
 import { getConfig, listBlogs } from '../../lib/data';
 import * as localHome from '../../content/page/home.mdx';
+import DemoAboutPage from '../demo/DemoAboutPage.astro';
+import DemoContactPage from '../demo/DemoContactPage.astro';
+import DemoOurTeamPage from '../demo/DemoOurTeamPage.astro';
+import DemoPageTemplate from '../demo/DemoPageTemplate.astro';
 
 const { data, config = null } = Astro.props;
 const pageBlocks = Array.isArray(data?.blocks) ? data.blocks : [];
-const isAboutMockup17Block = (block) =>
-  block?._template === 'aboutMockup17' ||
-  block?.__typename === 'PageBlocksAboutMockup17';
-const isContactMockup17Block = (block) =>
-  block?._template === 'contactMockup17' ||
-  block?.__typename === 'PageBlocksContactMockup17';
-const aboutMockup17Block = pageBlocks.find(isAboutMockup17Block);
-const contactMockup17Block = pageBlocks.find(isContactMockup17Block);
-const regularBlocks = pageBlocks.filter((block) => !isAboutMockup17Block(block));
-const isOurTeamMockup17Block = (block) =>
-  block?._template === 'ourTeamMockup17' ||
-  block?.__typename === 'PageBlocksOurTeamMockup17';
-const ourTeamMockup17Block = pageBlocks.find(isOurTeamMockup17Block);
 const homepageTemplateBlock = pageBlocks.find((block) => block?._template === 'homepageTemplate' || block?.__typename === 'PageBlocksHomepageTemplate');
-const isHomePage = Boolean(data?._sys?.filename === 'home' || data?.permalink === '/' || homepageTemplateBlock);
+const filename = data?._sys?.filename || '';
+const permalink = String(data?.permalink || '').replace(/^\/+|\/+$/g, '');
+const isHomePage = Boolean(filename === 'home' || data?.permalink === '/' || homepageTemplateBlock);
+const isAboutPage = filename === 'about' || permalink === 'about';
+const isContactPage = filename === 'contact' || permalink === 'contact';
+const isTeamPage = filename === 'our-team' || permalink === 'our-team';
 const frontPageData = (localHome.frontmatter as any) ?? data;
 const frontPagePosts = isHomePage ? await listBlogs() : [];
 const frontPageConfig = isHomePage ? ((await getConfig()).data?.config ?? config) : config;
-const showPageTitle = Boolean(data?.title && data?._sys?.filename !== 'home' && !aboutMockup17Block && !contactMockup17Block && !ourTeamMockup17Block && !homepageTemplateBlock);
+const isGenericDemoPage = Boolean(data && !isHomePage && !isAboutPage && !isContactPage && !isTeamPage);
 ---
 
 {data && (
   <>
     {isHomePage ? (
       <FrontPage posts={frontPagePosts} config={frontPageConfig} data={frontPageData} editData={data} />
+    ) : isAboutPage ? (
+      <DemoAboutPage data={data} />
+    ) : isContactPage ? (
+      <DemoContactPage data={data} config={config} />
+    ) : isTeamPage ? (
+      <DemoOurTeamPage data={data} />
+    ) : isGenericDemoPage ? (
+      <DemoPageTemplate data={data} />
     ) : (
-      <>
-        {showPageTitle && <h1 class="single-page-title">{data.title}</h1>}
-        {aboutMockup17Block && <AboutMockup17Block data={aboutMockup17Block} />}
-        {regularBlocks.length > 0 && <Blocks data={{ ...data, blocks: regularBlocks }} config={config} />}
-      </>
+      <Blocks data={data} config={config} />
     )}
   </>
 )}

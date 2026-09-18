@@ -6,6 +6,8 @@ import TinaIsland from '@tinacms/astro/TinaIsland.astro';
 import PageBody from '../components/islands/PageBody.astro';
 import BlogBody from '../components/islands/BlogBody.astro';
 import CategoryArchiveHeader from '../components/islands/CategoryArchiveHeader.astro';
+import DemoCategoryArchive from '../components/demo/DemoCategoryArchive.astro';
+import Demo404 from '../components/demo/Demo404.astro';
 import { getBlog, getConfig, getPublicPage, getUser, listBlogs, listPages, type CmsBlog, type CmsCategory } from '../lib/data';
 import { islands } from '../lib/islands';
 
@@ -155,8 +157,18 @@ if (view === 'not-found') {
   }
 }
 
-if (view === 'not-found') return new Response('Not Found', { status: 404 });
+if (view === 'not-found') {
+  Astro.response.status = 404;
+  pageTitle = '404 | Page Not Found | First For News';
+  pageDescription = 'The page you are looking for may have moved, been removed, or never existed.';
+}
 ---
+
+{view === 'not-found' && (
+  <Base title={pageTitle} description={pageDescription} noindex={true}>
+    <Demo404 posts={allPosts.slice(0, 3)} />
+  </Base>
+)}
 
 {view === 'page' && pageData && (
   <Base
@@ -177,55 +189,9 @@ if (view === 'not-found') return new Response('Not Found', { status: 404 });
 
 {view === 'category' && categoryContext && (
   <Base title={categoryContext.seoTitle} description={categoryContext.description}>
-    <main class="archive-template archive-template--category">
-      <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryContext.categoryDocumentSlug }} primary>
-        <CategoryArchiveHeader category={categoryContext.categoryFromPosts} fallbackTitle={categoryContext.archiveTitle} />
-      </TinaIsland>
-
-      <section class="grid-s">
-        <div class="archive-w">
-          {categoryContext.hasPosts ? (
-            <div class="pg">
-              {categoryContext.posts.map((post: CmsBlog) => (
-                <a href={getPostUrl(post)} class="pc">
-                  {post.heroImage ? <div class="pc-img" style={'background-image:url(' + post.heroImage + ')'}></div> : <div class="pc-img pc-img--empty"></div>}
-                  <div class="pc-b">
-                    <div class="pc-k">{labelFromReference(post.category) || 'News'}</div>
-                    <div class="pc-t">{post.title}</div>
-                    {post.description && <p class="pc-x">{post.description}</p>}
-                    <div class="pc-m"><span class="pc-mn">{getAuthorName(post.author)}</span></div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div class="archive-empty">
-              <div class="archive-empty__eyebrow">No articles yet</div>
-              <h2>Articles in {categoryContext.archiveTitle} are coming soon.</h2>
-              <p>There are currently no published articles in this category. Please check back soon for official updates and newly published stories.</p>
-              <a href="/blog/">Browse all articles</a>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {categoryContext.totalPages > 1 && (
-        <nav class="pag" aria-label="Archive pagination">
-          <div class="archive-w">
-            <div class="pag-in">
-              {categoryContext.currentPage > 1 && <a class="nx" href={pagePath(categoryContext.basePath, categoryContext.currentPage - 1)}>Prev</a>}
-              {Array.from({ length: categoryContext.totalPages }).map((_, index) => {
-                const page = index + 1;
-                return page === categoryContext.currentPage
-                  ? <a class="on" href={pagePath(categoryContext.basePath, page)}>{page}</a>
-                  : <a href={pagePath(categoryContext.basePath, page)}>{page}</a>;
-              })}
-              {categoryContext.currentPage < categoryContext.totalPages && <a class="nx" href={pagePath(categoryContext.basePath, categoryContext.currentPage + 1)}>Next</a>}
-            </div>
-          </div>
-        </nav>
-      )}
-    </main>
+    <TinaIsland name="category" wrapper={islands.category.wrapper} params={{ slug: categoryContext.categoryDocumentSlug }} primary>
+      <DemoCategoryArchive archiveTitle={categoryContext.archiveTitle} posts={categoryContext.posts} currentPage={categoryContext.currentPage} totalPages={categoryContext.totalPages} basePath={categoryContext.basePath} category={categoryContext.categoryFromPosts} />
+    </TinaIsland>
   </Base>
 )}
 

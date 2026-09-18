@@ -1,74 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
+import Demo404 from '../components/demo/Demo404.astro';
+import { listBlogs } from '../lib/data';
 
 const title = '404 | Page Not Found | First For News';
 const description = 'The page you are looking for may have moved, been removed, or never existed.';
+const posts = (await listBlogs()).slice(0, 3);
 ---
 
 <Base title={title} description={description} noindex={true}>
-  <main class="error-template error-404-template" aria-labelledby="error-404-title">
-    <section class="error-hero">
-      <div class="error-wrap">
-        <div class="error-hero__inner">
-          <div class="error-hero__number" aria-hidden="true">404</div>
-          <div class="error-hero__body">
-            <div class="error-hero__eyebrow"><i></i><span>Page not found</span></div>
-            <h1 id="error-404-title">This page is not where it used to be.</h1>
-            <p>The link may be broken, the story may have moved, or the address may have a typo in it. The rest of the site is still here.</p>
-            <div class="error-hero__actions">
-              <a href="/" class="error-btn error-btn--primary">Back to the homepage</a>
-              <a href="/blog" class="error-btn error-btn--secondary">Browse latest stories</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="error-go" aria-labelledby="error-go-title">
-      <div class="error-wrap">
-        <div class="error-go__header">
-          <p class="error-go__eyebrow">Start somewhere else</p>
-          <h2 id="error-go-title">Where to go from here</h2>
-        </div>
-        <div class="error-go__grid">
-          <a href="/blog" class="error-card">
-            <span class="error-card__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            </span>
-            <span class="error-card__title">Latest Reporting</span>
-            <span class="error-card__text">Everything published this week, newest first, across all desks.</span>
-          </a>
-          <a href="/about" class="error-card">
-            <span class="error-card__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            </span>
-            <span class="error-card__title">About the Publication</span>
-            <span class="error-card__text">Our purpose, editorial standards, and how independence is protected.</span>
-          </a>
-          <a href="/contact" class="error-card">
-            <span class="error-card__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </span>
-            <span class="error-card__title">Contact the Newsroom</span>
-            <span class="error-card__text">Tips, corrections, and general inquiries reach a person on staff.</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="error-broken" aria-label="Report a broken link">
-      <div class="error-wrap">
-        <div class="error-broken__inner">
-          <span class="error-broken__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </span>
-          <div>
-            <h2>Did a link on our site send you here?</h2>
-            <p>That is our error, not yours. Send us the page you came from and the link you clicked, and we will fix it.</p>
-          </div>
-          <a href="mailto:info@firstfornews.net" class="error-broken__link">Report a broken link</a>
-        </div>
-      </div>
-    </section>
-  </main>
+  <Demo404 posts={posts} />
 </Base>

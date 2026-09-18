@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import DemoAuthorArchive from '../../components/demo/DemoAuthorArchive.astro';
 import { getConfig, listBlogs, type CmsBlog } from '../../lib/data';
 import { getBlogPermalink } from '../../lib/permalinks';
 
@@ -101,26 +102,9 @@ const archiveTitle = labelFromReference(allPosts[0]?.author) || Astro.props.arch
 const basePath = '/author/' + parsed.slug;
 const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
 const description = 'Read the latest articles by ' + archiveTitle + ' from First For News.';
+const authorObject = allPosts.find((post) => post.author && typeof post.author === 'object')?.author ?? null;
 ---
 
 <Base title={seoTitle} description={description}>
-	<main class="archive-template archive-template--author">
-		<header class="ah">
-			<div class="crumb"><div class="archive-w"><div class="crumb-in"><a href="/blog/">Blog</a><i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i><a href="/author/">Authors</a><i><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></i><span>{archiveTitle}</span></div></div></div>
-			<div class="archive-w"><div class="ah-body"><div><div class="ah-kick"><i></i><span>Author Archive</span></div><h1>{archiveTitle}</h1></div></div></div>
-		</header>
-		<section class="grid-s"><div class="archive-w"><div class="pg">
-			{posts.map((post) => (
-				<a href={getPostUrl(post)} class="pc">
-					{post.heroImage ? <div class="pc-img" style={'background-image:url(' + post.heroImage + ')'}></div> : <div class="pc-img pc-img--empty"></div>}
-					<div class="pc-b"><div class="pc-k">{labelFromReference(post.category) || 'News'}</div><div class="pc-t">{post.title}</div>{post.description && <p class="pc-x">{post.description}</p>}<div class="pc-m"><span class="pc-mn">{archiveTitle}</span></div></div>
-				</a>
-			))}
-		</div></div></section>
-		{totalPages > 1 && <nav class="pag" aria-label="Archive pagination"><div class="archive-w"><div class="pag-in">
-			{currentPage > 1 && <a class="nx" href={pagePath(basePath, currentPage - 1)}>Prev</a>}
-			{Array.from({ length: totalPages }).map((_, index) => { const page = index + 1; return page === currentPage ? <a class="on" href={pagePath(basePath, page)}>{page}</a> : <a href={pagePath(basePath, page)}>{page}</a>; })}
-			{currentPage < totalPages && <a class="nx" href={pagePath(basePath, currentPage + 1)}>Next</a>}
-		</div></div></nav>}
-	</main>
+	<DemoAuthorArchive archiveTitle={archiveTitle} author={authorObject} posts={posts} currentPage={currentPage} totalPages={totalPages} basePath={basePath} />
 </Base>

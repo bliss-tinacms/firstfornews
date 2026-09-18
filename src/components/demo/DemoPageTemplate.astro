@@ -1,0 +1,37 @@
+---
+import TinaMarkdown from '@tinacms/astro/TinaMarkdown.astro';
+import { tinaField } from '@tinacms/astro/tina-field';
+
+const { data } = Astro.props;
+const contentBlock = Array.isArray(data?.blocks)
+  ? data.blocks.find((block: any) => block?.__typename === 'PageBlocksContent' || block?._template === 'content')
+  : null;
+const title = data?.title || data?.seoTitle || 'Editorial Guidelines';
+---
+
+<main class="ffn-demo ffn-demo-page-template">
+  <header class="pt"><div class="w">
+    <h1 data-tina-field={data ? tinaField(data, 'title') : undefined}>{title}</h1>
+  </div></header>
+  <div class="pg"><div class="w">
+    <article data-tina-field={contentBlock ? tinaField(contentBlock, 'body') : undefined}>
+      {contentBlock?.body ? (
+        <TinaMarkdown content={contentBlock.body} />
+      ) : (
+        <>
+          <p>This page is the content slot. Everything below is written as plain markdown or rich text — no classes are applied to any element, and the styling comes from the template.</p>
+          <h2>A second-level heading</h2>
+          <p>Body copy runs at nineteen pixels with generous leading. The opening paragraph is set slightly larger and darker so the page has an entry point, and that treatment applies only to the first paragraph.</p>
+          <p>Links inside prose, such as <a href="/contact/">this one</a>, take the darker orange so they clear contrast against white.</p>
+          <h3>A third-level heading</h3>
+          <ul>
+            <li>Unordered items take an orange square marker and a hairline rule.</li>
+            <li>The rules run between items, with one above the first.</li>
+            <li>Nothing here carries a class attribute.</li>
+          </ul>
+          <blockquote><p>Pull quotes sit on a black slab in the display face.</p><cite>Attribution line</cite></blockquote>
+        </>
+      )}
+    </article>
+  </div></div>
+</main>
