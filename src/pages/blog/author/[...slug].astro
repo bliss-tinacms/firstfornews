@@ -1,63 +1,50 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import TinaIsland from '@tinacms/astro/TinaIsland.astro';
-import AuthorArchiveHeader from '../../../components/islands/AuthorArchiveHeader.astro';
-import FormattedDate from '../../../components/FormattedDate.astro';
-import { getConfig, listBlogs, type CmsBlog } from '../../../lib/data';
+import DemoAuthorArchive from '../../../components/demo/DemoAuthorArchive.astro';
+import { getConfig, getUser, listBlogs, type CmsBlog } from '../../../lib/data';
 import { islands } from '../../../lib/islands';
-import { getBlogPermalink } from '../../../lib/permalinks';
 
 export const prerender = false;
 
+const POSTS_PER_PAGE = 30;
 type ReferenceObject = { title?: string | null; name?: string | null; _sys?: { filename?: string | null } | null; };
-type AuthorObject = ReferenceObject & { role?: string | null; avatar?: string | null; bio?: string | null; };
-
 function slugify(value?: string | null) { return (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
-function getReferenceLabel(reference: unknown) {
+function labelFromReference(reference: unknown) {
   if (!reference) return null;
-  if (typeof reference === 'string') return reference.split('/').pop()?.replace(/.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
-  if (typeof reference === 'object') { const item = reference as ReferenceObject; return String(item.title ?? item.name ?? '') || item._sys?.filename || null; }
+  if (typeof reference === 'string') return reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '').replace(/-/g, ' ') ?? null;
+  if (typeof reference === 'object') { const item = reference as ReferenceObject; return String(item.title ?? item.name ?? '') || null; }
   return null;
 }
-function getReferenceSlug(reference: unknown) {
+function slugFromReference(reference: unknown) {
   if (!reference) return null;
-  if (typeof reference === 'string') return slugify(reference.split('/').pop()?.replace(/.(json|mdx?)$/, '') || '');
+  if (typeof reference === 'string') return slugify(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
   if (typeof reference === 'object') { const item = reference as ReferenceObject; return slugify(item._sys?.filename || item.title || item.name || ''); }
   return null;
 }
-function getAuthor(reference: unknown) { return reference && typeof reference === 'object' ? reference as AuthorObject : null; }
-function getPostUrl(post: CmsBlog) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
+function parseArchiveParam(value?: string) {
+  const parts = String(value || '').toLowerCase().split('/').filter(Boolean);
+  const pageIndex = parts.indexOf('page');
+  if (pageIndex >= 0) return { slug: parts.slice(0, pageIndex).join('/'), page: Math.max(1, Number(parts[pageIndex + 1] || '1') || 1) };
+  return { slug: parts.join('/'), page: 1 };
+}
 
-const slug = slugify((Astro.params.slug ?? '').toString());
+const parsed = parseArchiveParam(Astro.params.slug?.toString());
 const config = (await getConfig()).data?.config ?? null;
-const posts = (await listBlogs()).filter((post) => getReferenceSlug(post.author) === slug);
-if (!posts.length) return new Response('Not Found', { status: 404 });
-const author = getAuthor(posts[0].author);
-const authorName = getReferenceLabel(posts[0]?.author) || 'Author';
-const title = authorName + ' Articles | ' + (config?.seo?.title || 'First For News');
-const description = author?.bio || 'Read the latest articles published by ' + authorName + '.';
-const initials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'SN';
-const authorDocumentSlug = author?._sys?.filename || slug;
+const allPosts = (await listBlogs()).filter((post) => slugFromReference(post.author) === parsed.slug);
+const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
+const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
+const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+const editableAuthor = (await getUser(parsed.slug || 'admin')).data?.user ?? null;
+const authorObject = allPosts.find((post) => post.author && typeof post.author === 'object')?.author ?? editableAuthor;
+const archiveTitle = editableAuthor?.name || labelFromReference(authorObject) || 'Author';
+const title = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
+const description = editableAuthor?.bio || 'Read the latest articles published by ' + archiveTitle + '.';
+const basePath = '/blog/author/' + parsed.slug;
 ---
 
 <Base title={title} description={description}>
-  <main class="author-archive">
-    <div class="site-wrap">
-      <TinaIsland name="author" wrapper={islands.author.wrapper} params={{ slug: authorDocumentSlug }} primary>
-        <AuthorArchiveHeader user={author} />
-      </TinaIsland>
-      <section class="author-archive__posts" aria-label={authorName + ' articles'}>
-        {posts.map((post) => (
-          <a href={getPostUrl(post)} class="author-archive-card">
-            {post.heroImage && <img src={post.heroImage} alt="" class="author-archive-card__image" width={360} height={220} />}
-            <span class="author-archive-card__body">
-              <span class="author-archive-card__title">{post.title}</span>
-              {post.pubDate && <span class="author-archive-card__date"><FormattedDate date={new Date(post.pubDate)} /></span>}
-              {post.description && <span class="author-archive-card__excerpt">{post.description}</span>}
-            </span>
-          </a>
-        ))}
-      </section>
-    </div>
-  </main>
+  <TinaIsland name="author" wrapper={islands.author.wrapper} params={{ slug: parsed.slug || 'admin' }} primary>
+    <DemoAuthorArchive archiveTitle={archiveTitle} author={editableAuthor || authorObject} posts={posts} currentPage={currentPage} totalPages={totalPages} basePath={basePath} />
+  </TinaIsland>
 </Base>

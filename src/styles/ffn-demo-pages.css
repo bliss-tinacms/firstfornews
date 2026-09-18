@@ -288,3 +288,9 @@ article h1{font-family:var(--dsp);font-size:48px;font-weight:800;text-transform:
   .ffn-demo .ah-k b,
   .ffn-demo .eye span{letter-spacing:.12em}
 }
+
+/* Empty archive state for category pages with no published articles. */
+.ffn-demo .empty-archive{border:3px solid var(--blk);background:#fff;padding:34px 36px;margin-top:12px;max-width:780px;box-shadow:12px 12px 0 rgba(231,92,0,.14)}
+.ffn-demo .empty-archive p{margin:0 0 18px;color:var(--txt);font-size:19px;line-height:1.75}
+.ffn-demo .empty-archive__link{display:inline-flex;align-items:center;justify-content:center;background:var(--org);color:var(--blk);border:2px solid var(--blk);text-decoration:none;font-family:var(--cnd);font-size:14px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:13px 18px}
+@media(max-width:640px){.ffn-demo .empty-archive{padding:24px 22px;box-shadow:8px 8px 0 rgba(231,92,0,.14)}.ffn-demo .empty-archive p{font-size:17px}}
