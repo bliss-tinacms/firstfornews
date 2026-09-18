@@ -334,7 +334,7 @@ article h1{font-family:var(--dsp);font-size:48px;font-weight:800;text-transform:
 .ffn-demo-sitemap .sitemap-note{border-top:5px solid var(--blk);padding-top:24px}
 .ffn-demo-sitemap .sitemap-note p{font-size:18px;line-height:1.82;color:var(--txt);margin:0 0 16px}
 .ffn-demo-sitemap .sitemap-note__meta{font-family:var(--cnd);font-size:15px!important;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)!important;margin-bottom:0!important}
-.ffn-demo-sitemap .sitemap-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:30px;align-items:start}
+.ffn-demo-sitemap .sitemap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px;align-items:start}
 .ffn-demo-sitemap .sitemap-panel{background:#fff;border:3px solid var(--blk);min-width:0}
 .ffn-demo-sitemap .sitemap-panel__top{background:var(--blk);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .ffn-demo-sitemap .sitemap-panel__top span{font-family:var(--cnd);font-size:15px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff}
