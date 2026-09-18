@@ -69,6 +69,36 @@ function overrideHomepageResponse(text: string, bodyText: string) {
   return text;
 }
 
+function responseHasUnsupportedFieldError(text: string) {
+  try {
+    const json = JSON.parse(text);
+    const errors = Array.isArray(json?.errors) ? json.errors : [];
+    return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus)\"/.test(String(error?.message || '')));
+  } catch (_error) {
+    return false;
+  }
+}
+
+function stripUnsupportedLaggingSchemaFields(bodyText: string) {
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    if (typeof payload.query !== 'string') return bodyText;
+
+    // Tina Cloud schemas can lag behind deployed local source after adding
+    // collection/block fields. Retry without optional fields instead of
+    // crashing the admin content fetch.
+    let query = payload.query;
+    query = query.replace(/\bseo\s*\{[^{}]*\}/g, '');
+    query = query.replace(/\bexperience\b/g, '');
+    query = query.replace(/\bfocus\b/g, '');
+    query = query.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+
+    return JSON.stringify({ ...payload, query });
+  } catch (_error) {
+    return bodyText;
+  }
+}
+
 function corsHeaders(request: Request) {
   const origin = request.headers.get('origin') || 'https://firstfornews.net';
   const allowed = new Set([
@@ -151,15 +181,29 @@ export const POST: APIRoute = async ({ request }) => {
       body,
     });
 
-    const text = overrideHomepageResponse(await upstreamResponse.text(), body);
+    let text = overrideHomepageResponse(await upstreamResponse.text(), body);
+    let status = upstreamResponse.status;
+    let contentType = upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
+
+    if (responseHasUnsupportedFieldError(text)) {
+      const retryBody = stripUnsupportedLaggingSchemaFields(body);
+      if (retryBody !== body) {
+        const retryResponse = await fetch(upstream, {
+          method: 'POST',
+          headers,
+          body: retryBody,
+        });
+        status = retryResponse.status;
+        contentType = retryResponse.headers.get('content-type') || contentType;
+        text = overrideHomepageResponse(await retryResponse.text(), retryBody);
+      }
+    }
 
     return new Response(text, {
-      status: upstreamResponse.status,
+      status,
       headers: {
         ...corsHeaders(request),
-        'Content-Type':
-          upstreamResponse.headers.get('content-type') ||
-          'application/json; charset=utf-8',
+        'Content-Type': contentType,
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'X-Splash-Tina-Proxy': 'astro-identity',
       },

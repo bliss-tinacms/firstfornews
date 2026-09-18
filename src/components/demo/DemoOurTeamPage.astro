@@ -35,7 +35,7 @@ const t = (value: unknown, fallback: string) => String(value || fallback);
               <div class="rsi-r" data-tina-field={tinaField(person, 'role')}>{person.role}</div>
             </div>
             <p class="rsi-x" data-tina-field={tinaField(person, 'bio')}>{person.bio}</p>
-            <div class="rsi-f"><span data-tina-field={tinaField(person, 'location')}>{person.location}</span><span data-tina-field={tinaField(person, 'experience')}>{person.experience}</span><span data-tina-field={tinaField(person, 'focus')}>{person.focus}</span></div>
+            <div class="rsi-f"><span data-tina-field={tinaField(person, 'location')}>{person.location}</span><span>{person.experience || 'Editorial desk'}</span><span>{person.focus || 'Daily coverage'}</span></div>
           </div>
         </article>
       ))}
