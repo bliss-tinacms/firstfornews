@@ -131,14 +131,44 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 	return permalink ? ({ ...node, permalink } as T) : node;
 }
 
+function tinaDirectContentApiUrl() {
+	const clientId =
+		process.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
+		process.env.PUBLIC_TINA_CLIENT_ID ||
+		process.env.TINA_PUBLIC_CLIENT_ID ||
+		'a9684e57-12db-4e1e-81bb-c908941e164f';
+	const branch = process.env.NEXT_PUBLIC_TINA_BRANCH || process.env.TINA_BRANCH || 'main';
+	if (!clientId) return null;
+	return `https://content.tinajs.io/2.4/content/${encodeURIComponent(clientId)}/github/${encodeURIComponent(branch)}`;
+}
+
+function tinaApiToken() {
+	return process.env.NEXT_PUBLIC_TINA_TOKEN || process.env.TINA_PUBLIC_TINA_TOKEN || process.env.TINA_TOKEN || '';
+}
+
+function hasUnsupportedFieldError(json: any) {
+	const errors = Array.isArray(json?.errors) ? json.errors : [];
+	return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus)\"/.test(String(error?.message || '')));
+}
+
+function stripUnsupportedLaggingSchemaFields(query: string) {
+	return query
+		.replace(/\bseo\s*\{[^{}]*\}/g, '')
+		.replace(/\bexperience\b/g, '')
+		.replace(/\bfocus\b/g, '')
+		.replace(/[ 	]+\n/g, '\n')
+		.replace(/\n{3,}/g, '\n\n');
+}
+
 function tinaProxyEndpoints() {
 	// Do not SSR-fetch this same Passenger app's public /tina-content-proxy.
 	// Self-fetching the live domain during page render can deadlock/timeout under cPanel Passenger.
-	// Public pages should use generated/local source fallbacks; Tina preview/editor metadata uses
-	// getEditable* loaders via requestWithMetadata.
+	// Public pages must still prefer saved Tina backend data over deployed local fallbacks, so
+	// call Tina Cloud directly from SSR using the public client ID + token.
 	const endpoints = [
 		process.env.TINA_UPSTREAM_CONTENT_API_URL,
 		process.env.TINA_DIRECT_CONTENT_API_URL,
+		tinaDirectContentApiUrl(),
 	].filter(Boolean) as string[];
 	return Array.from(new Set(endpoints));
 }
@@ -167,15 +197,32 @@ async function fetchLiveTina<T>(query: string, variables?: Record<string, unknow
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
-			const response = await fetch(endpoint, {
+			const headers: Record<string, string> = { 'content-type': 'application/json' };
+			const token = tinaApiToken();
+			if (token) headers['X-API-KEY'] = token;
+			let response = await fetch(endpoint, {
 				method: 'POST',
-				headers: { 'content-type': 'application/json' },
+				headers,
 				body: JSON.stringify({ query, variables }),
 				cache: 'no-store',
 				signal: controller.signal,
 			});
 			if (!response.ok) continue;
-			const json = await response.json();
+			let json = await response.json();
+			if (hasUnsupportedFieldError(json)) {
+				const retryQuery = stripUnsupportedLaggingSchemaFields(query);
+				if (retryQuery !== query) {
+					response = await fetch(endpoint, {
+						method: 'POST',
+						headers,
+						body: JSON.stringify({ query: retryQuery, variables }),
+						cache: 'no-store',
+						signal: controller.signal,
+					});
+					if (!response.ok) continue;
+					json = await response.json();
+				}
+			}
 			const data = pick ? pick(json) : json?.data;
 			if (data) return data;
 		} catch (_error) {
@@ -192,15 +239,32 @@ async function fetchLiveTinaResult<TData>(query: string, variables?: Record<stri
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
-			const response = await fetch(endpoint, {
+			const headers: Record<string, string> = { 'content-type': 'application/json' };
+			const token = tinaApiToken();
+			if (token) headers['X-API-KEY'] = token;
+			let response = await fetch(endpoint, {
 				method: 'POST',
-				headers: { 'content-type': 'application/json' },
+				headers,
 				body: JSON.stringify({ query, variables }),
 				cache: 'no-store',
 				signal: controller.signal,
 			});
 			if (!response.ok) continue;
-			const json = await response.json();
+			let json = await response.json();
+			if (hasUnsupportedFieldError(json)) {
+				const retryQuery = stripUnsupportedLaggingSchemaFields(query);
+				if (retryQuery !== query) {
+					response = await fetch(endpoint, {
+						method: 'POST',
+						headers,
+						body: JSON.stringify({ query: retryQuery, variables }),
+						cache: 'no-store',
+						signal: controller.signal,
+					});
+					if (!response.ok) continue;
+					json = await response.json();
+				}
+			}
 			if (json?.data) return { data: json.data as TData, query, variables: variables ?? {} };
 		} catch (_error) {
 			// Fall back to generated Tina client/local source below.
