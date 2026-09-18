@@ -13,10 +13,22 @@ const fallbackPeople = [
   { name: 'Kevin Manning', role: 'Standards Editor', location: 'Boise', bio: 'Kevin oversees the publication standards program, handles fact-checking on sensitive material, manages the corrections record, and serves as the stylebook authority.' },
 ];
 const roster = people.length ? people : fallbackPeople;
+const demoChips: Record<string, { experience: string; focus: string }> = {
+  'Michelle Hastings': { experience: '15+ years', focus: 'Final say on publication' },
+  'Patrick Alvarez': { experience: 'Calendar & assignments', focus: 'Desk operations' },
+  'Angela Simmons': { experience: '10+ years', focus: 'Business & economy desk' },
+  'Kevin Manning': { experience: 'Corrections record', focus: 'Stylebook authority' },
+};
 function personField(index: number) {
   const leadershipCount = leadership.people?.length || 0;
   if (index < leadershipCount) return leadership.people[index];
   return seniorStaff.people?.[index - leadershipCount];
+}
+function chipOne(person: any) {
+  return person.experience || demoChips[person.name || '']?.experience || 'Editorial desk';
+}
+function chipTwo(person: any) {
+  return person.focus || demoChips[person.name || '']?.focus || person.role;
 }
 ---
 
@@ -37,7 +49,7 @@ function personField(index: number) {
           <div>
             <div class="rsi-hd"><div class="rsi-n">{person.name}</div><div class="rsi-r">{person.role}</div></div>
             <p class="rsi-x">{person.bio}</p>
-            <div class="rsi-f"><span>{person.location || 'United States'}</span><span>{person.experience || 'Editorial desk'}</span><span>{person.focus || person.role}</span></div>
+            <div class="rsi-f"><span>{person.location || 'United States'}</span><span>{chipOne(person)}</span><span>{chipTwo(person)}</span></div>
           </div>
         </article>
       ))}
