@@ -70,6 +70,25 @@ function tinaProxyEndpoints() {
 	].filter(Boolean) as string[];
 }
 
+async function fetchGithubPageFrontmatter(relativePath: string) {
+	const branch = process.env.TINA_BRANCH || process.env.NEXT_PUBLIC_TINA_BRANCH || 'main';
+	const repo = process.env.GITHUB_CONTENT_REPO || 'bliss-tinacms/firstfornews';
+	const url = `https://raw.githubusercontent.com/${repo}/${branch}/src/content/page/${relativePath}`;
+	try {
+		const response = await fetch(url, { cache: 'no-store', headers: { 'cache-control': 'no-cache' } });
+		if (!response.ok) return null;
+		const text = await response.text();
+		const parsed = matter(text);
+		if (!parsed.data || !Object.keys(parsed.data).length) return null;
+		return {
+			...parsed.data,
+			_sys: { filename: relativePath.replace(/\.mdx$/, '') },
+		};
+	} catch (_error) {
+		return null;
+	}
+}
+
 async function fetchLiveTina<T>(query: string, variables?: Record<string, unknown>, pick?: (json: any) => T | null | undefined) {
 	for (const endpoint of tinaProxyEndpoints()) {
 		try {
@@ -206,6 +225,21 @@ async function getLivePage(slug: string) {
 			_sys { filename }
 		}
 	}`;
+
+	const localPage = readLocalPageFrontmatter(relativePath);
+	if (localPage) {
+		return {
+			data: {
+				page: {
+					...localPage,
+					_sys: { filename: relativePath.replace(/\.mdx$/, '') },
+				},
+			},
+		} as any;
+	}
+
+	const githubPage = await fetchGithubPageFrontmatter(relativePath);
+	if (githubPage) return { data: { page: githubPage } } as any;
 
 	const livePage = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.page);
 	if (livePage) return { data: { page: livePage } } as any;
