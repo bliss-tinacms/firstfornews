@@ -98,13 +98,24 @@ const allPosts = (await listBlogs()).filter((post) => slugFromReference(post.aut
 const totalPages = Math.max(1, Math.ceil(allPosts.length / POSTS_PER_PAGE));
 const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
 const posts = allPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
-const archiveTitle = labelFromReference(allPosts[0]?.author) || Astro.props.archiveTitle || 'Author';
+const editableAuthor = (await getUser(parsed.slug || 'admin')).data?.user ?? null;
+const authorObject = allPosts.find((post) => post.author && typeof post.author === 'object')?.author ?? editableAuthor;
+const archiveTitle = editableAuthor?.name || labelFromReference(authorObject) || Astro.props.archiveTitle || 'Author';
+const authorSeo = (editableAuthor as any)?.seo || (authorObject as any)?.seo || null;
 const basePath = '/author/' + parsed.slug;
-const seoTitle = archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
-const description = 'Read the latest articles by ' + archiveTitle + ' from First For News.';
-const authorObject = allPosts.find((post) => post.author && typeof post.author === 'object')?.author ?? null;
+const seoTitle = authorSeo?.metaTitle || archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News');
+const description = authorSeo?.metaDescription || editableAuthor?.bio || 'Read the latest articles by ' + archiveTitle + ' from First For News.';
 ---
 
-<Base title={seoTitle} description={description}>
-	<DemoAuthorArchive archiveTitle={archiveTitle} author={authorObject} posts={posts} currentPage={currentPage} totalPages={totalPages} basePath={basePath} />
+<Base
+	title={seoTitle}
+	description={description}
+	image={authorSeo?.ogImage || editableAuthor?.avatar || undefined}
+	ogTitle={authorSeo?.ogTitle || seoTitle}
+	ogDescription={authorSeo?.ogDescription || description}
+	canonicalUrl={authorSeo?.canonicalUrl || basePath + '/'}
+	noindex={authorSeo?.noindex || false}
+	nofollow={authorSeo?.nofollow || false}
+>
+	<DemoAuthorArchive archiveTitle={archiveTitle} author={editableAuthor || authorObject} posts={posts} currentPage={currentPage} totalPages={totalPages} basePath={basePath} />
 </Base>

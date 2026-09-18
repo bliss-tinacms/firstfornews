@@ -123,13 +123,14 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 }
 
 function tinaProxyEndpoints() {
-	return [
+	const endpoints = [
 		process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
 		process.env.PUBLIC_TINA_CONTENT_API_URL,
 		process.env.SITE_URL ? `${process.env.SITE_URL.replace(/\/$/, '')}/tina-content-proxy` : null,
 		'https://firstfornews.net/tina-content-proxy',
 	].filter(Boolean) as string[];
+	return Array.from(new Set(endpoints));
 }
 
 async function fetchGithubPageFrontmatter(relativePath: string) {
@@ -153,19 +154,24 @@ async function fetchGithubPageFrontmatter(relativePath: string) {
 
 async function fetchLiveTina<T>(query: string, variables?: Record<string, unknown>, pick?: (json: any) => T | null | undefined) {
 	for (const endpoint of tinaProxyEndpoints()) {
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
 			const response = await fetch(endpoint, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ query, variables }),
 				cache: 'no-store',
+				signal: controller.signal,
 			});
 			if (!response.ok) continue;
 			const json = await response.json();
 			const data = pick ? pick(json) : json?.data;
 			if (data) return data;
 		} catch (_error) {
-			// Fall back to generated Tina client below.
+			// Fall back to generated Tina client/local source below.
+		} finally {
+			clearTimeout(timeout);
 		}
 	}
 	return null;
@@ -173,18 +179,23 @@ async function fetchLiveTina<T>(query: string, variables?: Record<string, unknow
 
 async function fetchLiveTinaResult<TData>(query: string, variables?: Record<string, unknown>) {
 	for (const endpoint of tinaProxyEndpoints()) {
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
 			const response = await fetch(endpoint, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ query, variables }),
 				cache: 'no-store',
+				signal: controller.signal,
 			});
 			if (!response.ok) continue;
 			const json = await response.json();
 			if (json?.data) return { data: json.data as TData, query, variables: variables ?? {} };
 		} catch (_error) {
-			// Fall back to generated Tina client below.
+			// Fall back to generated Tina client/local source below.
+		} finally {
+			clearTimeout(timeout);
 		}
 	}
 	return null;
@@ -273,7 +284,7 @@ async function getLivePage(slug: string) {
 				... on PageBlocksContent { body }
 				... on PageBlocksHomepageTemplate { hero { eyebrow title description buttonText buttonLink image imageAlt } why { eyebrow title paragraphOne paragraphTwo standards { label title text } } newsroom { heading subheading submitHeading submitButtonText submitButtonLink prompts { title text } } wireFeature { eyebrow quote author byline image imageAlt } coverage { title description topics { number title text } } contact { eyebrow title description note cards { title email text accent } } }
 				... on PageBlocksAboutMockup17 { hero { eyebrow headline lede } purpose { eyebrow title paragraphOne pullquote paragraphTwo } coverage { eyebrow title intro items { number title text link } } standardsSection { eyebrow title intro items { number title text } } independence { eyebrow title image imageAlt paragraphOne paragraphTwo buttonText buttonLink } newsroom { eyebrow title intro contacts { icon title email text } } }
-				... on PageBlocksOurTeamMockup17 { hero { eyebrow headline lede } leadership { eyebrow title people { name role location image imageAlt bio } } seniorStaff { eyebrow title people { name role location image imageAlt bio } } }
+				... on PageBlocksOurTeamMockup17 { hero { eyebrow headline lede } leadership { eyebrow title people { name role location image imageAlt bio experience focus } } seniorStaff { eyebrow title people { name role location image imageAlt bio experience focus } } }
 				... on PageBlocksContactMockup17 { hero { eyebrow headline lede } formSection { eyebrow title description buttonText note formAction subject } inboxes { eyebrow title cards { title description email note } } requests { eyebrow title intro cards { icon title text } } }
 				... on PageBlocksHero { headline tagline starfield image { src alt } actions { label type icon link } }
 				... on PageBlocksCallout { text url }
@@ -287,6 +298,9 @@ async function getLivePage(slug: string) {
 			_sys { filename }
 		}
 	}`;
+
+	const livePage = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.page);
+	if (livePage) return { data: { page: livePage } } as any;
 
 	const localPage = readLocalPageFrontmatter(relativePath);
 	if (localPage) {
@@ -302,9 +316,6 @@ async function getLivePage(slug: string) {
 
 	const githubPage = await fetchGithubPageFrontmatter(relativePath);
 	if (githubPage) return { data: { page: githubPage } } as any;
-
-	const livePage = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.page);
-	if (livePage) return { data: { page: livePage } } as any;
 
 	return requestWithMetadata(client.queries.page({ relativePath }), { priority: 'primary' });
 }
@@ -336,11 +347,10 @@ export async function getBlog(slug: string) {
 			_sys { filename }
 		}
 	}`;
-	const localBlog = readLocalBlogFrontmatter(relativePath);
-	if (localBlog) return { data: { blog: hydratePermalink('blog', localBlog as any) } } as any;
-
 	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
 	if (liveBlog) return { data: { blog: liveBlog } } as any;
+	const localBlog = readLocalBlogFrontmatter(relativePath);
+	if (localBlog) return { data: { blog: hydratePermalink('blog', localBlog as any) } } as any;
 	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 }
 
@@ -359,11 +369,10 @@ async function getLiveUser(slug: string) {
 		}
 	}`;
 
-	const localUser = readLocalJson('user', relativePath);
-	if (localUser) return { data: { user: localUser } } as any;
-
 	const liveUser = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.user);
 	if (liveUser) return { data: { user: liveUser } } as any;
+	const localUser = readLocalJson('user', relativePath);
+	if (localUser) return { data: { user: localUser } } as any;
 
 	return requestWithMetadata(client.queries.user({ relativePath }));
 }
@@ -392,11 +401,10 @@ export async function getCategory(slug: string) {
 			_sys { filename }
 		}
 	}`;
-	const localCategory = readLocalJson('category', relativePath);
-	if (localCategory) return { data: { category: localCategory } } as any;
-
 	const liveCategory = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.category);
 	if (liveCategory) return { data: { category: liveCategory } } as any;
+	const localCategory = readLocalJson('category', relativePath);
+	if (localCategory) return { data: { category: localCategory } } as any;
 	return requestWithMetadata(client.queries.category({ relativePath }));
 }
 
@@ -413,15 +421,14 @@ export async function listPages() {
 			}
 		}
 	}`;
-	const localPages = listLocalFrontmatter('page');
-	if (localPages) return localPages as any;
-
 	const livePages = await fetchLiveTina(query, undefined, (json) => json?.data?.pageConnection?.edges);
 	if (Array.isArray(livePages)) {
 		return livePages
 			.flatMap((edge) => (edge?.node ? [edge.node] : []))
 			.map((node) => hydratePermalink('page', node));
 	}
+	const localPages = listLocalFrontmatter('page');
+	if (localPages) return localPages as any;
 	const result = await client.queries.pageConnection();
 	return (result.data.pageConnection.edges ?? [])
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
@@ -448,15 +455,6 @@ export async function listBlogs() {
 			}
 		}
 	}`;
-	const localBlogs = listLocalFrontmatter('blog');
-	if (localBlogs) {
-		return (localBlogs as any[]).sort((a, b) => {
-			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
-			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
-			return bd - ad;
-		});
-	}
-
 	const liveBlogs = await fetchLiveTina(query, undefined, (json) => json?.data?.blogConnection?.edges);
 	const nodes = Array.isArray(liveBlogs)
 		? liveBlogs.flatMap((edge) => (edge?.node ? [edge.node] : []))
@@ -469,6 +467,14 @@ export async function listBlogs() {
 				const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
 				return bd - ad;
 			});
+	}
+	const localBlogs = listLocalFrontmatter('blog');
+	if (localBlogs) {
+		return (localBlogs as any[]).sort((a, b) => {
+			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
+			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
+			return bd - ad;
+		});
 	}
 	const result = await client.queries.blogConnection();
 	return (result.data.blogConnection.edges ?? [])

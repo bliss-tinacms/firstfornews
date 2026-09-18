@@ -1,5 +1,54 @@
 ---
+import { tinaField } from '@tinacms/astro/tina-field';
+
+const { data = null } = Astro.props;
+const block = Array.isArray(data?.blocks) ? data.blocks[0] : data;
+const hero = block?.hero || {};
+const leadership = block?.leadership || {};
+const seniorStaff = block?.seniorStaff || {};
+const people = Array.isArray(leadership?.people) && leadership.people.length ? leadership.people : [
+  { name: 'Michelle Hastings', role: 'Editor-in-Chief', location: 'Baltimore', image: '/mockup-assets/pages/our-team-09f55fbb-e7cb-4dbc-92bf-61d6fb7cc956.jpg', imageAlt: 'Michelle Hastings', bio: 'Michelle leads the newsroom from Baltimore. Her career spans more than fifteen years in editorial leadership at national and regional publications, with a background that includes both reporting and editing. She sets the standards for what runs, oversees the corrections process, and is the final authority on questions of what the publication will and will not publish. She holds a degree in journalism from a university on the East Coast.', experience: '15+ years', focus: 'Final say on publication' },
+  { name: 'Patrick Alvarez', role: 'Managing Editor', location: 'Austin', image: '/mockup-assets/pages/our-team-25ad0d30-21cd-4581-80fd-d1f3b2205378.jpg', imageAlt: 'Patrick Alvarez', bio: 'Patrick manages the day-to-day operations of the newsroom from Austin. He is responsible for the editorial calendar, story assignments, and the flow of publication across the desks. His background is in digital publishing operations at national media organizations, and he brings to the role the working conviction that a newsroom runs on clear communication, reasonable deadlines, and unmistakable editorial priorities.', experience: 'Calendar & assignments', focus: 'Desk operations' },
+  { name: 'Angela Simmons', role: 'Business Editor', location: 'Milwaukee', image: '/mockup-assets/pages/our-team-6f1645bb-428f-4a1e-afb4-8fb2045dd914.jpg', imageAlt: 'Angela Simmons', bio: 'Angela runs the business and economy desk from Milwaukee. Her reporting career includes more than a decade covering business, finance, and household economics at regional and national publications. She is the editor most likely to reach for the underlying data on a story and the one who insists on distinguishing what a company has actually announced from what its press release wants readers to think it announced.', experience: '10+ years', focus: 'Business & economy desk' },
+  { name: 'Kevin Manning', role: 'Standards Editor', location: 'Boise', image: '/mockup-assets/pages/our-team-a21578b0-b813-4a74-9c0f-d35de6f70e63.jpg', imageAlt: 'Kevin Manning', bio: 'Kevin oversees the publication’s standards program from Boise. He handles fact-checking on sensitive material, manages the corrections record, and serves as the point of contact for readers and named subjects who identify errors in published pieces. His background is in editorial standards and compliance at national organizations, and he is the in-house authority on the publication’s stylebook and the placement of commas in compound sentences.', experience: 'Corrections record', focus: 'Stylebook authority' },
+];
+const t = (value: unknown, fallback: string) => String(value || fallback);
 ---
+
 <main class="ffn-demo ffn-demo-team">
-<Fragment set:html={'<!-- PAGE HEAD -->\n<header class="ph"><div class="w"><div class="ph-in">\n  <div class="ph-k"><b>Our Team</b></div>\n  <h1>The editors behind the coverage.</h1>\n  <p class="ph-d">Every story on First for News passes through the people below. They decide what runs, hold the corrections record, and answer for what the publication publishes.</p>\n</div></div></header>\n<!-- ROSTER -->\n<section class="sc"><div class="w">\n  <div class="eye"><i></i><span>Editorial leadership</span></div>\n  <h2 class="h2">Who runs the newsroom</h2>\n  <div class="rs">\n    <article class="rsi">\n      <img class="rsi-img" src="/mockup-assets/pages/our-team-09f55fbb-e7cb-4dbc-92bf-61d6fb7cc956.jpg" alt="Michelle Hastings">\n      <div>\n        <div class="rsi-hd">\n          <div class="rsi-n">Michelle Hastings</div>\n          <div class="rsi-r">Editor-in-Chief</div>\n        </div>\n        <p class="rsi-x">Michelle leads the newsroom from Baltimore. Her career spans more than fifteen years in editorial leadership at national and regional publications, with a background that includes both reporting and editing. She sets the standards for what runs, oversees the corrections process, and is the final authority on questions of what the publication will and will not publish. She holds a degree in journalism from a university on the East Coast.</p>\n        <div class="rsi-f"><span>Baltimore</span><span>15+ years</span><span>Final say on publication</span></div>\n      </div>\n    </article>\n    <article class="rsi">\n      <img class="rsi-img" src="/mockup-assets/pages/our-team-25ad0d30-21cd-4581-80fd-d1f3b2205378.jpg" alt="Patrick Alvarez">\n      <div>\n        <div class="rsi-hd">\n          <div class="rsi-n">Patrick Alvarez</div>\n          <div class="rsi-r">Managing Editor</div>\n        </div>\n        <p class="rsi-x">Patrick manages the day-to-day operations of the newsroom from Austin. He is responsible for the editorial calendar, story assignments, and the flow of publication across the desks. His background is in digital publishing operations at national media organizations, and he brings to the role the working conviction that a newsroom runs on clear communication, reasonable deadlines, and unmistakable editorial priorities.</p>\n        <div class="rsi-f"><span>Austin</span><span>Calendar &amp; assignments</span><span>Desk operations</span></div>\n      </div>\n    </article>\n    <article class="rsi">\n      <img class="rsi-img" src="/mockup-assets/pages/our-team-a21578b0-b813-4a74-9c0f-d35de6f70e63.jpg" alt="Angela Simmons">\n      <div>\n        <div class="rsi-hd">\n          <div class="rsi-n">Angela Simmons</div>\n          <div class="rsi-r">Business Editor</div>\n        </div>\n        <p class="rsi-x">Angela runs the business and economy desk from Milwaukee. Her reporting career includes more than a decade covering business, finance, and household economics at regional and national publications. She is the editor most likely to reach for the underlying data on a story and the one who insists on distinguishing what a company has actually announced from what its press release wants readers to think it announced.</p>\n        <div class="rsi-f"><span>Milwaukee</span><span>10+ years</span><span>Business &amp; economy desk</span></div>\n      </div>\n    </article>\n    <article class="rsi">\n      <img class="rsi-img" src="/mockup-assets/pages/our-team-6f1645bb-428f-4a1e-afb4-8fb2045dd914.jpg" alt="Kevin Manning">\n      <div>\n        <div class="rsi-hd">\n          <div class="rsi-n">Kevin Manning</div>\n          <div class="rsi-r">Standards Editor</div>\n        </div>\n        <p class="rsi-x">Kevin oversees the publication\'s standards program from Boise. He handles fact-checking on sensitive material, manages the corrections record, and serves as the point of contact for readers and named subjects who identify errors in published pieces. His background is in editorial standards and compliance at national organizations, and he is the in-house authority on the publication\'s stylebook and the placement of commas in compound sentences.</p>\n        <div class="rsi-f"><span>Boise</span><span>Corrections record</span><span>Stylebook authority</span></div>\n      </div>\n    </article>\n  </div>\n</div></section>\n<!-- CLOSING -->\n<section class="cl"><div class="w"><div class="cl-in">\n  <h2>Found an error? Tell an editor.</h2>\n  <p>If an article contains a factual error, readers are encouraged to contact us with specific details and supporting information. Submissions are reviewed, and appropriate corrections may be made when warranted.</p>\n  <a href="/contact/" class="cl-cta">Contact us →</a>\n</div></div></section>'} />
+  <header class="ph"><div class="w"><div class="ph-in">
+    <div class="ph-k"><b data-tina-field={hero ? tinaField(hero, 'eyebrow') : undefined}>{t(hero.eyebrow, 'Our Team')}</b></div>
+    <h1 data-tina-field={hero ? tinaField(hero, 'headline') : undefined}>{t(hero.headline, 'The editors behind the coverage.')}</h1>
+    <p class="ph-d" data-tina-field={hero ? tinaField(hero, 'lede') : undefined}>{t(hero.lede, 'Every story on First for News passes through the people below. They decide what runs, hold the corrections record, and answer for what the publication publishes.')}</p>
+  </div></div></header>
+
+  <section class="sc"><div class="w">
+    <div class="eye"><i></i><span data-tina-field={leadership ? tinaField(leadership, 'eyebrow') : undefined}>{t(leadership.eyebrow, 'Editorial leadership')}</span></div>
+    <h2 class="h2" data-tina-field={leadership ? tinaField(leadership, 'title') : undefined}>{t(leadership.title, 'Who runs the newsroom')}</h2>
+    <div class="rs">
+      {people.map((person: any) => (
+        <article class="rsi">
+          {person.image ? <img class="rsi-img" src={person.image} alt={person.imageAlt || person.name || ''} data-tina-field={tinaField(person, 'image')} /> : <div class="rsi-img demo-img"></div>}
+          <div>
+            <div class="rsi-hd">
+              <div class="rsi-n" data-tina-field={tinaField(person, 'name')}>{person.name}</div>
+              <div class="rsi-r" data-tina-field={tinaField(person, 'role')}>{person.role}</div>
+            </div>
+            <p class="rsi-x" data-tina-field={tinaField(person, 'bio')}>{person.bio}</p>
+            <div class="rsi-f"><span data-tina-field={tinaField(person, 'location')}>{person.location}</span><span data-tina-field={tinaField(person, 'experience')}>{person.experience}</span><span data-tina-field={tinaField(person, 'focus')}>{person.focus}</span></div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div></section>
+
+  {Array.isArray(seniorStaff?.people) && seniorStaff.people.length > 0 && (
+    <section class="sc alt"><div class="w">
+      <div class="eye"><i></i><span data-tina-field={tinaField(seniorStaff, 'eyebrow')}>{t(seniorStaff.eyebrow, 'Senior staff')}</span></div>
+      <h2 class="h2" data-tina-field={tinaField(seniorStaff, 'title')}>{t(seniorStaff.title, 'More editors')}</h2>
+      <div class="rs">{seniorStaff.people.map((person: any) => <article class="rsi"><div><div class="rsi-hd"><div class="rsi-n" data-tina-field={tinaField(person, 'name')}>{person.name}</div><div class="rsi-r" data-tina-field={tinaField(person, 'role')}>{person.role}</div></div><p class="rsi-x" data-tina-field={tinaField(person, 'bio')}>{person.bio}</p></div></article>)}</div>
+    </div></section>
+  )}
+
+  <section class="sc dark"><div class="w"><h2 class="h2">Found an error? Tell an editor.</h2><a class="btn" href="/contact/">Contact Us →</a></div></section>
 </main>

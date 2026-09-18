@@ -8,7 +8,7 @@ import BlogBody from '../components/islands/BlogBody.astro';
 import CategoryArchiveHeader from '../components/islands/CategoryArchiveHeader.astro';
 import DemoCategoryArchive from '../components/demo/DemoCategoryArchive.astro';
 import Demo404 from '../components/demo/Demo404.astro';
-import { getBlog, getConfig, getPublicPage, getUser, listBlogs, listPages, type CmsBlog, type CmsCategory } from '../lib/data';
+import { getBlog, getCategory, getConfig, getPublicPage, getUser, listBlogs, listPages, type CmsBlog, type CmsCategory } from '../lib/data';
 import { islands } from '../lib/islands';
 
 export const prerender = false;
@@ -97,8 +97,10 @@ if (view === 'not-found') {
     const totalPages = Math.max(1, Math.ceil(allCategoryPosts.length / POSTS_PER_PAGE));
     const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
     const posts = allCategoryPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
-    const categoryFromPosts = allCategoryPosts[0]?.category && typeof allCategoryPosts[0].category === 'object' ? allCategoryPosts[0].category as CmsCategory : categoryEntry.data;
-    const archiveTitle = labelFromReference(allCategoryPosts[0]?.category) || categoryEntry.label || titleCase(parsed.slug) || 'Category';
+    const editableCategory = (await getCategory(categoryEntry.filename || parsed.slug)).data?.category ?? null;
+    const categoryFromPosts = editableCategory || (allCategoryPosts[0]?.category && typeof allCategoryPosts[0].category === 'object' ? allCategoryPosts[0].category as CmsCategory : categoryEntry.data);
+    const archiveTitle = editableCategory?.title || labelFromReference(allCategoryPosts[0]?.category) || categoryEntry.label || titleCase(parsed.slug) || 'Category';
+    const categorySeo = (editableCategory as any)?.seo || (categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo || null;
     view = 'category';
     categoryContext = {
       parsed,
@@ -110,9 +112,9 @@ if (view === 'not-found') {
       categoryDocumentSlug: categoryEntry.filename || categoryFromPosts?._sys?.filename || archiveTitle,
       basePath: '/' + parsed.slug,
       hasPosts: posts.length > 0,
-      seo: (categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo || null,
-      seoTitle: ((categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo)?.metaTitle || archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News'),
-      description: ((categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo)?.metaDescription || categoryEntry.data?.description || (allCategoryPosts.length > 0 ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.'),
+      seo: categorySeo,
+      seoTitle: categorySeo?.metaTitle || archiveTitle + ' Articles | ' + (config?.seo?.title || 'First For News'),
+      description: categorySeo?.metaDescription || editableCategory?.description || categoryEntry.data?.description || (allCategoryPosts.length > 0 ? 'Read the latest ' + archiveTitle + ' articles from First For News.' : 'Articles in the ' + archiveTitle + ' category will be published soon on First For News.'),
     };
   }
 }
