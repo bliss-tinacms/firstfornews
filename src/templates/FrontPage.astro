@@ -61,7 +61,7 @@ function getPostDescription(post: Post) {
   return post.description || 'Read the latest reporting from the newsroom.';
 }
 
-const hero = homepage.hero ?? {};
+const hero = editHomepage.hero ?? homepage.hero ?? {};
 const why = homepage.why ?? {};
 const newsroom = homepage.newsroom ?? {};
 const wireFeature = homepage.wireFeature ?? {};

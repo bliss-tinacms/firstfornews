@@ -2,7 +2,6 @@
 import Blocks from '../blocks/Blocks.astro';
 import FrontPage from '../../templates/FrontPage.astro';
 import { getConfig, listBlogs } from '../../lib/data';
-import * as localHome from '../../content/page/home.mdx';
 import DemoAboutPage from '../demo/DemoAboutPage.astro';
 import DemoContactPage from '../demo/DemoContactPage.astro';
 import DemoOurTeamPage from '../demo/DemoOurTeamPage.astro';
@@ -17,7 +16,7 @@ const isHomePage = Boolean(filename === 'home' || data?.permalink === '/' || hom
 const isAboutPage = filename === 'about' || permalink === 'about';
 const isContactPage = filename === 'contact' || permalink === 'contact';
 const isTeamPage = filename === 'our-team' || permalink === 'our-team';
-const frontPageData = (localHome.frontmatter as any) ?? data;
+const frontPageData = data;
 const frontPagePosts = isHomePage ? await listBlogs() : [];
 const frontPageConfig = isHomePage ? ((await getConfig()).data?.config ?? config) : config;
 const isGenericDemoPage = Boolean(data && !isHomePage && !isAboutPage && !isContactPage && !isTeamPage);
