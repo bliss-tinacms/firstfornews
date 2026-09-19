@@ -171,16 +171,26 @@ function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
 		const references = categories
 			.map((item) => (typeof item === 'string' ? item : item?.category))
 			.filter(Boolean);
-		if (references.length) return { ...node, category: references, categories: references } as T;
+		if (references.length) {
+			const next = { ...node, categories: references } as Record<string, any>;
+			delete next.category;
+			return next as T;
+		}
 	}
 	const legacyCategory = node?.category;
 	if (legacyCategory) {
 		const references = (Array.isArray(legacyCategory) ? legacyCategory : [legacyCategory])
 			.map((item) => (typeof item === 'string' ? item : item?.category || item?._sys?.path || item?._sys?.relativePath))
 			.filter(Boolean);
-		if (references.length) return { ...node, category: references, categories: references } as T;
+		if (references.length) {
+			const next = { ...node, categories: references } as Record<string, any>;
+			delete next.category;
+			return next as T;
+		}
 	}
-	return node;
+	const next = { ...node } as Record<string, any>;
+	delete next.category;
+	return next as T;
 }
 
 function tinaDirectContentApiUrl() {
@@ -634,7 +644,11 @@ export async function listBlogs() {
 		: null;
 	if (nodes) {
 		return nodes
-			.map((node) => hydrateBlogCategories(hydratePermalink('blog', node as any)))
+			.map((node) => {
+				const relativePath = (node as any)?._sys?.relativePath || ((node as any)?._sys?.filename ? `${(node as any)._sys.filename}.mdx` : null);
+				const override = readBlogOverride(relativePath);
+				return hydrateBlogCategories(hydratePermalink('blog', { ...(node as any), ...(override ?? {}) }));
+			})
 			.sort((a, b) => {
 				const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 				const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
@@ -643,7 +657,11 @@ export async function listBlogs() {
 	}
 	const localBlogs = listLocalFrontmatter('blog');
 	if (localBlogs) {
-		return (localBlogs as any[]).map((node) => hydrateBlogCategories(node)).sort((a, b) => {
+		return (localBlogs as any[]).map((node) => {
+			const relativePath = node?._sys?.relativePath || (node?._sys?.filename ? `${node._sys.filename}.mdx` : null);
+			const override = readBlogOverride(relativePath);
+			return hydrateBlogCategories({ ...node, ...(override ?? {}) });
+		}).sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
 			return bd - ad;
@@ -652,7 +670,11 @@ export async function listBlogs() {
 	const result = await client.queries.blogConnection();
 	return (result.data.blogConnection.edges ?? [])
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
-		.map((node) => hydrateBlogCategories(hydratePermalink('blog', node as any)))
+		.map((node) => {
+			const relativePath = (node as any)?._sys?.relativePath || ((node as any)?._sys?.filename ? `${(node as any)._sys.filename}.mdx` : null);
+			const override = readBlogOverride(relativePath);
+			return hydrateBlogCategories(hydratePermalink('blog', { ...(node as any), ...(override ?? {}) }));
+		})
 		.sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;

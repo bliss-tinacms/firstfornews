@@ -20,6 +20,12 @@ export function getAuthorName(reference: unknown, fallback = 'First For News Sta
   return labelFromReference(reference, fallback);
 }
 
+export function getPostCategories(post: any) {
+  const categories = post?.categories;
+  if (Array.isArray(categories) && categories.length) return categories;
+  return post?.category ? [post.category] : [];
+}
+
 export function firstImage(post: any) {
   return post?.heroImage || '';
 }

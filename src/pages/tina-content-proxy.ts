@@ -295,12 +295,14 @@ function overrideBlogResponse(text: string, bodyText: string) {
           : localCategories.length
             ? localCategories
             : existingCategories;
-      json.data[key] = {
+      const merged = {
         ...existing,
         ...(localBlog ?? {}),
         ...(override ?? {}),
         categories,
       };
+      delete (merged as Record<string, any>).category;
+      json.data[key] = merged;
     }
     if (Array.isArray(json.errors)) {
       json.errors = json.errors.filter((error: any) => !/Cannot query field\s+\"categories\"/.test(String(error?.message || '')));

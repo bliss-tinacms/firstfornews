@@ -1,7 +1,7 @@
 ---
 import { tinaField } from '@tinacms/astro/tina-field';
 import { getBlogPermalink } from '../../lib/permalinks';
-import { labelFromReference } from './DemoHelpers';
+import { labelFromReference, getPostCategories } from './DemoHelpers';
 const { archiveTitle = 'Author', author = null, posts = [], currentPage = 1, totalPages = 1, basePath = '/author/admin' } = Astro.props;
 function postUrl(post: any) { const url = getBlogPermalink(post); return url.endsWith('/') ? url : url + '/'; }
 function pagePath(page: number) { return page <= 1 ? basePath + '/' : basePath + '/page/' + page + '/'; }
@@ -17,7 +17,7 @@ const role = author?.role || '';
   </div></div></header>
   <section class="lg"><div class="w"><div class="lg-h"><div class="eye"><i></i><span>Most recent first</span></div><div class="h2">Stories by {archiveTitle}</div></div>
     <div>
-      {posts.map((post: any) => <a href={postUrl(post)} class="si">{post.heroImage ? <img class="si-img" src={post.heroImage} alt="" /> : <div class="si-img demo-img"></div>}<div><div class="si-k">{labelFromReference(post.category)}</div><div class="si-h">{post.title}</div>{post.description && <p class="si-x">{post.description}</p>}</div></a>)}
+      {posts.map((post: any) => <a href={postUrl(post)} class="si">{post.heroImage ? <img class="si-img" src={post.heroImage} alt="" /> : <div class="si-img demo-img"></div>}<div><div class="si-k">{labelFromReference(getPostCategories(post))}</div><div class="si-h">{post.title}</div>{post.description && <p class="si-x">{post.description}</p>}</div></a>)}
     </div>
   </div></section>
   {totalPages > 1 && <nav class="pg" aria-label="Archive pagination"><div class="w"><a class="nx" href={pagePath(Math.max(1,currentPage-1))}>Prev</a>{Array.from({ length: Math.min(totalPages, 3) }).map((_, i) => { const p=i+1; return <a class={p===currentPage?'on':''} href={pagePath(p)}>{p}</a>; })}<span class="gap">…</span><a class="nx" href={pagePath(Math.min(totalPages,currentPage+1))}>Next →</a></div></nav>}

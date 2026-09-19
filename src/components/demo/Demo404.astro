@@ -1,6 +1,6 @@
 ---
 import { getBlogPermalink } from '../../lib/permalinks';
-import { labelFromReference } from './DemoHelpers';
+import { labelFromReference, getPostCategories } from './DemoHelpers';
 const { posts = [] } = Astro.props;
 const latest = posts.slice(0, 3);
 const sections = ['Business','Technology','Health','Politics','World','Lifestyle'];
@@ -11,7 +11,7 @@ function sectionUrl(label: string) { return '/' + label.toLowerCase().replace(/[
 <main class="ffn-demo ffn-demo-404">
   <section class="er"><div class="w"><div class="er-in"><span class="er-num">404</span><div class="er-b"><div class="er-k"><b>Page not found</b></div><h1>This page is not here.</h1><p>The link may be broken, or the story may have moved. Nothing was deleted quietly — if a piece was taken down or corrected, we say so on the page.</p><div class="er-cta"><a href="/" class="pri">Back to the homepage →</a></div></div></div></div></section>
   <section class="sc"><div class="w"><div class="eye"><i></i><span>While you are here</span></div><div class="h2">Latest reporting</div><div class="mo-g">
-    {latest.map((post: any) => <a href={postUrl(post)} class="mi">{post.heroImage ? <img class="mi-img" src={post.heroImage} alt="" /> : <div class="mi-img demo-img"></div>}<div class="mi-c"><div class="mi-k">{labelFromReference(post.category)}</div><div class="mi-h">{post.title}</div>{post.description && <p class="mi-x">{post.description}</p>}</div></a>)}
+    {latest.map((post: any) => <a href={postUrl(post)} class="mi">{post.heroImage ? <img class="mi-img" src={post.heroImage} alt="" /> : <div class="mi-img demo-img"></div>}<div class="mi-c"><div class="mi-k">{labelFromReference(getPostCategories(post))}</div><div class="mi-h">{post.title}</div>{post.description && <p class="mi-x">{post.description}</p>}</div></a>)}
   </div></div></section>
   <section class="bd2"><div class="w"><div class="eye"><i></i><span>Or start from a section</span></div><div class="h2">Browse coverage</div><div class="bd2-g">
     {sections.map((label, index) => <a href={sectionUrl(label)} class="bd2-i"><div class="bd2-n">{String(index + 1).padStart(2, '0')}</div><div class="bd2-t">{label}</div></a>)}

@@ -26,6 +26,12 @@ function getReferenceLabel(reference: unknown) {
 	}
 	return null;
 }
+
+function getPostCategories(post: any) {
+	const categories = post?.categories;
+	if (Array.isArray(categories) && categories.length) return categories;
+	return post?.category ? [post.category] : [];
+}
 ---
 
 <Base
@@ -42,9 +48,9 @@ function getReferenceLabel(reference: unknown) {
 							<img width={720} height={360} src={post.heroImage} alt={post.title ?? ''} class="aspect-video w-full object-cover" />
 						)}
 						<div class="p-6">
-							{getReferenceLabel(post.category) && (
+							{getReferenceLabel(getPostCategories(post)) && (
 								<p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-									{getReferenceLabel(post.category)}
+									{getReferenceLabel(getPostCategories(post))}
 								</p>
 							)}
 							<h2 class="font-semibold group-hover:underline">{post.title}</h2>

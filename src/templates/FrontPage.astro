@@ -65,6 +65,12 @@ function getPostDescription(post: Post) {
   return post.description || 'Read the latest reporting from the newsroom.';
 }
 
+function getPostCategories(post: any) {
+  const categories = post?.categories;
+  if (Array.isArray(categories) && categories.length) return categories;
+  return post?.category ? [post.category] : [];
+}
+
 const hero = editHomepage.hero ?? homepage.hero ?? {};
 const why = homepage.why ?? {};
 const newsroom = homepage.newsroom ?? {};
@@ -142,7 +148,7 @@ const teamImages = [
           <a href={getPostUrl(post)} class="rpi">
             <div class="rpi-img" style={`background-image:url('${post.heroImage || fallbackReportImages[index % fallbackReportImages.length]}')`}></div>
             <div class="rpi-c">
-              <div class="rpi-k">{getReferenceLabel(post.category) || 'Featured'}</div>
+              <div class="rpi-k">{getReferenceLabel(getPostCategories(post)) || 'Featured'}</div>
               <div class="rpi-h">{getPostTitle(post)}</div>
               <p class="rpi-x">{getPostDescription(post)}</p>
             </div>

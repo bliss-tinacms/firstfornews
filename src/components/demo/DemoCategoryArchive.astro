@@ -1,7 +1,7 @@
 ---
 import { tinaField } from '@tinacms/astro/tina-field';
 import { getBlogPermalink } from '../../lib/permalinks';
-import { labelFromReference, getAuthorName } from './DemoHelpers';
+import { labelFromReference, getAuthorName, getPostCategories } from './DemoHelpers';
 const { archiveTitle = 'Business', posts = [], currentPage = 1, totalPages = 1, basePath = '/business', category = null } = Astro.props;
 const lead = posts[0];
 const rest = posts.slice(1);
@@ -20,13 +20,13 @@ const emptyBody = hasPosts
   {lead && (
     <section class="ld"><div class="w"><a href={postUrl(lead)} class="ld-a">
       {lead.heroImage ? <div class="ld-img" style={`background-image:url(${lead.heroImage})`}></div> : <div class="ld-img demo-img"></div>}
-      <div class="ld-c"><span class="ld-k">Lead Story</span><div class="ld-h">{lead.title}</div>{lead.description && <p class="ld-x">{lead.description}</p>}<div class="ld-b">{getAuthorName(lead.author)} · {labelFromReference(lead.category, archiveTitle)}</div></div>
+      <div class="ld-c"><span class="ld-k">Lead Story</span><div class="ld-h">{lead.title}</div>{lead.description && <p class="ld-x">{lead.description}</p>}<div class="ld-b">{getAuthorName(lead.author)} · {labelFromReference(getPostCategories(lead), archiveTitle)}</div></div>
     </a></div></section>
   )}
   <section class="lg"><div class="w"><div class="lg-h"><div class="eye"><i></i><span>{hasPosts ? 'Most recent first' : 'No articles yet'}</span></div><div class="h2">{hasPosts ? `More in ${archiveTitle}` : emptyHeadline}</div></div>
     {hasBottomPosts ? (
       <div>
-        {rest.map((post: any) => <a href={postUrl(post)} class="si">{post.heroImage ? <img class="si-img" src={post.heroImage} alt="" /> : <div class="si-img demo-img"></div>}<div><div class="si-k">{labelFromReference(post.category, archiveTitle)}</div><div class="si-h">{post.title}</div>{post.description && <p class="si-x">{post.description}</p>}<div class="si-b">{getAuthorName(post.author)}</div></div></a>)}
+        {rest.map((post: any) => <a href={postUrl(post)} class="si">{post.heroImage ? <img class="si-img" src={post.heroImage} alt="" /> : <div class="si-img demo-img"></div>}<div><div class="si-k">{labelFromReference(getPostCategories(post), archiveTitle)}</div><div class="si-h">{post.title}</div>{post.description && <p class="si-x">{post.description}</p>}<div class="si-b">{getAuthorName(post.author)}</div></div></a>)}
       </div>
     ) : (
       <div class="empty-archive"><p>{emptyBody}</p><a href="/" class="empty-archive__link">Back to the homepage</a></div>
