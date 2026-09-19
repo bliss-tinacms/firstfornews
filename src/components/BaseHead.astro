@@ -21,7 +21,7 @@ interface Props {
 const {
 	title,
 	description,
-	image = 'https://firstfornews.net/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg',
+	image,
 	ogTitle,
 	ogDescription,
 	canonicalUrl,
@@ -47,6 +47,7 @@ function resolveCanonicalUrl(value?: string | URL | null) {
 const canonicalURL = canonicalUrl ? resolveCanonicalUrl(canonicalUrl) : resolveCanonicalUrl(Astro.url.pathname);
 const socialTitle = ogTitle || title;
 const socialDescription = ogDescription || description;
+const socialImage = image || 'https://firstfornews.net/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg';
 const robots = [noindex ? 'noindex' : 'index', nofollow ? 'nofollow' : 'follow'].join(', ');
 const faviconUrl = favicon || '/favicon.svg';
 const faviconHref = favicon || '/favicon.svg';
@@ -104,19 +105,19 @@ const faviconType = faviconLower.endsWith('.png')
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={socialTitle} />
 <meta property="og:description" content={socialDescription} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={new URL(socialImage, Astro.url)} />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content={canonicalURL} />
 <meta name="twitter:title" content={socialTitle} />
 <meta name="twitter:description" content={socialDescription} />
-<meta name="twitter:image" content={new URL(image, Astro.url)} />
+<meta name="twitter:image" content={new URL(socialImage, Astro.url)} />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={socialTitle} />
 <meta property="twitter:description" content={socialDescription} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta property="twitter:image" content={new URL(socialImage, Astro.url)} />
 
 <!-- TinaCMS visual editing is wired by the tina() integration in astro.config.mjs; its middleware only touches edit-mode responses, so there's nothing to add here. -->
 

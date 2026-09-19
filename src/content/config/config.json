@@ -4,6 +4,7 @@
     "description": "Timely stories, useful insights, and clear coverage of the topics that matter.",
     "siteOwner": "First For News",
     "logo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png",
+    "defaultSocialImage": "https://firstfornews.net/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg",
     "favicon": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789664635/firstfornews/favicon.png",
     "footerLogo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png"
   },

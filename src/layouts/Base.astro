@@ -24,6 +24,7 @@ const footerNavigation = (await getFooterNavigation()).data?.navigation ?? null;
 const headerCode = config?.codeInjection?.headerCode?.trim() || '';
 const footerCode = config?.codeInjection?.footerCode?.trim() || '';
 const favicon = config?.seo?.favicon || config?.favicon || '/favicon.svg';
+const defaultSocialImage = config?.seo?.defaultSocialImage || undefined;
 ---
 
 <!doctype html>
@@ -32,7 +33,7 @@ const favicon = config?.seo?.favicon || config?.favicon || '/favicon.svg';
 		<BaseHead
 			title={title}
 			description={description}
-			image={image}
+			image={image || defaultSocialImage}
 			ogTitle={ogTitle}
 			ogDescription={ogDescription}
 			canonicalUrl={canonicalUrl}

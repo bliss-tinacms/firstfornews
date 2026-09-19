@@ -285,7 +285,7 @@ export async function getConfig() {
 
 	const query = `query Config($relativePath: String!) {
 		config(relativePath: $relativePath) {
-			seo { title description siteOwner logo favicon footerLogo }
+			seo { title description siteOwner logo defaultSocialImage favicon footerLogo }
 			contactForm { formspreeEndpoint heading description buttonText note subject }
 			codeInjection { headerCode footerCode }
 			contactLinks { title link icon }

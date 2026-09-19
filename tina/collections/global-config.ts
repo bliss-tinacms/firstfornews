@@ -30,6 +30,12 @@ export const GlobalConfigCollection: Collection = {
         { name: "siteOwner", label: "Site Owner", type: "string" },
         { name: "logo", label: "Logo", type: "image" },
         {
+          name: "defaultSocialImage",
+          label: "Default Social / Embed Image",
+          type: "image",
+          description: "Fallback image used for Open Graph/Twitter/Discord embeds when a page, post, category, or author does not set its own social share image.",
+        },
+        {
           name: "favicon",
           label: "Favicon",
           type: "image",
