@@ -115,7 +115,10 @@ function queryTargetsBlog(bodyText: string) {
     const variables = payload?.variables ?? {};
     const relativePath = variables.relativePath || variables.path;
     const query = String(payload?.query || '');
-    return typeof relativePath === 'string' && /\b(blog|updateBlog|createBlog)\s*\(/.test(query);
+    return typeof relativePath === 'string' && (
+      /\b(blog|updateBlog|createBlog)\s*\(/.test(query) ||
+      (/\b(createDocument|updateDocument)\s*\(/.test(query) && (variables.collection === 'blog' || variables.collectionName === 'blog'))
+    );
   } catch (_error) {
     return false;
   }
@@ -126,6 +129,31 @@ function normalizeBlogCategoryList(categories: any) {
   return categories
     .map((item) => (typeof item === 'string' ? item : item?.category))
     .filter(Boolean);
+}
+
+function normalizeTinaRichText(value: any) {
+  if (typeof value !== 'string') return value;
+  const text = value.trim();
+  return {
+    type: 'root',
+    children: text
+      ? [{ type: 'p', children: [{ type: 'text', text }] }]
+      : [{ type: 'p', children: [{ type: 'text', text: '' }] }],
+  };
+}
+
+function normalizeBlogMutationParams(params: any) {
+  if (!params || typeof params !== 'object') return params;
+  const next = { ...params };
+  if (Object.prototype.hasOwnProperty.call(next, 'body')) {
+    next.body = normalizeTinaRichText(next.body);
+  }
+  if (Object.prototype.hasOwnProperty.call(next, 'categories')) {
+    const categories = normalizeBlogCategoryList(next.categories);
+    if (categories.length && !next.category) next.category = categories[0];
+    delete next.categories;
+  }
+  return next;
 }
 
 function queryTargetsConfig(bodyText: string) {
@@ -205,7 +233,9 @@ function overrideBlogResponse(text: string, bodyText: string) {
       ? ['updateBlog']
       : /\bcreateBlog\s*\(/.test(String(payload.query || ''))
         ? ['createBlog']
-        : ['blog'];
+        : /\b(createDocument|updateDocument)\s*\(/.test(String(payload.query || ''))
+          ? [String(payload.query || '').includes('createDocument') ? 'createDocument' : 'updateDocument']
+          : ['blog'];
     for (const key of targetKeys) {
       json.data[key] = {
         ...(json.data[key] ?? {}),
@@ -231,7 +261,7 @@ function responseHasUnsupportedFieldError(text: string) {
       const message = String(error?.message || '');
       return (
         /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage|redirects|categories)\"/.test(message) ||
-        (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /(defaultSocialImage|redirects)/.test(message)) ||
+        (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /(defaultSocialImage|redirects|categories|Expected object, received string|invalid_type)/.test(message)) ||
         (/Field\s+\"defaultSocialImage\"\s+is not defined by type\s+\"ConfigSeoMutation\"/.test(message)) ||
         (/Field\s+\"redirects\"\s+is not defined by type\s+\"ConfigMutation\"/.test(message))
       );
@@ -256,14 +286,18 @@ function stripUnsupportedLaggingSchemaFields(bodyText: string) {
     query = query.replace(/\bdefaultSocialImage\b/g, '');
     query = query.replace(/\bcategories\s*\{[^{}]*(?:\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[^{}]*)*\}/g, '');
     query = query.replace(/^\s*categories\s*$/gm, '');
+    query = query.replace(/\bcategories\b/g, '');
     query = query.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
 
     const variables = payload.variables ? { ...payload.variables } : payload.variables;
-    if (variables?.params?.categories) {
-      const params = { ...variables.params };
-      const categories = normalizeBlogCategoryList(params.categories);
-      if (categories.length && !params.category) params.category = categories[0];
-      delete params.categories;
+    if (variables?.params) {
+      let params = { ...variables.params };
+      if (variables.collection === 'blog' || variables.collectionName === 'blog') {
+        params = normalizeBlogMutationParams(params);
+        if (params.blog) params.blog = normalizeBlogMutationParams(params.blog);
+      } else {
+        params = normalizeBlogMutationParams(params);
+      }
       variables.params = params;
     }
 
