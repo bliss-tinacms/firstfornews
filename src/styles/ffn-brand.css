@@ -263,9 +263,9 @@ a:hover{color:var(--org2)}
 .tc{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:baseline;text-decoration:none;padding:14px 0;border-bottom:1px solid var(--line);transition:padding-left .18s}
 .tc:last-child{border-bottom:none}
 .tc:hover{padding-left:6px}
-.tc-n{font-family:var(--dsp);font-size:22px;font-weight:800;color:var(--dim);line-height:1;transition:color .18s}
+.tc-n{font-family:var(--dsp);font-size:18px;font-weight:800;color:var(--dim);line-height:1;transition:color .18s}
 .tc:hover .tc-n{color:var(--org)}
-.tc-h{font-family:var(--dsp);font-size:21px;font-weight:700;text-transform:uppercase;letter-spacing:-.004em;line-height:1.06;color:var(--blk);transition:color .18s}
+.tc-h{font-family:var(--dsp);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:-.004em;line-height:1.06;color:var(--blk);transition:color .18s}
 .tc:hover .tc-h{color:var(--org2)}
 .sh{display:flex;flex-direction:column;gap:0;padding:8px 20px 18px}
 .sh a{display:flex;align-items:center;gap:12px;font-family:var(--cnd);font-size:15px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--txt);text-decoration:none;padding:13px 0;min-height:46px;border-bottom:1px solid var(--line);transition:color .16s}

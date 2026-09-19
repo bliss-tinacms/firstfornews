@@ -207,7 +207,7 @@ const heroImageAlt = (() => {
 				<aside class="rl" aria-label="Article tools">
 					{hasToc && (
 						<div class="rc toc">
-							<div class="rc-t">In this story</div>
+							<div class="rc-t">Table of Content</div>
 							<div class="rc-b">
 								{tocItems.map((item, index) => (
 									<a class="tc" href={`#${item.id}`}>
@@ -221,7 +221,7 @@ const heroImageAlt = (() => {
 					<div class="rc">
 						<div class="rc-t">Share this story</div>
 						<div class="sh">
-							<a href={shareUrl} data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg><span>Copy Link</span></a>
+							<a href={shareUrl} data-copy-link aria-label="Copy this post URL"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"></path></svg><span>Copy Link</span></a>
 							<a href="mailto:contact@firstfornews.net"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"></path><path d="m4 7 8 6 8-6"></path></svg><span>Email Us</span></a>
 							<a href="/contact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v10H8l-3 3z"></path></svg><span>Send a Tip</span></a>
 						</div>
@@ -256,12 +256,38 @@ const heroImageAlt = (() => {
 		<script is:inline>
 			(() => {
 				const article = document.currentScript?.previousElementSibling?.querySelector?.('.pr') || document.querySelector('.pr[data-toc-ids]');
-				if (!article) return;
-				let ids = [];
-				try { ids = JSON.parse(article.getAttribute('data-toc-ids') || '[]'); } catch (_) {}
-				article.querySelectorAll('h2').forEach((heading, index) => {
-					if (ids[index] && !heading.id) heading.id = ids[index];
-				});
+				if (article) {
+					let ids = [];
+					try { ids = JSON.parse(article.getAttribute('data-toc-ids') || '[]'); } catch (_) {}
+					article.querySelectorAll('h2').forEach((heading, index) => {
+						if (ids[index] && !heading.id) heading.id = ids[index];
+					});
+				}
+
+				const copyLink = document.querySelector('[data-copy-link]');
+				if (copyLink) {
+					copyLink.addEventListener('click', async (event) => {
+						event.preventDefault();
+						const url = document.querySelector('link[rel="canonical"]')?.href || new URL(window.location.pathname, window.location.origin).toString();
+						try {
+							await navigator.clipboard.writeText(url);
+						} catch (_) {
+							const input = document.createElement('input');
+							input.value = url;
+							input.setAttribute('readonly', '');
+							document.body.appendChild(input);
+							input.select();
+							document.execCommand('copy');
+							input.remove();
+						}
+						const label = copyLink.querySelector('span');
+						if (label) {
+							const previous = label.textContent;
+							label.textContent = 'Copied';
+							window.setTimeout(() => { label.textContent = previous || 'Copy Link'; }, 1600);
+						}
+					});
+				}
 			})();
 		</script>
 	</>
