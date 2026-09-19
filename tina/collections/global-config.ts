@@ -72,6 +72,46 @@ export const GlobalConfigCollection: Collection = {
       ],
     },
     {
+      name: "redirects",
+      label: "Redirects",
+      type: "object",
+      list: true,
+      description: "Manage site redirects. Source Path is the old URL path and Destination Path is where visitors should be sent.",
+      ui: {
+        itemProps: (item) => ({
+          label: item?.source && item?.destination ? `${item.source} → ${item.destination}` : "Redirect",
+        }),
+      },
+      fields: [
+        {
+          name: "enabled",
+          label: "Enabled",
+          type: "boolean",
+          description: "Turn this redirect on or off without deleting it.",
+        },
+        {
+          name: "source",
+          label: "Source Path",
+          type: "string",
+          description: "Old path to redirect from, for example /old-page/.",
+          required: true,
+        },
+        {
+          name: "destination",
+          label: "Destination Path",
+          type: "string",
+          description: "New path or full URL to redirect to, for example /new-page/.",
+          required: true,
+        },
+        {
+          name: "permanent",
+          label: "Permanent",
+          type: "boolean",
+          description: "Use 301 when enabled, or 302 when disabled.",
+        },
+      ],
+    },
+    {
       name: "contactLinks",
       label: "Contact Links",
       type: "object",

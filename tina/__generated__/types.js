@@ -505,6 +505,13 @@ export const ConfigPartsFragmentDoc = gql`
     headerCode
     footerCode
   }
+  redirects {
+    __typename
+    enabled
+    source
+    destination
+    permanent
+  }
   contactLinks {
     __typename
     title

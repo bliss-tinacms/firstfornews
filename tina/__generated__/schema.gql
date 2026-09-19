@@ -1179,6 +1179,13 @@ type ConfigCodeInjection {
   footerCode: String
 }
 
+type ConfigRedirects {
+  enabled: Boolean
+  source: String!
+  destination: String!
+  permanent: Boolean
+}
+
 type ConfigContactLinks {
   title: String
   link: String
@@ -1190,6 +1197,7 @@ type Config implements Node & Document {
   seo: ConfigSeo
   contactForm: ConfigContactForm
   codeInjection: ConfigCodeInjection
+  redirects: [ConfigRedirects]
   contactLinks: [ConfigContactLinks]
   footerStarfield: Boolean
   id: ID!
@@ -1221,6 +1229,13 @@ input ConfigCodeInjectionFilter {
   footerCode: StringFilter
 }
 
+input ConfigRedirectsFilter {
+  enabled: BooleanFilter
+  source: StringFilter
+  destination: StringFilter
+  permanent: BooleanFilter
+}
+
 input ConfigContactLinksFilter {
   title: StringFilter
   link: StringFilter
@@ -1232,6 +1247,7 @@ input ConfigFilter {
   seo: ConfigSeoFilter
   contactForm: ConfigContactFormFilter
   codeInjection: ConfigCodeInjectionFilter
+  redirects: ConfigRedirectsFilter
   contactLinks: ConfigContactLinksFilter
   footerStarfield: BooleanFilter
 }
@@ -1782,6 +1798,13 @@ input ConfigCodeInjectionMutation {
   footerCode: String
 }
 
+input ConfigRedirectsMutation {
+  enabled: Boolean
+  source: String
+  destination: String
+  permanent: Boolean
+}
+
 input ConfigContactLinksMutation {
   title: String
   link: String
@@ -1793,6 +1816,7 @@ input ConfigMutation {
   seo: ConfigSeoMutation
   contactForm: ConfigContactFormMutation
   codeInjection: ConfigCodeInjectionMutation
+  redirects: [ConfigRedirectsMutation]
   contactLinks: [ConfigContactLinksMutation]
   footerStarfield: Boolean
 }

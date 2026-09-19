@@ -492,6 +492,13 @@ fragment ConfigParts on Config {
     headerCode
     footerCode
   }
+  redirects {
+    __typename
+    enabled
+    source
+    destination
+    permanent
+  }
   contactLinks {
     __typename
     title

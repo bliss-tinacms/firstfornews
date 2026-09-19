@@ -46,7 +46,7 @@ function getLocalConfigData() {
   }
 }
 
-function persistLocalDefaultSocialImageFromMutation(bodyText: string) {
+function persistLocalConfigAdditionsFromMutation(bodyText: string) {
   try {
     if (!queryTargetsConfig(bodyText)) return;
     const payload = JSON.parse(bodyText || '{}');
@@ -54,11 +54,23 @@ function persistLocalDefaultSocialImageFromMutation(bodyText: string) {
     const directValue = params?.seo?.defaultSocialImage;
     const nestedValue = params?.config?.seo?.defaultSocialImage;
     const defaultSocialImage = nestedValue || directValue;
-    if (!defaultSocialImage || typeof defaultSocialImage !== 'string') return;
+    const directRedirects = params?.redirects;
+    const nestedRedirects = params?.config?.redirects;
+    const redirects = Array.isArray(nestedRedirects)
+      ? nestedRedirects
+      : Array.isArray(directRedirects)
+        ? directRedirects
+        : undefined;
+    if ((!defaultSocialImage || typeof defaultSocialImage !== 'string') && !redirects) return;
 
     const filePath = join(process.cwd(), 'src', 'content', 'config', 'config.json');
     const localConfig = JSON.parse(readFileSync(filePath, 'utf8'));
-    localConfig.seo = { ...(localConfig.seo ?? {}), defaultSocialImage };
+    if (defaultSocialImage && typeof defaultSocialImage === 'string') {
+      localConfig.seo = { ...(localConfig.seo ?? {}), defaultSocialImage };
+    }
+    if (redirects) {
+      localConfig.redirects = redirects;
+    }
     writeFileSync(filePath, JSON.stringify(localConfig, null, 2) + '\n');
   } catch (_error) {
     // Do not block the Tina save retry if the deployed filesystem is read-only.
@@ -125,6 +137,7 @@ function overrideConfigResponse(text: string, bodyText: string) {
     if (json?.data?.config) {
       json.data.config = {
         ...json.data.config,
+        redirects: localConfig.redirects ?? json.data.config.redirects ?? [],
         seo: {
           ...(json.data.config.seo ?? {}),
           ...(localConfig.seo ?? {}),
@@ -145,9 +158,10 @@ function responseHasUnsupportedFieldError(text: string) {
     return errors.some((error: any) => {
       const message = String(error?.message || '');
       return (
-        /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage)\"/.test(message) ||
-        (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /defaultSocialImage/.test(message)) ||
-        (/Field\s+\"defaultSocialImage\"\s+is not defined by type\s+\"ConfigSeoMutation\"/.test(message))
+        /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage|redirects)\"/.test(message) ||
+        (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /(defaultSocialImage|redirects)/.test(message)) ||
+        (/Field\s+\"defaultSocialImage\"\s+is not defined by type\s+\"ConfigSeoMutation\"/.test(message)) ||
+        (/Field\s+\"redirects\"\s+is not defined by type\s+\"ConfigMutation\"/.test(message))
       );
     });
   } catch (_error) {
@@ -182,6 +196,7 @@ function stripConfigLaggingSchemaFields(bodyText: string) {
     if (typeof payload.query !== 'string') return bodyText;
     let query = payload.query
       .replace(/\bdefaultSocialImage\b/g, '')
+      .replace(/\bredirects\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '')
       .replace(/seo\s*\{\s*\}/g, '')
       .replace(/\.\.\.\s+on\s+Config\s*\{\s*\}/g, '... on Config { _sys { filename } }')
       .replace(/[ \t]+\n/g, '\n')
@@ -202,6 +217,10 @@ function stripConfigLaggingSchemaFields(bodyText: string) {
       const nextParams = { ...params };
       Object.assign(nextParams, stripSeo(nextParams));
       if (nextParams.config) nextParams.config = stripSeo({ ...nextParams.config });
+      if (Object.prototype.hasOwnProperty.call(nextParams, 'redirects')) delete nextParams.redirects;
+      if (nextParams.config && Object.prototype.hasOwnProperty.call(nextParams.config, 'redirects')) {
+        delete nextParams.config.redirects;
+      }
       variables.params = nextParams;
     }
 
@@ -298,7 +317,7 @@ export const POST: APIRoute = async ({ request }) => {
     let contentType = upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
 
     if (responseHasUnsupportedFieldError(text)) {
-      if (queryTargetsConfig(body)) persistLocalDefaultSocialImageFromMutation(body);
+      if (queryTargetsConfig(body)) persistLocalConfigAdditionsFromMutation(body);
       const retryBody = queryTargetsConfig(body)
         ? stripConfigLaggingSchemaFields(body)
         : stripUnsupportedLaggingSchemaFields(body);

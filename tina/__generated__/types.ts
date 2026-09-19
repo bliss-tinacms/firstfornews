@@ -1406,6 +1406,14 @@ export type ConfigCodeInjection = {
   footerCode?: Maybe<Scalars['String']['output']>;
 };
 
+export type ConfigRedirects = {
+  __typename?: 'ConfigRedirects';
+  enabled?: Maybe<Scalars['Boolean']['output']>;
+  source: Scalars['String']['output'];
+  destination: Scalars['String']['output'];
+  permanent?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type ConfigContactLinks = {
   __typename?: 'ConfigContactLinks';
   title?: Maybe<Scalars['String']['output']>;
@@ -1419,6 +1427,7 @@ export type Config = Node & Document & {
   seo?: Maybe<ConfigSeo>;
   contactForm?: Maybe<ConfigContactForm>;
   codeInjection?: Maybe<ConfigCodeInjection>;
+  redirects?: Maybe<Array<Maybe<ConfigRedirects>>>;
   contactLinks?: Maybe<Array<Maybe<ConfigContactLinks>>>;
   footerStarfield?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
@@ -1450,6 +1459,13 @@ export type ConfigCodeInjectionFilter = {
   footerCode?: InputMaybe<StringFilter>;
 };
 
+export type ConfigRedirectsFilter = {
+  enabled?: InputMaybe<BooleanFilter>;
+  source?: InputMaybe<StringFilter>;
+  destination?: InputMaybe<StringFilter>;
+  permanent?: InputMaybe<BooleanFilter>;
+};
+
 export type ConfigContactLinksFilter = {
   title?: InputMaybe<StringFilter>;
   link?: InputMaybe<StringFilter>;
@@ -1461,6 +1477,7 @@ export type ConfigFilter = {
   seo?: InputMaybe<ConfigSeoFilter>;
   contactForm?: InputMaybe<ConfigContactFormFilter>;
   codeInjection?: InputMaybe<ConfigCodeInjectionFilter>;
+  redirects?: InputMaybe<ConfigRedirectsFilter>;
   contactLinks?: InputMaybe<ConfigContactLinksFilter>;
   footerStarfield?: InputMaybe<BooleanFilter>;
 };
@@ -2119,6 +2136,13 @@ export type ConfigCodeInjectionMutation = {
   footerCode?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ConfigRedirectsMutation = {
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  destination?: InputMaybe<Scalars['String']['input']>;
+  permanent?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type ConfigContactLinksMutation = {
   title?: InputMaybe<Scalars['String']['input']>;
   link?: InputMaybe<Scalars['String']['input']>;
@@ -2130,6 +2154,7 @@ export type ConfigMutation = {
   seo?: InputMaybe<ConfigSeoMutation>;
   contactForm?: InputMaybe<ConfigContactFormMutation>;
   codeInjection?: InputMaybe<ConfigCodeInjectionMutation>;
+  redirects?: InputMaybe<Array<InputMaybe<ConfigRedirectsMutation>>>;
   contactLinks?: InputMaybe<Array<InputMaybe<ConfigContactLinksMutation>>>;
   footerStarfield?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -2679,6 +2704,13 @@ export type ConfigCodeInjectionFilter = {
   footerCode?: StringFilter | null | undefined;
 };
 
+export type ConfigRedirectsFilter = {
+  enabled?: BooleanFilter | null | undefined;
+  source?: StringFilter | null | undefined;
+  destination?: StringFilter | null | undefined;
+  permanent?: BooleanFilter | null | undefined;
+};
+
 export type ConfigContactLinksFilter = {
   title?: StringFilter | null | undefined;
   link?: StringFilter | null | undefined;
@@ -2690,6 +2722,7 @@ export type ConfigFilter = {
   seo?: ConfigSeoFilter | null | undefined;
   contactForm?: ConfigContactFormFilter | null | undefined;
   codeInjection?: ConfigCodeInjectionFilter | null | undefined;
+  redirects?: ConfigRedirectsFilter | null | undefined;
   contactLinks?: ConfigContactLinksFilter | null | undefined;
   footerStarfield?: BooleanFilter | null | undefined;
 };
@@ -2718,7 +2751,7 @@ export type UserPartsFragment = { __typename: 'User', name: string, role: string
 
 export type NavigationPartsFragment = { __typename: 'Navigation', title: string, items: Array<{ __typename: 'NavigationItems', label: string, href: string, children: Array<{ __typename: 'NavigationItemsChildren', label: string, href: string } | null> | null } | null> | null };
 
-export type ConfigPartsFragment = { __typename: 'Config', favicon: string | null, footerStarfield: boolean | null, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null };
+export type ConfigPartsFragment = { __typename: 'Config', favicon: string | null, footerStarfield: boolean | null, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, redirects: Array<{ __typename: 'ConfigRedirects', enabled: boolean | null, source: string, destination: string, permanent: boolean | null } | null> | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null };
 
 export type BlogQueryVariables = Exact<{
   relativePath: string;
@@ -2848,7 +2881,7 @@ export type ConfigQueryVariables = Exact<{
 }>;
 
 
-export type ConfigQuery = { config: { __typename: 'Config', id: string, favicon: string | null, footerStarfield: boolean | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null } };
+export type ConfigQuery = { config: { __typename: 'Config', id: string, favicon: string | null, footerStarfield: boolean | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, redirects: Array<{ __typename: 'ConfigRedirects', enabled: boolean | null, source: string, destination: string, permanent: boolean | null } | null> | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null } };
 
 export type ConfigConnectionQueryVariables = Exact<{
   before?: string | null | undefined;
@@ -2860,7 +2893,7 @@ export type ConfigConnectionQueryVariables = Exact<{
 }>;
 
 
-export type ConfigConnectionQuery = { configConnection: { totalCount: number, pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ cursor: string, node: { __typename: 'Config', id: string, favicon: string | null, footerStarfield: boolean | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null } | null } | null> | null } };
+export type ConfigConnectionQuery = { configConnection: { totalCount: number, pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ cursor: string, node: { __typename: 'Config', id: string, favicon: string | null, footerStarfield: boolean | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'ConfigSeo', title: string | null, description: string | null, siteOwner: string | null, logo: string | null, defaultSocialImage: string | null, favicon: string | null, footerLogo: string | null } | null, contactForm: { __typename: 'ConfigContactForm', formspreeEndpoint: string | null, heading: string | null, description: string | null, buttonText: string | null, note: string | null, subject: string | null } | null, codeInjection: { __typename: 'ConfigCodeInjection', headerCode: string | null, footerCode: string | null } | null, redirects: Array<{ __typename: 'ConfigRedirects', enabled: boolean | null, source: string, destination: string, permanent: boolean | null } | null> | null, contactLinks: Array<{ __typename: 'ConfigContactLinks', title: string | null, link: string | null, icon: string | null } | null> | null } | null } | null> | null } };
 
 export const BlogPartsFragmentDoc = gql`
     fragment BlogParts on Blog {
@@ -3361,6 +3394,13 @@ export const ConfigPartsFragmentDoc = gql`
     __typename
     headerCode
     footerCode
+  }
+  redirects {
+    __typename
+    enabled
+    source
+    destination
+    permanent
   }
   contactLinks {
     __typename

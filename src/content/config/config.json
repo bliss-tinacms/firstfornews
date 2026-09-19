@@ -19,6 +19,14 @@
     "headerCode": "",
     "footerCode": ""
   },
+  "redirects": [
+    {
+      "enabled": true,
+      "source": "/privacy/",
+      "destination": "/privacy-policy/",
+      "permanent": true
+    }
+  ],
   "contactLinks": [],
   "footerStarfield": false
 }
