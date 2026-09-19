@@ -46,6 +46,26 @@ function getLocalConfigData() {
   }
 }
 
+function getLocalBlogData(relativePath?: string) {
+  if (!relativePath) return null;
+  try {
+    const filename = relativePath.endsWith('.mdx') ? relativePath : `${relativePath}.mdx`;
+    const filePath = join(process.cwd(), 'src', 'content', 'blog', filename);
+    const parsed = matter(readFileSync(filePath, 'utf8'));
+    if (!parsed.data || !Object.keys(parsed.data).length) return null;
+    const data: Record<string, any> = { ...parsed.data };
+    for (const key of ['pubDate', 'updatedDate']) {
+      if (data[key] instanceof Date) data[key] = data[key].toISOString();
+    }
+    return {
+      ...data,
+      _sys: { filename: filename.replace(/\.mdx$/, ''), relativePath: filename },
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
 function persistLocalConfigAdditionsFromMutation(bodyText: string) {
   try {
     if (!queryTargetsConfig(bodyText)) return;
@@ -84,6 +104,18 @@ function queryTargetsHomepage(bodyText: string) {
     const relativePath = variables.relativePath || variables.relativePath__homepage || variables.path;
     const query = String(payload?.query || '');
     return relativePath === 'home.mdx' && /\bpage\s*\(/.test(query);
+  } catch (_error) {
+    return false;
+  }
+}
+
+function queryTargetsBlog(bodyText: string) {
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    const variables = payload?.variables ?? {};
+    const relativePath = variables.relativePath || variables.path;
+    const query = String(payload?.query || '');
+    return typeof relativePath === 'string' && /\bblog\s*\(/.test(query);
   } catch (_error) {
     return false;
   }
@@ -151,6 +183,30 @@ function overrideConfigResponse(text: string, bodyText: string) {
   return text;
 }
 
+function overrideBlogResponse(text: string, bodyText: string) {
+  if (!queryTargetsBlog(bodyText)) return text;
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    const relativePath = payload?.variables?.relativePath || payload?.variables?.path;
+    const localBlog = getLocalBlogData(relativePath);
+    if (!localBlog) return text;
+    const json = JSON.parse(text || '{}');
+    if (!json.data) json.data = {};
+    json.data.blog = {
+      ...(json.data.blog ?? {}),
+      ...localBlog,
+      categories: localBlog.categories ?? json.data.blog?.categories ?? [],
+    };
+    if (Array.isArray(json.errors)) {
+      json.errors = json.errors.filter((error: any) => !/Cannot query field\s+\"categories\"/.test(String(error?.message || '')));
+      if (!json.errors.length) delete json.errors;
+    }
+    return JSON.stringify(json);
+  } catch (_error) {
+    return text;
+  }
+}
+
 function responseHasUnsupportedFieldError(text: string) {
   try {
     const json = JSON.parse(text);
@@ -158,7 +214,7 @@ function responseHasUnsupportedFieldError(text: string) {
     return errors.some((error: any) => {
       const message = String(error?.message || '');
       return (
-        /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage|redirects)\"/.test(message) ||
+        /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage|redirects|categories)\"/.test(message) ||
         (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /(defaultSocialImage|redirects)/.test(message)) ||
         (/Field\s+\"defaultSocialImage\"\s+is not defined by type\s+\"ConfigSeoMutation\"/.test(message)) ||
         (/Field\s+\"redirects\"\s+is not defined by type\s+\"ConfigMutation\"/.test(message))
@@ -182,6 +238,7 @@ function stripUnsupportedLaggingSchemaFields(bodyText: string) {
     query = query.replace(/\bexperience\b/g, '');
     query = query.replace(/\bfocus\b/g, '');
     query = query.replace(/\bdefaultSocialImage\b/g, '');
+    query = query.replace(/\bcategories\s*\{[^{}]*(?:\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[^{}]*)*\}/g, '');
     query = query.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
 
     return JSON.stringify({ ...payload, query });
@@ -312,7 +369,7 @@ export const POST: APIRoute = async ({ request }) => {
       body,
     });
 
-    let text = overrideConfigResponse(overrideHomepageResponse(await upstreamResponse.text(), body), body);
+    let text = overrideBlogResponse(overrideConfigResponse(overrideHomepageResponse(await upstreamResponse.text(), body), body), body);
     let status = upstreamResponse.status;
     let contentType = upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
 
@@ -329,7 +386,7 @@ export const POST: APIRoute = async ({ request }) => {
         });
         status = retryResponse.status;
         contentType = retryResponse.headers.get('content-type') || contentType;
-        text = overrideConfigResponse(overrideHomepageResponse(await retryResponse.text(), retryBody), body);
+        text = overrideBlogResponse(overrideConfigResponse(overrideHomepageResponse(await retryResponse.text(), retryBody), body), body);
       }
     }
 
