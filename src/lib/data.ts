@@ -394,17 +394,32 @@ async function getLivePage(slug: string) {
 
 export const getPublicPage = (slug: string) => getLivePage(slug);
 
-export const getEditableBlog = (slug: string) => {
+export const getEditableBlog = async (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
-	const localBlog = readLocalBlogFrontmatter(relativePath);
-	if (localBlog) {
-		return requestWithMetadata(Promise.resolve({
-			data: { blog: hydratePermalink('blog', localBlog as any) },
-			query: BlogDocument,
-			variables: { relativePath },
-		}), { priority: 'primary' });
+	// Editor/sidebar data must preserve the generated Tina query metadata and rich-text body.
+	// Prefer the generated Tina client first; a local markdown body fallback can render public
+	// pages but leaves the visual editor with an empty/broken form payload for blog posts.
+	try {
+		const result = await client.queries.blog({ relativePath });
+		if (result?.data?.blog) {
+			return requestWithMetadata(Promise.resolve({
+				data: result.data,
+				query: result.query,
+				variables: result.variables ?? { relativePath },
+			}), { priority: 'primary' });
+		}
+		return requestWithMetadata(Promise.resolve(result), { priority: 'primary' });
+	} catch (_error) {
+		const localBlog = readLocalBlogFrontmatter(relativePath);
+		if (localBlog) {
+			return requestWithMetadata(Promise.resolve({
+				data: { blog: hydratePermalink('blog', localBlog as any) },
+				query: BlogDocument,
+				variables: { relativePath },
+			}), { priority: 'primary' });
+		}
+		throw _error;
 	}
-	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 };
 
 export async function getBlog(slug: string) {

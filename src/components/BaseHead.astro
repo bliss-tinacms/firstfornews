@@ -48,6 +48,16 @@ const canonicalURL = canonicalUrl ? resolveCanonicalUrl(canonicalUrl) : resolveC
 const socialTitle = ogTitle || title;
 const socialDescription = ogDescription || description;
 const socialImage = image || 'https://firstfornews.net/mockup-assets/ff79aa4a-78e3-4ef4-afe8-72dd2f816909.jpg';
+function resolveSocialImageUrl(value: string) {
+	const url = new URL(value, HERMES_PRODUCTION_SITE_URL);
+	if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || !/^https?:$/.test(url.protocol)) {
+		return new URL(url.pathname, HERMES_PRODUCTION_SITE_URL);
+	}
+	url.protocol = 'https:';
+	url.port = '';
+	return url;
+}
+const socialImageURL = resolveSocialImageUrl(socialImage);
 const robots = [noindex ? 'noindex' : 'index', nofollow ? 'nofollow' : 'follow'].join(', ');
 const faviconUrl = favicon || '/favicon.svg';
 const faviconHref = favicon || '/favicon.svg';
@@ -105,19 +115,19 @@ const faviconType = faviconLower.endsWith('.png')
 <meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={socialTitle} />
 <meta property="og:description" content={socialDescription} />
-<meta property="og:image" content={new URL(socialImage, Astro.url)} />
+<meta property="og:image" content={socialImageURL} />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:url" content={canonicalURL} />
 <meta name="twitter:title" content={socialTitle} />
 <meta name="twitter:description" content={socialDescription} />
-<meta name="twitter:image" content={new URL(socialImage, Astro.url)} />
+<meta name="twitter:image" content={socialImageURL} />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content={canonicalURL} />
 <meta property="twitter:title" content={socialTitle} />
 <meta property="twitter:description" content={socialDescription} />
-<meta property="twitter:image" content={new URL(socialImage, Astro.url)} />
+<meta property="twitter:image" content={socialImageURL} />
 
 <!-- TinaCMS visual editing is wired by the tina() integration in astro.config.mjs; its middleware only touches edit-mode responses, so there's nothing to add here. -->
 
