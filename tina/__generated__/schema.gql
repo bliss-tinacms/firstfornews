@@ -217,17 +217,41 @@ type BlogConnection implements Connection {
   edges: [BlogConnectionEdges]
 }
 
+type CategorySeo {
+  metaTitle: String
+  metaDescription: String
+  ogTitle: String
+  ogDescription: String
+  ogImage: String
+  canonicalUrl: String
+  noindex: Boolean
+  nofollow: Boolean
+}
+
 type Category implements Node & Document {
   title: String!
   description: String
+  seo: CategorySeo
   id: ID!
   _sys: SystemInfo!
   _values: JSON!
 }
 
+input CategorySeoFilter {
+  metaTitle: StringFilter
+  metaDescription: StringFilter
+  ogTitle: StringFilter
+  ogDescription: StringFilter
+  ogImage: ImageFilter
+  canonicalUrl: StringFilter
+  noindex: BooleanFilter
+  nofollow: BooleanFilter
+}
+
 input CategoryFilter {
   title: StringFilter
   description: StringFilter
+  seo: CategorySeoFilter
 }
 
 type CategoryConnectionEdges {
@@ -423,6 +447,8 @@ type PageBlocksOurTeamMockup17LeadershipPeople {
   image: String
   imageAlt: String
   bio: String
+  experience: String
+  focus: String
 }
 
 type PageBlocksOurTeamMockup17Leadership {
@@ -438,6 +464,8 @@ type PageBlocksOurTeamMockup17SeniorStaffPeople {
   image: String
   imageAlt: String
   bio: String
+  experience: String
+  focus: String
 }
 
 type PageBlocksOurTeamMockup17SeniorStaff {
@@ -800,6 +828,8 @@ input PageBlocksOurTeamMockup17LeadershipPeopleFilter {
   image: ImageFilter
   imageAlt: StringFilter
   bio: StringFilter
+  experience: StringFilter
+  focus: StringFilter
 }
 
 input PageBlocksOurTeamMockup17LeadershipFilter {
@@ -815,6 +845,8 @@ input PageBlocksOurTeamMockup17SeniorStaffPeopleFilter {
   image: ImageFilter
   imageAlt: StringFilter
   bio: StringFilter
+  experience: StringFilter
+  focus: StringFilter
 }
 
 input PageBlocksOurTeamMockup17SeniorStaffFilter {
@@ -1023,15 +1055,38 @@ type PageConnection implements Connection {
   edges: [PageConnectionEdges]
 }
 
+type UserSeo {
+  metaTitle: String
+  metaDescription: String
+  ogTitle: String
+  ogDescription: String
+  ogImage: String
+  canonicalUrl: String
+  noindex: Boolean
+  nofollow: Boolean
+}
+
 type User implements Node & Document {
   name: String!
   role: String
   avatar: String
   bio: String
   email: String
+  seo: UserSeo
   id: ID!
   _sys: SystemInfo!
   _values: JSON!
+}
+
+input UserSeoFilter {
+  metaTitle: StringFilter
+  metaDescription: StringFilter
+  ogTitle: StringFilter
+  ogDescription: StringFilter
+  ogImage: ImageFilter
+  canonicalUrl: StringFilter
+  noindex: BooleanFilter
+  nofollow: BooleanFilter
 }
 
 input UserFilter {
@@ -1040,6 +1095,7 @@ input UserFilter {
   avatar: ImageFilter
   bio: StringFilter
   email: StringFilter
+  seo: UserSeoFilter
 }
 
 type UserConnectionEdges {
@@ -1104,6 +1160,7 @@ type ConfigSeo {
   description: String
   siteOwner: String
   logo: String
+  defaultSocialImage: String
   favicon: String
   footerLogo: String
 }
@@ -1145,6 +1202,7 @@ input ConfigSeoFilter {
   description: StringFilter
   siteOwner: StringFilter
   logo: ImageFilter
+  defaultSocialImage: ImageFilter
   favicon: ImageFilter
   footerLogo: ImageFilter
 }
@@ -1255,9 +1313,21 @@ input BlogMutation {
   body: JSON
 }
 
+input CategorySeoMutation {
+  metaTitle: String
+  metaDescription: String
+  ogTitle: String
+  ogDescription: String
+  ogImage: String
+  canonicalUrl: String
+  noindex: Boolean
+  nofollow: Boolean
+}
+
 input CategoryMutation {
   title: String
   description: String
+  seo: CategorySeoMutation
 }
 
 input PageSeoMutation {
@@ -1442,6 +1512,8 @@ input PageBlocksOurTeamMockup17LeadershipPeopleMutation {
   image: String
   imageAlt: String
   bio: String
+  experience: String
+  focus: String
 }
 
 input PageBlocksOurTeamMockup17LeadershipMutation {
@@ -1457,6 +1529,8 @@ input PageBlocksOurTeamMockup17SeniorStaffPeopleMutation {
   image: String
   imageAlt: String
   bio: String
+  experience: String
+  focus: String
 }
 
 input PageBlocksOurTeamMockup17SeniorStaffMutation {
@@ -1648,12 +1722,24 @@ input PageMutation {
   blocks: [PageBlocksMutation]
 }
 
+input UserSeoMutation {
+  metaTitle: String
+  metaDescription: String
+  ogTitle: String
+  ogDescription: String
+  ogImage: String
+  canonicalUrl: String
+  noindex: Boolean
+  nofollow: Boolean
+}
+
 input UserMutation {
   name: String
   role: String
   avatar: String
   bio: String
   email: String
+  seo: UserSeoMutation
 }
 
 input NavigationItemsChildrenMutation {
@@ -1677,6 +1763,7 @@ input ConfigSeoMutation {
   description: String
   siteOwner: String
   logo: String
+  defaultSocialImage: String
   favicon: String
   footerLogo: String
 }

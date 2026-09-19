@@ -10,6 +10,7 @@ export const BlogPartsFragmentDoc = gql`
   __typename
   viewPostShortcut
   title
+  permalink
   description
   seo {
     __typename
@@ -29,6 +30,17 @@ export const BlogPartsFragmentDoc = gql`
       __typename
       title
       description
+      seo {
+        __typename
+        metaTitle
+        metaDescription
+        ogTitle
+        ogDescription
+        ogImage
+        canonicalUrl
+        noindex
+        nofollow
+      }
     }
     ... on Document {
       _sys {
@@ -51,6 +63,17 @@ export const BlogPartsFragmentDoc = gql`
       avatar
       bio
       email
+      seo {
+        __typename
+        metaTitle
+        metaDescription
+        ogTitle
+        ogDescription
+        ogImage
+        canonicalUrl
+        noindex
+        nofollow
+      }
     }
     ... on Document {
       _sys {
@@ -76,6 +99,17 @@ export const CategoryPartsFragmentDoc = gql`
   __typename
   title
   description
+  seo {
+    __typename
+    metaTitle
+    metaDescription
+    ogTitle
+    ogDescription
+    ogImage
+    canonicalUrl
+    noindex
+    nofollow
+  }
 }
     `;
 export const PagePartsFragmentDoc = gql`
@@ -83,6 +117,7 @@ export const PagePartsFragmentDoc = gql`
   __typename
   viewPageShortcut
   title
+  permalink
   seo {
     __typename
     metaTitle
@@ -252,6 +287,8 @@ export const PagePartsFragmentDoc = gql`
           image
           imageAlt
           bio
+          experience
+          focus
         }
       }
       seniorStaff {
@@ -266,6 +303,8 @@ export const PagePartsFragmentDoc = gql`
           image
           imageAlt
           bio
+          experience
+          focus
         }
       }
     }
@@ -409,6 +448,17 @@ export const UserPartsFragmentDoc = gql`
   avatar
   bio
   email
+  seo {
+    __typename
+    metaTitle
+    metaDescription
+    ogTitle
+    ogDescription
+    ogImage
+    canonicalUrl
+    noindex
+    nofollow
+  }
 }
     `;
 export const NavigationPartsFragmentDoc = gql`
@@ -430,12 +480,14 @@ export const NavigationPartsFragmentDoc = gql`
 export const ConfigPartsFragmentDoc = gql`
     fragment ConfigParts on Config {
   __typename
+  favicon
   seo {
     __typename
     title
     description
     siteOwner
     logo
+    defaultSocialImage
     favicon
     footerLogo
   }
@@ -864,7 +916,7 @@ const generateRequester = (client) => {
 export const ExperimentalGetTinaClient = () => getSdk(
   generateRequester(
     createClient({
-      url: "http://localhost:4001/graphql",
+      url: "https://firstfornews.net/tina-content-proxy",
       queries
     })
   )
