@@ -57,6 +57,21 @@ function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null,
 	return null;
 }
 
+function markdownToTinaRichText(markdown?: string | null) {
+	const children = (markdown || '')
+		.split(/\n{2,}/)
+		.map((block) => block.trim())
+		.filter(Boolean)
+		.map((block) => {
+			const heading = block.match(/^(#{1,6})\s+(.+)$/);
+			if (heading) {
+				return { type: 'h' + Math.min(6, heading[1].length), children: [{ type: 'text', text: heading[2].trim() }] };
+			}
+			return { type: 'p', children: [{ type: 'text', text: block.replace(/\n+/g, ' ') }] };
+		});
+	return { type: 'root', children };
+}
+
 function readLocalFrontmatter(collection: 'blog' | 'page', slug?: string | null) {
 	if (!slug) return null;
 	const filename = slug.endsWith('.mdx') ? slug : slug + '.mdx';
@@ -65,9 +80,13 @@ function readLocalFrontmatter(collection: 'blog' | 'page', slug?: string | null)
 			const filePath = join(root, 'src', 'content', collection, filename);
 			const parsed = matter(readFileSync(filePath, 'utf8'));
 			if (!parsed.data || !Object.keys(parsed.data).length) continue;
+			const data = { ...parsed.data } as Record<string, any>;
+			for (const key of ['pubDate', 'updatedDate']) {
+				if (data[key] instanceof Date) data[key] = data[key].toISOString();
+			}
 			return {
-				...parsed.data,
-				body: parsed.content || undefined,
+				...data,
+				body: collection === 'blog' ? markdownToTinaRichText(parsed.content) : parsed.content || undefined,
 				_sys: { filename: filename.replace(/\.mdx$/, '') },
 			};
 		} catch (_error) {

@@ -171,7 +171,7 @@ const heroImageAlt = (() => {
 			<div class="w">
 				<div class="ah-in">
 					{categoryLabel && (
-						<div data-tina-field={tinaField(data, 'category')} class="ah-k">
+						<div data-tina-field={tinaField(data, 'categories')} class="ah-k">
 							<b>{categoryLabel}</b>
 						</div>
 					)}
@@ -239,7 +239,7 @@ const heroImageAlt = (() => {
 				<article id="article-body" class="pr" data-toc-ids={JSON.stringify(tocItems.map((item) => item.id))}>
 					{data.body && (
 						<div data-tina-field={tinaField(data, 'body')}>
-							<TinaMarkdown content={data.body} components={mdxComponents} />
+							{typeof data.body === 'string' ? <p>{data.body}</p> : <TinaMarkdown content={data.body} components={mdxComponents} />}
 						</div>
 					)}
 
