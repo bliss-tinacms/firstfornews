@@ -142,7 +142,14 @@ function responseHasUnsupportedFieldError(text: string) {
   try {
     const json = JSON.parse(text);
     const errors = Array.isArray(json?.errors) ? json.errors : [];
-    return errors.some((error: any) => /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage)\"/.test(String(error?.message || '')));
+    return errors.some((error: any) => {
+      const message = String(error?.message || '');
+      return (
+        /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage)\"/.test(message) ||
+        (/Variable\s+\"\$params\"\s+got invalid value/.test(message) && /defaultSocialImage/.test(message)) ||
+        (/Field\s+\"defaultSocialImage\"\s+is not defined by type\s+\"ConfigSeoMutation\"/.test(message))
+      );
+    });
   } catch (_error) {
     return false;
   }
