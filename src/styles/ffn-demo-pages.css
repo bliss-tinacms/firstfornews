@@ -349,7 +349,6 @@ article h1{font-family:var(--dsp);font-size:48px;font-weight:800;text-transform:
 .ffn-demo-sitemap .sitemap-list li:hover .sitemap-list__number,.ffn-demo-sitemap .sitemap-list a:hover{color:var(--org)}
 .ffn-demo-sitemap .sitemap-list time{font-family:var(--cnd);font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
 .ffn-demo-sitemap .sitemap-empty{font-size:18px;line-height:1.7;color:var(--txt);padding:22px 0;margin:0}
-.ffn-demo-sitemap .sitemap-cta .cl-cta span{font-size:20px;line-height:1}
 @media (max-width:1080px){.ffn-demo-sitemap .sitemap-intro__grid,.ffn-demo-sitemap .sitemap-grid{grid-template-columns:1fr}.ffn-demo-sitemap .sitemap-metrics{width:100%}.ffn-demo-sitemap .sitemap-metrics span{flex:1 1 180px}}
 @media (max-width:700px){.ffn-demo-sitemap .sitemap-metrics{display:grid;grid-template-columns:1fr}.ffn-demo-sitemap .sitemap-metrics span{border-right:0;border-bottom:1px solid rgba(255,255,255,.16)}.ffn-demo-sitemap .sitemap-metrics span:last-child{border-bottom:0}.ffn-demo-sitemap .sitemap-panel__body{padding:24px 20px 28px}.ffn-demo-sitemap .sitemap-panel .h2{font-size:34px}.ffn-demo-sitemap .sitemap-list li,.ffn-demo-sitemap .sitemap-list--posts li{grid-template-columns:42px minmax(0,1fr)}.ffn-demo-sitemap .sitemap-list time{grid-column:2;white-space:normal}.ffn-demo-sitemap .sitemap-list a{font-size:22px}.ffn-demo-sitemap .sitemap-list__number{font-size:24px}}
 
