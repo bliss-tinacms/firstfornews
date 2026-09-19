@@ -37,6 +37,15 @@ function getLocalHomepageData() {
   }
 }
 
+function getLocalConfigData() {
+  try {
+    const filePath = join(process.cwd(), 'src', 'content', 'config', 'config.json');
+    return JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch (_error) {
+    return null;
+  }
+}
+
 function queryTargetsHomepage(bodyText: string) {
   try {
     const payload = JSON.parse(bodyText || '{}');
@@ -44,6 +53,18 @@ function queryTargetsHomepage(bodyText: string) {
     const relativePath = variables.relativePath || variables.relativePath__homepage || variables.path;
     const query = String(payload?.query || '');
     return relativePath === 'home.mdx' && /\bpage\s*\(/.test(query);
+  } catch (_error) {
+    return false;
+  }
+}
+
+function queryTargetsConfig(bodyText: string) {
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    const variables = payload?.variables ?? {};
+    const relativePath = variables.relativePath || variables.path;
+    const query = String(payload?.query || '');
+    return relativePath === 'config.json' && /\bconfig\s*\(/.test(query);
   } catch (_error) {
     return false;
   }
@@ -69,11 +90,33 @@ function overrideHomepageResponse(text: string, bodyText: string) {
   return text;
 }
 
+function overrideConfigResponse(text: string, bodyText: string) {
+  if (!queryTargetsConfig(bodyText)) return text;
+  const localConfig = getLocalConfigData();
+  if (!localConfig) return text;
+  try {
+    const json = JSON.parse(text);
+    if (json?.data?.config) {
+      json.data.config = {
+        ...json.data.config,
+        seo: {
+          ...(json.data.config.seo ?? {}),
+          ...(localConfig.seo ?? {}),
+        },
+      };
+      return JSON.stringify(json);
+    }
+  } catch (_error) {
+    return text;
+  }
+  return text;
+}
+
 function responseHasUnsupportedFieldError(text: string) {
   try {
     const json = JSON.parse(text);
     const errors = Array.isArray(json?.errors) ? json.errors : [];
-    return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus)\"/.test(String(error?.message || '')));
+    return errors.some((error: any) => /Cannot query field\s+\"(seo|experience|focus|defaultSocialImage)\"/.test(String(error?.message || '')));
   } catch (_error) {
     return false;
   }
@@ -91,8 +134,23 @@ function stripUnsupportedLaggingSchemaFields(bodyText: string) {
     query = query.replace(/\bseo\s*\{[^{}]*\}/g, '');
     query = query.replace(/\bexperience\b/g, '');
     query = query.replace(/\bfocus\b/g, '');
+    query = query.replace(/\bdefaultSocialImage\b/g, '');
     query = query.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
 
+    return JSON.stringify({ ...payload, query });
+  } catch (_error) {
+    return bodyText;
+  }
+}
+
+function stripConfigLaggingSchemaFields(bodyText: string) {
+  try {
+    const payload = JSON.parse(bodyText || '{}');
+    if (typeof payload.query !== 'string') return bodyText;
+    const query = payload.query
+      .replace(/\bdefaultSocialImage\b/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n');
     return JSON.stringify({ ...payload, query });
   } catch (_error) {
     return bodyText;
@@ -181,12 +239,14 @@ export const POST: APIRoute = async ({ request }) => {
       body,
     });
 
-    let text = overrideHomepageResponse(await upstreamResponse.text(), body);
+    let text = overrideConfigResponse(overrideHomepageResponse(await upstreamResponse.text(), body), body);
     let status = upstreamResponse.status;
     let contentType = upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
 
     if (responseHasUnsupportedFieldError(text)) {
-      const retryBody = stripUnsupportedLaggingSchemaFields(body);
+      const retryBody = queryTargetsConfig(body)
+        ? stripConfigLaggingSchemaFields(body)
+        : stripUnsupportedLaggingSchemaFields(body);
       if (retryBody !== body) {
         const retryResponse = await fetch(upstream, {
           method: 'POST',
@@ -195,7 +255,7 @@ export const POST: APIRoute = async ({ request }) => {
         });
         status = retryResponse.status;
         contentType = retryResponse.headers.get('content-type') || contentType;
-        text = overrideHomepageResponse(await retryResponse.text(), retryBody);
+        text = overrideConfigResponse(overrideHomepageResponse(await retryResponse.text(), retryBody), body);
       }
     }
 
