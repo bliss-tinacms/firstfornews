@@ -63,8 +63,15 @@ function queryTargetsConfig(bodyText: string) {
     const payload = JSON.parse(bodyText || '{}');
     const variables = payload?.variables ?? {};
     const relativePath = variables.relativePath || variables.path;
+    const collection = variables.collection || variables.collectionName || '';
     const query = String(payload?.query || '');
-    return relativePath === 'config.json' && /\b(config|updateConfig|createConfig)\s*\(/.test(query);
+    return (
+      relativePath === 'config.json' &&
+      (/\b(config|updateConfig|createConfig)\s*\(/.test(query) ||
+        /\b(updateDocument|createDocument)\s*\(/.test(query) ||
+        collection === 'config' ||
+        /collection\s*:\s*"config"/.test(query))
+    );
   } catch (_error) {
     return false;
   }
@@ -150,16 +157,26 @@ function stripConfigLaggingSchemaFields(bodyText: string) {
     let query = payload.query
       .replace(/\bdefaultSocialImage\b/g, '')
       .replace(/seo\s*\{\s*\}/g, '')
+      .replace(/\.\.\.\s+on\s+Config\s*\{\s*\}/g, '... on Config { _sys { filename } }')
       .replace(/[ \t]+\n/g, '\n')
       .replace(/\n{3,}/g, '\n\n');
 
     const variables = payload.variables ? { ...payload.variables } : payload.variables;
     const params = variables?.params ? { ...variables.params } : variables?.params;
-    const seo = params?.seo ? { ...params.seo } : params?.seo;
-    if (seo && Object.prototype.hasOwnProperty.call(seo, 'defaultSocialImage')) {
-      delete seo.defaultSocialImage;
-      params.seo = seo;
-      variables.params = params;
+    const stripSeo = (container: any) => {
+      if (!container?.seo) return container;
+      const seo = { ...container.seo };
+      if (Object.prototype.hasOwnProperty.call(seo, 'defaultSocialImage')) {
+        delete seo.defaultSocialImage;
+        return { ...container, seo };
+      }
+      return container;
+    };
+    if (params) {
+      const nextParams = { ...params };
+      Object.assign(nextParams, stripSeo(nextParams));
+      if (nextParams.config) nextParams.config = stripSeo({ ...nextParams.config });
+      variables.params = nextParams;
     }
 
     return JSON.stringify({ ...payload, query, variables });
