@@ -95,6 +95,10 @@ export const BlogCollection: Collection = {
       type: "string",
       list: true,
       options: categoryOptions(),
+      ui: {
+        component: "checkbox-group",
+        direction: "vertical",
+      },
       description: "Assign this post to one or more categories. Values save as category document paths.",
     },
     {
