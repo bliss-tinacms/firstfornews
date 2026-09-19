@@ -73,7 +73,7 @@ function getReferenceSlug(reference: unknown) {
 function getPostCategories(post?: Partial<CmsBlog> | null) {
 	const categories = (post as any)?.categories;
 	if (Array.isArray(categories) && categories.length) {
-		return categories.map((item) => item?.category).filter(Boolean);
+		return categories.map((item) => typeof item === 'string' ? item : item?.category).filter(Boolean);
 	}
 	return (post as any)?.category;
 }

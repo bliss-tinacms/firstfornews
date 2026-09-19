@@ -51,6 +51,18 @@ function filenameFromDocument(document: any): string {
   return cleanPublicSlug(document?._sys?.filename || document?._sys?.basename || "");
 }
 
+function categoryOptions() {
+  return [
+    { label: "Business", value: "src/content/category/Business.json" },
+    { label: "Featured", value: "src/content/category/Featured.json" },
+    { label: "Health", value: "src/content/category/Health.json" },
+    { label: "Lifestyle", value: "src/content/category/Lifestyle.json" },
+    { label: "Politics", value: "src/content/category/Politics.json" },
+    { label: "Technology", value: "src/content/category/Technology.json" },
+    { label: "World", value: "src/content/category/World.json" },
+  ];
+}
+
 export const BlogCollection: Collection = {
   name: "blog",
   label: "Blogs",
@@ -80,21 +92,10 @@ export const BlogCollection: Collection = {
     {
       name: "categories",
       label: "Categories",
-      type: "object",
+      type: "string",
       list: true,
-      description: "Assign this post to one or more categories, similar to WordPress post categories.",
-      ui: {
-        itemProps: (item) => ({ label: item?.category?.split('/')?.pop()?.replace(/\.json$/, '') || 'Category' }),
-      },
-      fields: [
-        {
-          name: "category",
-          label: "Category",
-          type: "reference",
-          collections: ["category"],
-          required: true,
-        },
-      ],
+      options: categoryOptions(),
+      description: "Assign this post to one or more categories. Values save as category document paths.",
     },
     {
       name: "author",

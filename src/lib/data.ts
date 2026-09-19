@@ -153,8 +153,10 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
 	const categories = node?.categories;
 	if (Array.isArray(categories) && categories.length) {
-		const references = categories.map((item) => item?.category).filter(Boolean);
-		if (references.length) return { ...node, category: references } as T;
+		const references = categories
+			.map((item) => (typeof item === 'string' ? item : item?.category))
+			.filter(Boolean);
+		if (references.length) return { ...node, category: references, categories: references } as T;
 	}
 	return node;
 }
@@ -431,7 +433,7 @@ export const getEditableBlog = async (slug: string) => {
 		const result = await client.queries.blog({ relativePath });
 		if (result?.data?.blog) {
 			return requestWithMetadata(Promise.resolve({
-				data: result.data,
+				data: { ...result.data, blog: hydrateBlogCategories(result.data.blog as any) },
 				query: result.query,
 				variables: result.variables ?? { relativePath },
 			}), { priority: 'primary' });
@@ -460,7 +462,7 @@ export async function getBlog(slug: string) {
 			permalink
 			pubDate
 			updatedDate
-			categories { category { ... on Category { title description _sys { filename } } } }
+			categories
 			author { ... on User { name role avatar bio email _sys { filename } } }
 			heroImage
 			authorAlt
@@ -584,7 +586,7 @@ export async function listBlogs() {
 					heroImage
 					heroImageAlt
 					seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
-					categories { category { ... on Category { title description _sys { filename } } } }
+					categories
 					author { ... on User { name role avatar bio email _sys { filename } } }
 					_sys { filename }
 				}

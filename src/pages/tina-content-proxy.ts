@@ -121,6 +121,13 @@ function queryTargetsBlog(bodyText: string) {
   }
 }
 
+function normalizeBlogCategoryList(categories: any) {
+  if (!Array.isArray(categories)) return [];
+  return categories
+    .map((item) => (typeof item === 'string' ? item : item?.category))
+    .filter(Boolean);
+}
+
 function queryTargetsConfig(bodyText: string) {
   try {
     const payload = JSON.parse(bodyText || '{}');
@@ -195,7 +202,7 @@ function overrideBlogResponse(text: string, bodyText: string) {
     json.data.blog = {
       ...(json.data.blog ?? {}),
       ...localBlog,
-      categories: localBlog.categories ?? json.data.blog?.categories ?? [],
+      categories: normalizeBlogCategoryList((localBlog as any).categories ?? (json.data.blog as any)?.categories ?? []),
     };
     if (Array.isArray(json.errors)) {
       json.errors = json.errors.filter((error: any) => !/Cannot query field\s+\"categories\"/.test(String(error?.message || '')));

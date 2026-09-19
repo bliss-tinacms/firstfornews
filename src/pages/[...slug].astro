@@ -62,7 +62,7 @@ function findReferenceBySlug(reference: unknown, slug: string) {
 }
 function getPostCategories(post: any) {
   const categories = post?.categories;
-  if (Array.isArray(categories) && categories.length) return categories.map((item) => item?.category).filter(Boolean);
+  if (Array.isArray(categories) && categories.length) return categories.map((item) => typeof item === 'string' ? item : item?.category).filter(Boolean);
   return post?.category;
 }
 function parseArchiveParam(value?: string) {
