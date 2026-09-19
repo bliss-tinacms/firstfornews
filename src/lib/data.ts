@@ -31,6 +31,21 @@ function localContentRoots() {
 	return Array.from(new Set(roots));
 }
 
+function readBlogOverride(relativePath?: string | null) {
+	if (!relativePath) return null;
+	const filename = relativePath.endsWith('.mdx') ? relativePath : `${relativePath}.mdx`;
+	for (const root of localContentRoots()) {
+		try {
+			const overrides = JSON.parse(readFileSync(join(root, '.tina-blog-category-overrides.json'), 'utf8'));
+			const data = overrides?.[filename];
+			if (data && typeof data === 'object') return data;
+		} catch (_error) {
+			// Try next root.
+		}
+	}
+	return null;
+}
+
 function readFrontmatterValue(collection: 'blog' | 'page', slug?: string | null, key = 'permalink') {
 	if (!slug) return null;
 	for (const root of localContentRoots()) {
@@ -158,6 +173,13 @@ function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
 			.filter(Boolean);
 		if (references.length) return { ...node, category: references, categories: references } as T;
 	}
+	const legacyCategory = node?.category;
+	if (legacyCategory) {
+		const references = (Array.isArray(legacyCategory) ? legacyCategory : [legacyCategory])
+			.map((item) => (typeof item === 'string' ? item : item?.category || item?._sys?.path || item?._sys?.relativePath))
+			.filter(Boolean);
+		if (references.length) return { ...node, category: references, categories: references } as T;
+	}
 	return node;
 }
 
@@ -178,7 +200,7 @@ function tinaApiToken() {
 
 function hasUnsupportedFieldError(json: any) {
 	const errors = Array.isArray(json?.errors) ? json.errors : [];
-	return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus)\"/.test(String(error?.message || '')));
+	return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus|categories)\"/.test(String(error?.message || '')));
 }
 
 function stripUnsupportedLaggingSchemaFields(query: string) {
@@ -186,6 +208,7 @@ function stripUnsupportedLaggingSchemaFields(query: string) {
 		.replace(/\bseo\s*\{[^{}]*\}/g, '')
 		.replace(/\bexperience\b/g, '')
 		.replace(/\bfocus\b/g, '')
+		.replace(/\bcategories\b/g, 'category')
 		.replace(/[ 	]+\n/g, '\n')
 		.replace(/\n{3,}/g, '\n\n');
 }
@@ -432,18 +455,29 @@ export const getEditableBlog = async (slug: string) => {
 	try {
 		const result = await client.queries.blog({ relativePath });
 		if (result?.data?.blog) {
+			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
-				data: { ...result.data, blog: hydrateBlogCategories(result.data.blog as any) },
+				data: { ...result.data, blog: hydrateBlogCategories({ ...(result.data.blog as any), ...(override ?? {}) }) },
 				query: result.query,
 				variables: result.variables ?? { relativePath },
 			}), { priority: 'primary' });
 		}
 		return requestWithMetadata(Promise.resolve(result), { priority: 'primary' });
 	} catch (_error) {
-		const localBlog = readLocalBlogFrontmatter(relativePath);
-		if (localBlog) {
+		const live = await fetchLiveTinaResult<{ blog: any }>(BlogDocument, { relativePath });
+		if (live?.data?.blog) {
+			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
-				data: { blog: hydratePermalink('blog', localBlog as any) },
+				data: { ...live.data, blog: hydrateBlogCategories({ ...(live.data.blog as any), ...(override ?? {}) }) },
+				query: BlogDocument,
+				variables: { relativePath },
+			}), { priority: 'primary' });
+		}
+		const localBlog = readLocalBlogFrontmatter(relativePath);
+		const override = readBlogOverride(relativePath);
+		if (localBlog || override) {
+			return requestWithMetadata(Promise.resolve({
+				data: { blog: hydratePermalink('blog', hydrateBlogCategories({ ...(localBlog as any), ...(override ?? {}) })) },
 				query: BlogDocument,
 				variables: { relativePath },
 			}), { priority: 'primary' });
@@ -472,9 +506,10 @@ export async function getBlog(slug: string) {
 		}
 	}`;
 	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
-	if (liveBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', liveBlog as any)) } } as any;
+	const override = readBlogOverride(relativePath);
+	if (liveBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', { ...(liveBlog as any), ...(override ?? {}) })) } } as any;
 	const localBlog = readLocalBlogFrontmatter(relativePath);
-	if (localBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', localBlog as any)) } } as any;
+	if (localBlog || override) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', { ...(localBlog as any), ...(override ?? {}) })) } } as any;
 	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 }
 

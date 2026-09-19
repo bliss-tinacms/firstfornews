@@ -66,6 +66,52 @@ function getLocalBlogData(relativePath?: string) {
   }
 }
 
+function blogOverridePath() {
+  return join(process.cwd(), '.tina-blog-category-overrides.json');
+}
+
+function readBlogOverrides(): Record<string, any> {
+  try {
+    return JSON.parse(readFileSync(blogOverridePath(), 'utf8'));
+  } catch (_error) {
+    return {};
+  }
+}
+
+function getBlogOverride(relativePath?: string) {
+  if (!relativePath) return null;
+  const filename = relativePath.endsWith('.mdx') ? relativePath : `${relativePath}.mdx`;
+  return readBlogOverrides()[filename] ?? null;
+}
+
+function persistBlogCategoryOverride(bodyText: string) {
+  try {
+    if (!queryTargetsBlog(bodyText)) return;
+    const payload = JSON.parse(bodyText || '{}');
+    const variables = payload?.variables ?? {};
+    const relativePath = variables.relativePath || variables.path;
+    if (!relativePath) return;
+    const filename = relativePath.endsWith('.mdx') ? relativePath : `${relativePath}.mdx`;
+    const directParams = variables.params ?? {};
+    const blogParams = directParams.blog ?? directParams;
+    const categories = normalizeBlogCategoryList(blogParams.categories ?? []);
+    const hasBlogParams = blogParams && typeof blogParams === 'object' && Object.keys(blogParams).length > 0;
+    if (!categories.length && !hasBlogParams) return;
+    const overrides = readBlogOverrides();
+    overrides[filename] = {
+      ...(overrides[filename] ?? {}),
+      ...blogParams,
+      ...(categories.length ? { categories } : {}),
+      ...(blogParams.body ? { body: normalizeTinaRichText(blogParams.body) } : {}),
+      _sys: { filename: filename.replace(/\.mdx$/, ''), relativePath: filename },
+      updatedAt: new Date().toISOString(),
+    };
+    writeFileSync(blogOverridePath(), JSON.stringify(overrides, null, 2) + '\n');
+  } catch (_error) {
+    // Do not block the Tina save if deployed storage is unavailable.
+  }
+}
+
 function persistLocalConfigAdditionsFromMutation(bodyText: string) {
   try {
     if (!queryTargetsConfig(bodyText)) return;
@@ -224,9 +270,10 @@ function overrideBlogResponse(text: string, bodyText: string) {
     const payload = JSON.parse(bodyText || '{}');
     const relativePath = payload?.variables?.relativePath || payload?.variables?.path;
     const localBlog = getLocalBlogData(relativePath);
-    const requestedCategories = normalizeBlogCategoryList(payload?.variables?.params?.categories ?? []);
-    const categories = requestedCategories.length ? requestedCategories : normalizeBlogCategoryList((localBlog as any)?.categories ?? []);
-    if (!localBlog && !categories.length) return text;
+    const override = getBlogOverride(relativePath);
+    const params = payload?.variables?.params ?? {};
+    const blogParams = params.blog ?? params;
+    const requestedCategories = normalizeBlogCategoryList(blogParams.categories ?? []);
     const json = JSON.parse(text || '{}');
     if (!json.data) json.data = {};
     const targetKeys = /\bupdateBlog\s*\(/.test(String(payload.query || ''))
@@ -237,9 +284,21 @@ function overrideBlogResponse(text: string, bodyText: string) {
           ? [String(payload.query || '').includes('createDocument') ? 'createDocument' : 'updateDocument']
           : ['blog'];
     for (const key of targetKeys) {
+      const existing = json.data[key] ?? {};
+      const overrideCategories = normalizeBlogCategoryList(override?.categories ?? []);
+      const localCategories = normalizeBlogCategoryList((localBlog as any)?.categories ?? []);
+      const existingCategories = normalizeBlogCategoryList(existing.categories ?? (existing.category ? [existing.category] : []));
+      const categories = requestedCategories.length
+        ? requestedCategories
+        : overrideCategories.length
+          ? overrideCategories
+          : localCategories.length
+            ? localCategories
+            : existingCategories;
       json.data[key] = {
-        ...(json.data[key] ?? {}),
+        ...existing,
         ...(localBlog ?? {}),
+        ...(override ?? {}),
         categories,
       };
     }
@@ -398,6 +457,7 @@ export const POST: APIRoute = async ({ request }) => {
   )}/github/${encodeURIComponent(branch)}`;
 
   const body = await request.text();
+  persistBlogCategoryOverride(body);
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

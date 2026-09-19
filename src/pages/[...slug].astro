@@ -142,11 +142,10 @@ if (view === 'not-found') {
 
 if (view === 'not-found') {
   const matchedPost = allPosts.find((post) => getBlogRouteSlug(post) === routeSlug || post._sys.filename === routeSlug);
-  if (matchedPost) {
-    const documentSlug = matchedPost._sys.filename ?? routeSlug;
-    const blog = await getBlog(documentSlug);
-    const data = blog.data?.blog;
-    if (data) {
+  const documentSlug = matchedPost?._sys?.filename ?? routeSlug;
+  const blog = await getBlog(documentSlug);
+  const data = blog.data?.blog;
+  if (data?.title || data?._sys?.filename) {
       const canonicalSlug = getBlogRouteSlug(data);
       if (canonicalSlug && canonicalSlug !== routeSlug) return Astro.redirect(getBlogPermalink(data) + '/', 301);
       const defaultAuthor = (await getUser('admin')).data?.user ?? null;
@@ -179,7 +178,6 @@ if (view === 'not-found') {
       };
     }
   }
-}
 
 if (view === 'not-found') {
   Astro.response.status = 404;
