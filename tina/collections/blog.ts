@@ -78,11 +78,23 @@ export const BlogCollection: Collection = {
     { name: "pubDate", label: "Publication Date", type: "datetime" },
     { name: "updatedDate", label: "Updated Date", type: "datetime" },
     {
-      name: "category",
-      label: "Category",
-      type: "reference",
-      collections: ["category"],
-      description: "Assign this post to a category, similar to WordPress post categories.",
+      name: "categories",
+      label: "Categories",
+      type: "object",
+      list: true,
+      description: "Assign this post to one or more categories, similar to WordPress post categories.",
+      ui: {
+        itemProps: (item) => ({ label: item?.category?.split('/')?.pop()?.replace(/\.json$/, '') || 'Category' }),
+      },
+      fields: [
+        {
+          name: "category",
+          label: "Category",
+          type: "reference",
+          collections: ["category"],
+          required: true,
+        },
+      ],
     },
     {
       name: "author",

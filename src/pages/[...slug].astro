@@ -25,24 +25,45 @@ function slugify(value?: string | null) { return String(value || '').toLowerCase
 function titleCase(value?: string | null) { return String(value || '').replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()).trim(); }
 function labelFromReference(reference: unknown) {
   if (!reference) return null;
+  if (Array.isArray(reference)) return reference.map(labelFromReference).filter(Boolean).join(', ') || null;
   if (typeof reference === 'string') return titleCase(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
   if (typeof reference === 'object') { const item = reference as ReferenceObject; return String(item.title || item.name || item._sys?.filename || '') || null; }
   return null;
 }
 function slugFromReference(reference: unknown) {
   if (!reference) return null;
+  if (Array.isArray(reference)) return slugFromReference(reference[0]);
   if (typeof reference === 'string') return slugify(reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '') || '');
   if (typeof reference === 'object') { const item = reference as ReferenceObject; return slugify(item._sys?.filename || item.title || item.name || ''); }
   return null;
 }
+function slugsFromReference(reference: unknown) {
+  return (Array.isArray(reference) ? reference : reference ? [reference] : [])
+    .map(slugFromReference)
+    .filter(Boolean) as string[];
+}
 function getReferenceKey(reference: unknown) {
   if (!reference) return null;
+  if (Array.isArray(reference)) return getReferenceKey(reference[0]);
   if (typeof reference === 'string') return reference;
   if (typeof reference === 'object') {
     const item = reference as ReferenceObject;
     return item._sys?.filename || item.title || item.name || null;
   }
   return null;
+}
+function getReferenceKeys(reference: unknown) {
+  return (Array.isArray(reference) ? reference : reference ? [reference] : [])
+    .map(getReferenceKey)
+    .filter(Boolean) as string[];
+}
+function findReferenceBySlug(reference: unknown, slug: string) {
+  return (Array.isArray(reference) ? reference : reference ? [reference] : []).find((item) => slugFromReference(item) === slug) || null;
+}
+function getPostCategories(post: any) {
+  const categories = post?.categories;
+  if (Array.isArray(categories) && categories.length) return categories.map((item) => item?.category).filter(Boolean);
+  return post?.category;
 }
 function parseArchiveParam(value?: string) {
   const parts = String(value || '').toLowerCase().split('/').filter(Boolean);
@@ -93,13 +114,13 @@ if (view === 'not-found') {
   const categories = categoryFileMap();
   const categoryEntry = categories.get(parsed.slug);
   if (categoryEntry) {
-    const allCategoryPosts = allPosts.filter((post) => slugFromReference(post.category) === parsed.slug);
+    const allCategoryPosts = allPosts.filter((post) => slugsFromReference(getPostCategories(post)).includes(parsed.slug));
     const totalPages = Math.max(1, Math.ceil(allCategoryPosts.length / POSTS_PER_PAGE));
     const currentPage = Math.min(Math.max(1, parsed.page), totalPages);
     const posts = allCategoryPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
     const editableCategory = (await getCategory(categoryEntry.filename || parsed.slug)).data?.category ?? null;
-    const categoryFromPosts = editableCategory || (allCategoryPosts[0]?.category && typeof allCategoryPosts[0].category === 'object' ? allCategoryPosts[0].category as CmsCategory : categoryEntry.data);
-    const archiveTitle = editableCategory?.title || labelFromReference(allCategoryPosts[0]?.category) || categoryEntry.label || titleCase(parsed.slug) || 'Category';
+    const categoryFromPosts = editableCategory || (findReferenceBySlug(getPostCategories(allCategoryPosts[0]), parsed.slug) as CmsCategory | null) || categoryEntry.data;
+    const archiveTitle = editableCategory?.title || labelFromReference(findReferenceBySlug(getPostCategories(allCategoryPosts[0]), parsed.slug)) || categoryEntry.label || titleCase(parsed.slug) || 'Category';
     const categorySeo = (editableCategory as any)?.seo || (categoryFromPosts as any)?.seo || (categoryEntry.data as any)?.seo || null;
     view = 'category';
     categoryContext = {
@@ -129,10 +150,10 @@ if (view === 'not-found') {
       const canonicalSlug = getBlogRouteSlug(data);
       if (canonicalSlug && canonicalSlug !== routeSlug) return Astro.redirect(getBlogPermalink(data) + '/', 301);
       const defaultAuthor = (await getUser('admin')).data?.user ?? null;
-      const currentCategoryKey = getReferenceKey(data.category);
+      const currentCategoryKeys = getReferenceKeys(getPostCategories(data));
       const relatedPosts = allPosts
         .filter((post) => post._sys.filename !== documentSlug)
-        .filter((post) => currentCategoryKey && getReferenceKey(post.category) === currentCategoryKey)
+        .filter((post) => getReferenceKeys(getPostCategories(post)).some((key) => currentCategoryKeys.includes(key)))
         .slice(0, 3);
       const seo = data.seo ?? null;
       const title = seo?.metaTitle || data.title || '';

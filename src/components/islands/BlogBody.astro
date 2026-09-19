@@ -36,7 +36,11 @@ type RichNode = {
 	[key: string]: unknown;
 };
 
-function getReferenceLabel(reference: unknown) {
+function getReferenceItems(reference: unknown): unknown[] {
+	return Array.isArray(reference) ? reference.filter(Boolean) : reference ? [reference] : [];
+}
+
+function getSingleReferenceLabel(reference: unknown) {
 	if (!reference) return null;
 	if (typeof reference === 'string') {
 		return reference.split('/').pop()?.replace(/\.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
@@ -48,16 +52,30 @@ function getReferenceLabel(reference: unknown) {
 	return null;
 }
 
+function getReferenceLabel(reference: unknown) {
+	const labels = getReferenceItems(reference).map(getSingleReferenceLabel).filter(Boolean) as string[];
+	return labels.length ? labels.join(', ') : null;
+}
+
 function getReferenceSlug(reference: unknown) {
-	if (!reference) return null;
-	if (typeof reference === 'string') {
-		return reference.split('/').pop()?.replace(/\.(json|mdx?)$/, '') || null;
+	const first = getReferenceItems(reference)[0];
+	if (!first) return null;
+	if (typeof first === 'string') {
+		return first.split('/').pop()?.replace(/\.(json|mdx?)$/, '') || null;
 	}
-	if (typeof reference === 'object') {
-		const item = reference as ReferenceObject;
+	if (typeof first === 'object') {
+		const item = first as ReferenceObject;
 		return item._sys?.filename || (item.title || item.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || null;
 	}
 	return null;
+}
+
+function getPostCategories(post?: Partial<CmsBlog> | null) {
+	const categories = (post as any)?.categories;
+	if (Array.isArray(categories) && categories.length) {
+		return categories.map((item) => item?.category).filter(Boolean);
+	}
+	return (post as any)?.category;
 }
 
 function getAuthor(reference: unknown) {
@@ -125,7 +143,7 @@ const authorName = getReferenceLabel(defaultAuthor) || getReferenceLabel(postAut
 const authorSlug = getReferenceSlug(data?.author) || getReferenceSlug(author);
 const authorArchiveUrl = authorSlug ? `/blog/author/${authorSlug}/` : '/blog/';
 const authorInitials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'FF';
-const categoryLabel = getReferenceLabel(data?.category) || 'Article';
+const categoryLabel = getReferenceLabel(getPostCategories(data)) || 'Article';
 const publishedDate = data?.pubDate ? new Date(data.pubDate) : getFallbackPublishedDate(data);
 const shareUrl = data ? getPostUrl(data) : '/blog/';
 const shareTitle = data?.title || 'First For News';
@@ -259,7 +277,7 @@ const heroImageAlt = (() => {
 					<a href={getPostUrl(post)} class="mi">
 						{post.heroImage && <img src={post.heroImage} alt="" class="mi-img" width={420} height={262} />}
 						<div class="mi-c">
-							<div class="mi-k">{getReferenceLabel(post.category) || 'Article'}</div>
+							<div class="mi-k">{getReferenceLabel(getPostCategories(post)) || 'Article'}</div>
 							<div class="mi-h">{getPostTitle(post)}</div>
 							<p class="mi-x">{getPostDescription(post)}</p>
 						</div>

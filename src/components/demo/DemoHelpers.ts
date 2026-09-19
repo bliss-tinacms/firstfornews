@@ -2,6 +2,10 @@ export type RefObject = { title?: string | null; name?: string | null; _sys?: { 
 
 export function labelFromReference(reference: unknown, fallback = 'News') {
   if (!reference) return fallback;
+  if (Array.isArray(reference)) {
+    const labels = reference.map((item) => labelFromReference(item, '')).filter(Boolean);
+    return labels.length ? labels.join(', ') : fallback;
+  }
   if (typeof reference === 'string') {
     return reference.split('/').pop()?.replace(/\.(json|mdx?)$/i, '').replace(/[-_]+/g, ' ') || fallback;
   }

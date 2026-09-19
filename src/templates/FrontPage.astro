@@ -38,6 +38,10 @@ function list<T>(input: T[] | null | undefined, fallback: T[]): T[] {
 
 function getReferenceLabel(reference: unknown) {
   if (!reference) return null;
+  if (Array.isArray(reference)) {
+    const labels = reference.map(getReferenceLabel).filter(Boolean);
+    return labels.length ? labels.join(', ') : null;
+  }
   if (typeof reference === 'string') {
     return reference.split('/').pop()?.replace(/\.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
   }

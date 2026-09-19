@@ -13,6 +13,10 @@ const description = config?.seo?.description ?? 'Latest blog posts.';
 
 function getReferenceLabel(reference: unknown) {
 	if (!reference) return null;
+	if (Array.isArray(reference)) {
+		const labels = reference.map(getReferenceLabel).filter(Boolean);
+		return labels.length ? labels.join(', ') : null;
+	}
 	if (typeof reference === 'string') {
 		return reference.split('/').pop()?.replace(/\.(json|mdx?)$/, '').replace(/-/g, ' ') ?? null;
 	}

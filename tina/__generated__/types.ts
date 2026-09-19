@@ -266,7 +266,12 @@ export type BlogSeo = {
   nofollow?: Maybe<Scalars['Boolean']['output']>;
 };
 
-export type BlogCategory = Category;
+export type BlogCategoriesCategory = Category;
+
+export type BlogCategories = {
+  __typename?: 'BlogCategories';
+  category: BlogCategoriesCategory;
+};
 
 export type BlogAuthor = User;
 
@@ -279,7 +284,7 @@ export type Blog = Node & Document & {
   seo?: Maybe<BlogSeo>;
   pubDate?: Maybe<Scalars['String']['output']>;
   updatedDate?: Maybe<Scalars['String']['output']>;
-  category?: Maybe<BlogCategory>;
+  categories?: Maybe<Array<Maybe<BlogCategories>>>;
   author?: Maybe<BlogAuthor>;
   heroImage?: Maybe<Scalars['String']['output']>;
   authorAlt?: Maybe<Scalars['String']['output']>;
@@ -328,8 +333,12 @@ export type DatetimeFilter = {
   in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
-export type BlogCategoryFilter = {
+export type BlogCategoriesCategoryFilter = {
   category?: InputMaybe<CategoryFilter>;
+};
+
+export type BlogCategoriesFilter = {
+  category?: InputMaybe<BlogCategoriesCategoryFilter>;
 };
 
 export type BlogAuthorFilter = {
@@ -352,7 +361,7 @@ export type BlogFilter = {
   seo?: InputMaybe<BlogSeoFilter>;
   pubDate?: InputMaybe<DatetimeFilter>;
   updatedDate?: InputMaybe<DatetimeFilter>;
-  category?: InputMaybe<BlogCategoryFilter>;
+  categories?: InputMaybe<BlogCategoriesFilter>;
   author?: InputMaybe<BlogAuthorFilter>;
   heroImage?: InputMaybe<ImageFilter>;
   authorAlt?: InputMaybe<StringFilter>;
@@ -1651,6 +1660,10 @@ export type BlogSeoMutation = {
   nofollow?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type BlogCategoriesMutation = {
+  category?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type BlogMutation = {
   viewPostShortcut?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
@@ -1659,7 +1672,7 @@ export type BlogMutation = {
   seo?: InputMaybe<BlogSeoMutation>;
   pubDate?: InputMaybe<Scalars['String']['input']>;
   updatedDate?: InputMaybe<Scalars['String']['input']>;
-  category?: InputMaybe<Scalars['String']['input']>;
+  categories?: InputMaybe<Array<InputMaybe<BlogCategoriesMutation>>>;
   author?: InputMaybe<Scalars['String']['input']>;
   heroImage?: InputMaybe<Scalars['String']['input']>;
   authorAlt?: InputMaybe<Scalars['String']['input']>;
@@ -2197,8 +2210,12 @@ export type DatetimeFilter = {
   in?: Array<string | null | undefined> | null | undefined;
 };
 
-export type BlogCategoryFilter = {
+export type BlogCategoriesCategoryFilter = {
   category?: CategoryFilter | null | undefined;
+};
+
+export type BlogCategoriesFilter = {
+  category?: BlogCategoriesCategoryFilter | null | undefined;
 };
 
 export type BlogAuthorFilter = {
@@ -2221,7 +2238,7 @@ export type BlogFilter = {
   seo?: BlogSeoFilter | null | undefined;
   pubDate?: DatetimeFilter | null | undefined;
   updatedDate?: DatetimeFilter | null | undefined;
-  category?: BlogCategoryFilter | null | undefined;
+  categories?: BlogCategoriesFilter | null | undefined;
   author?: BlogAuthorFilter | null | undefined;
   heroImage?: ImageFilter | null | undefined;
   authorAlt?: StringFilter | null | undefined;
@@ -2727,7 +2744,7 @@ export type ConfigFilter = {
   footerStarfield?: BooleanFilter | null | undefined;
 };
 
-export type BlogPartsFragment = { __typename: 'Blog', viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null };
+export type BlogPartsFragment = { __typename: 'Blog', viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, categories: Array<{ __typename: 'BlogCategories', category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } } | null> | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null };
 
 export type CategoryPartsFragment = { __typename: 'Category', title: string, description: string | null, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null };
 
@@ -2758,7 +2775,7 @@ export type BlogQueryVariables = Exact<{
 }>;
 
 
-export type BlogQuery = { blog: { __typename: 'Blog', id: string, viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } };
+export type BlogQuery = { blog: { __typename: 'Blog', id: string, viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, categories: Array<{ __typename: 'BlogCategories', category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } } | null> | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } };
 
 export type BlogConnectionQueryVariables = Exact<{
   before?: string | null | undefined;
@@ -2770,7 +2787,7 @@ export type BlogConnectionQueryVariables = Exact<{
 }>;
 
 
-export type BlogConnectionQuery = { blogConnection: { totalCount: number, pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ cursor: string, node: { __typename: 'Blog', id: string, viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } | null } | null> | null } };
+export type BlogConnectionQuery = { blogConnection: { totalCount: number, pageInfo: { hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string, endCursor: string }, edges: Array<{ cursor: string, node: { __typename: 'Blog', id: string, viewPostShortcut: string | null, title: string, permalink: string | null, description: string | null, pubDate: string | null, updatedDate: string | null, heroImage: string | null, authorAlt: string | null, heroImageAlt: string | null, body: any, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string }, seo: { __typename: 'BlogSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, categories: Array<{ __typename: 'BlogCategories', category: { __typename: 'Category', title: string, description: string | null, id: string, seo: { __typename: 'CategorySeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } } | null> | null, author: { __typename: 'User', name: string, role: string | null, avatar: string | null, bio: string | null, email: string | null, id: string, seo: { __typename: 'UserSeo', metaTitle: string | null, metaDescription: string | null, ogTitle: string | null, ogDescription: string | null, ogImage: string | null, canonicalUrl: string | null, noindex: boolean | null, nofollow: boolean | null } | null, _sys: { filename: string, basename: string, hasReferences: boolean | null, breadcrumbs: Array<string>, path: string, relativePath: string, extension: string } } | null } | null } | null> | null } };
 
 export type CategoryQueryVariables = Exact<{
   relativePath: string;
@@ -2915,34 +2932,37 @@ export const BlogPartsFragmentDoc = gql`
   }
   pubDate
   updatedDate
-  category {
-    ... on Category {
-      __typename
-      title
-      description
-      seo {
+  categories {
+    __typename
+    category {
+      ... on Category {
         __typename
-        metaTitle
-        metaDescription
-        ogTitle
-        ogDescription
-        ogImage
-        canonicalUrl
-        noindex
-        nofollow
+        title
+        description
+        seo {
+          __typename
+          metaTitle
+          metaDescription
+          ogTitle
+          ogDescription
+          ogImage
+          canonicalUrl
+          noindex
+          nofollow
+        }
       }
-    }
-    ... on Document {
-      _sys {
-        filename
-        basename
-        hasReferences
-        breadcrumbs
-        path
-        relativePath
-        extension
+      ... on Document {
+        _sys {
+          filename
+          basename
+          hasReferences
+          breadcrumbs
+          path
+          relativePath
+          extension
+        }
+        id
       }
-      id
     }
   }
   author {

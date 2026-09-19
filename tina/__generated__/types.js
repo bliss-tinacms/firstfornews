@@ -25,34 +25,37 @@ export const BlogPartsFragmentDoc = gql`
   }
   pubDate
   updatedDate
-  category {
-    ... on Category {
-      __typename
-      title
-      description
-      seo {
+  categories {
+    __typename
+    category {
+      ... on Category {
         __typename
-        metaTitle
-        metaDescription
-        ogTitle
-        ogDescription
-        ogImage
-        canonicalUrl
-        noindex
-        nofollow
+        title
+        description
+        seo {
+          __typename
+          metaTitle
+          metaDescription
+          ogTitle
+          ogDescription
+          ogImage
+          canonicalUrl
+          noindex
+          nofollow
+        }
       }
-    }
-    ... on Document {
-      _sys {
-        filename
-        basename
-        hasReferences
-        breadcrumbs
-        path
-        relativePath
-        extension
+      ... on Document {
+        _sys {
+          filename
+          basename
+          hasReferences
+          breadcrumbs
+          path
+          relativePath
+          extension
+        }
+        id
       }
-      id
     }
   }
   author {

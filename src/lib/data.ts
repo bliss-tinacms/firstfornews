@@ -131,6 +131,15 @@ function hydratePermalink<T extends { _sys?: { filename?: string | null } | null
 	return permalink ? ({ ...node, permalink } as T) : node;
 }
 
+function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
+	const categories = node?.categories;
+	if (Array.isArray(categories) && categories.length) {
+		const references = categories.map((item) => item?.category).filter(Boolean);
+		if (references.length) return { ...node, category: references } as T;
+	}
+	return node;
+}
+
 function tinaDirectContentApiUrl() {
 	const clientId =
 		process.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
@@ -432,7 +441,7 @@ export async function getBlog(slug: string) {
 			permalink
 			pubDate
 			updatedDate
-			category { ... on Category { title description _sys { filename } } }
+			categories { category { ... on Category { title description _sys { filename } } } }
 			author { ... on User { name role avatar bio email _sys { filename } } }
 			heroImage
 			authorAlt
@@ -442,9 +451,9 @@ export async function getBlog(slug: string) {
 		}
 	}`;
 	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
-	if (liveBlog) return { data: { blog: liveBlog } } as any;
+	if (liveBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', liveBlog as any)) } } as any;
 	const localBlog = readLocalBlogFrontmatter(relativePath);
-	if (localBlog) return { data: { blog: hydratePermalink('blog', localBlog as any) } } as any;
+	if (localBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', localBlog as any)) } } as any;
 	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 }
 
@@ -556,7 +565,7 @@ export async function listBlogs() {
 					heroImage
 					heroImageAlt
 					seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
-					category { ... on Category { title description _sys { filename } } }
+					categories { category { ... on Category { title description _sys { filename } } } }
 					author { ... on User { name role avatar bio email _sys { filename } } }
 					_sys { filename }
 				}
@@ -569,7 +578,7 @@ export async function listBlogs() {
 		: null;
 	if (nodes) {
 		return nodes
-			.map((node) => hydratePermalink('blog', node))
+			.map((node) => hydrateBlogCategories(hydratePermalink('blog', node as any)))
 			.sort((a, b) => {
 				const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 				const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
@@ -578,7 +587,7 @@ export async function listBlogs() {
 	}
 	const localBlogs = listLocalFrontmatter('blog');
 	if (localBlogs) {
-		return (localBlogs as any[]).sort((a, b) => {
+		return (localBlogs as any[]).map((node) => hydrateBlogCategories(node)).sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
 			return bd - ad;
@@ -587,7 +596,7 @@ export async function listBlogs() {
 	const result = await client.queries.blogConnection();
 	return (result.data.blogConnection.edges ?? [])
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
-		.map((node) => hydratePermalink('blog', node))
+		.map((node) => hydrateBlogCategories(hydratePermalink('blog', node as any)))
 		.sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
