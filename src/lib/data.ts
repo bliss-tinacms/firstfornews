@@ -193,6 +193,17 @@ function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
 	return next as T;
 }
 
+function toTinaEditableBlog<T extends Record<string, any>>(node: T): T {
+	const hydrated = hydrateBlogCategories(node as any) as Record<string, any>;
+	return {
+		...hydrated,
+		// Tina Cloud is still schema-stale for this field. Keep the form payload empty
+		// so its validator does not reject either string or object category values.
+		// The custom field hydrates/persists the real selections through /tina-content-proxy.
+		categories: [],
+	} as unknown as T;
+}
+
 function tinaDirectContentApiUrl() {
 	const clientId =
 		process.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
@@ -467,7 +478,7 @@ export const getEditableBlog = async (slug: string) => {
 		if (result?.data?.blog) {
 			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
-				data: { ...result.data, blog: hydrateBlogCategories({ ...(result.data.blog as any), ...(override ?? {}) }) },
+				data: { ...result.data, blog: toTinaEditableBlog({ ...(result.data.blog as any), ...(override ?? {}) }) },
 				query: result.query,
 				variables: result.variables ?? { relativePath },
 			}), { priority: 'primary' });
@@ -478,7 +489,7 @@ export const getEditableBlog = async (slug: string) => {
 		if (live?.data?.blog) {
 			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
-				data: { ...live.data, blog: hydrateBlogCategories({ ...(live.data.blog as any), ...(override ?? {}) }) },
+				data: { ...live.data, blog: toTinaEditableBlog({ ...(live.data.blog as any), ...(override ?? {}) }) },
 				query: BlogDocument,
 				variables: { relativePath },
 			}), { priority: 'primary' });
@@ -487,7 +498,7 @@ export const getEditableBlog = async (slug: string) => {
 		const override = readBlogOverride(relativePath);
 		if (localBlog || override) {
 			return requestWithMetadata(Promise.resolve({
-				data: { blog: hydratePermalink('blog', hydrateBlogCategories({ ...(localBlog as any), ...(override ?? {}) })) },
+				data: { blog: hydratePermalink('blog', toTinaEditableBlog({ ...(localBlog as any), ...(override ?? {}) })) },
 				query: BlogDocument,
 				variables: { relativePath },
 			}), { priority: 'primary' });
