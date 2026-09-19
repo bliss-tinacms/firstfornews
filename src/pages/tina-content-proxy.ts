@@ -115,7 +115,7 @@ function queryTargetsBlog(bodyText: string) {
     const variables = payload?.variables ?? {};
     const relativePath = variables.relativePath || variables.path;
     const query = String(payload?.query || '');
-    return typeof relativePath === 'string' && /\bblog\s*\(/.test(query);
+    return typeof relativePath === 'string' && /\b(blog|updateBlog|createBlog)\s*\(/.test(query);
   } catch (_error) {
     return false;
   }
@@ -196,14 +196,23 @@ function overrideBlogResponse(text: string, bodyText: string) {
     const payload = JSON.parse(bodyText || '{}');
     const relativePath = payload?.variables?.relativePath || payload?.variables?.path;
     const localBlog = getLocalBlogData(relativePath);
-    if (!localBlog) return text;
+    const requestedCategories = normalizeBlogCategoryList(payload?.variables?.params?.categories ?? []);
+    const categories = requestedCategories.length ? requestedCategories : normalizeBlogCategoryList((localBlog as any)?.categories ?? []);
+    if (!localBlog && !categories.length) return text;
     const json = JSON.parse(text || '{}');
     if (!json.data) json.data = {};
-    json.data.blog = {
-      ...(json.data.blog ?? {}),
-      ...localBlog,
-      categories: normalizeBlogCategoryList((localBlog as any).categories ?? (json.data.blog as any)?.categories ?? []),
-    };
+    const targetKeys = /\bupdateBlog\s*\(/.test(String(payload.query || ''))
+      ? ['updateBlog']
+      : /\bcreateBlog\s*\(/.test(String(payload.query || ''))
+        ? ['createBlog']
+        : ['blog'];
+    for (const key of targetKeys) {
+      json.data[key] = {
+        ...(json.data[key] ?? {}),
+        ...(localBlog ?? {}),
+        categories,
+      };
+    }
     if (Array.isArray(json.errors)) {
       json.errors = json.errors.filter((error: any) => !/Cannot query field\s+\"categories\"/.test(String(error?.message || '')));
       if (!json.errors.length) delete json.errors;
@@ -246,9 +255,19 @@ function stripUnsupportedLaggingSchemaFields(bodyText: string) {
     query = query.replace(/\bfocus\b/g, '');
     query = query.replace(/\bdefaultSocialImage\b/g, '');
     query = query.replace(/\bcategories\s*\{[^{}]*(?:\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[^{}]*)*\}/g, '');
+    query = query.replace(/^\s*categories\s*$/gm, '');
     query = query.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
 
-    return JSON.stringify({ ...payload, query });
+    const variables = payload.variables ? { ...payload.variables } : payload.variables;
+    if (variables?.params?.categories) {
+      const params = { ...variables.params };
+      const categories = normalizeBlogCategoryList(params.categories);
+      if (categories.length && !params.category) params.category = categories[0];
+      delete params.categories;
+      variables.params = params;
+    }
+
+    return JSON.stringify({ ...payload, query, variables });
   } catch (_error) {
     return bodyText;
   }
