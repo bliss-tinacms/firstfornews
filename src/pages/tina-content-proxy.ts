@@ -64,7 +64,7 @@ function queryTargetsConfig(bodyText: string) {
     const variables = payload?.variables ?? {};
     const relativePath = variables.relativePath || variables.path;
     const query = String(payload?.query || '');
-    return relativePath === 'config.json' && /\bconfig\s*\(/.test(query);
+    return relativePath === 'config.json' && /\b(config|updateConfig|createConfig)\s*\(/.test(query);
   } catch (_error) {
     return false;
   }
@@ -147,11 +147,22 @@ function stripConfigLaggingSchemaFields(bodyText: string) {
   try {
     const payload = JSON.parse(bodyText || '{}');
     if (typeof payload.query !== 'string') return bodyText;
-    const query = payload.query
+    let query = payload.query
       .replace(/\bdefaultSocialImage\b/g, '')
+      .replace(/seo\s*\{\s*\}/g, '')
       .replace(/[ \t]+\n/g, '\n')
       .replace(/\n{3,}/g, '\n\n');
-    return JSON.stringify({ ...payload, query });
+
+    const variables = payload.variables ? { ...payload.variables } : payload.variables;
+    const params = variables?.params ? { ...variables.params } : variables?.params;
+    const seo = params?.seo ? { ...params.seo } : params?.seo;
+    if (seo && Object.prototype.hasOwnProperty.call(seo, 'defaultSocialImage')) {
+      delete seo.defaultSocialImage;
+      params.seo = seo;
+      variables.params = params;
+    }
+
+    return JSON.stringify({ ...payload, query, variables });
   } catch (_error) {
     return bodyText;
   }
