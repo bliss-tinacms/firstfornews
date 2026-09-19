@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "enabled": true,
+      "source": "/privacy/",
+      "destination": "/privacy-policy/",
+      "permanent": true
+    }
+  ],
   "seo": {
     "title": "First For News",
     "description": "Timely stories, useful insights, and clear coverage of the topics that matter.",
@@ -19,14 +27,6 @@
     "headerCode": "",
     "footerCode": ""
   },
-  "redirects": [
-    {
-      "enabled": true,
-      "source": "/privacy/",
-      "destination": "/privacy-policy/",
-      "permanent": true
-    }
-  ],
   "contactLinks": [],
   "footerStarfield": false
 }
