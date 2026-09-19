@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import matter from 'gray-matter';
 import type { APIRoute } from 'astro';
@@ -43,6 +43,25 @@ function getLocalConfigData() {
     return JSON.parse(readFileSync(filePath, 'utf8'));
   } catch (_error) {
     return null;
+  }
+}
+
+function persistLocalDefaultSocialImageFromMutation(bodyText: string) {
+  try {
+    if (!queryTargetsConfig(bodyText)) return;
+    const payload = JSON.parse(bodyText || '{}');
+    const params = payload?.variables?.params;
+    const directValue = params?.seo?.defaultSocialImage;
+    const nestedValue = params?.config?.seo?.defaultSocialImage;
+    const defaultSocialImage = nestedValue || directValue;
+    if (!defaultSocialImage || typeof defaultSocialImage !== 'string') return;
+
+    const filePath = join(process.cwd(), 'src', 'content', 'config', 'config.json');
+    const localConfig = JSON.parse(readFileSync(filePath, 'utf8'));
+    localConfig.seo = { ...(localConfig.seo ?? {}), defaultSocialImage };
+    writeFileSync(filePath, JSON.stringify(localConfig, null, 2) + '\n');
+  } catch (_error) {
+    // Do not block the Tina save retry if the deployed filesystem is read-only.
   }
 }
 
@@ -272,6 +291,7 @@ export const POST: APIRoute = async ({ request }) => {
     let contentType = upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
 
     if (responseHasUnsupportedFieldError(text)) {
+      if (queryTargetsConfig(body)) persistLocalDefaultSocialImageFromMutation(body);
       const retryBody = queryTargetsConfig(body)
         ? stripConfigLaggingSchemaFields(body)
         : stripUnsupportedLaggingSchemaFields(body);
