@@ -14,8 +14,8 @@ if (!data) return new Response('Not Found', { status: 404 });
 const config = (await getConfig()).data?.config ?? null;
 const posts = await listBlogs();
 const seo = data.seo ?? null;
-const title = seo?.metaTitle || data.seoTitle || config?.seo?.title || 'First For News';
-const description = seo?.metaDescription || config?.seo?.description || 'Independent local reporting for the harbor counties.';
+const title = seo?.metaTitle || data.seoTitle || data.title || config?.seo?.title;
+const description = seo?.metaDescription || data.description || config?.seo?.description;
 ---
 
 <Base
