@@ -42,7 +42,7 @@ export const UserCollection: Collection = {
       name: "email",
       label: "Email",
     },
-    seoFields,
+    { ...seoFields, label: "Author SEO" },
   ],
 };
 

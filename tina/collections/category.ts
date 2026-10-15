@@ -27,6 +27,6 @@ export const CategoryCollection: Collection = {
         component: "textarea",
       },
     },
-    seoFields,
+    { ...seoFields, label: "Category SEO" },
   ],
 };
