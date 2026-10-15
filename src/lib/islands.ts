@@ -15,7 +15,7 @@ import AuthorArchiveHeader from '../components/islands/AuthorArchiveHeader.astro
 import CategoryArchiveHeader from '../components/islands/CategoryArchiveHeader.astro';
 import Header from '../templates/Header.astro';
 import Footer from '../templates/Footer.astro';
-import { getConfig, getEditableBlog, getEditableCategory, getEditablePage, getEditableUser } from './data';
+import { getEditableBlog, getEditableCategory, getEditableConfig, getEditablePage, getEditableUser } from './data';
 
 export const islands: IslandRegistry = {
 	page: {
@@ -51,7 +51,7 @@ export const islands: IslandRegistry = {
 		}),
 	},
 	global: {
-		fetch: () => getConfig(),
+		fetch: () => getEditableConfig(),
 		component: Header,
 		wrapper: { tag: 'div' },
 		propsFromData: (data) => ({
@@ -59,7 +59,7 @@ export const islands: IslandRegistry = {
 		}),
 	},
 	'global-footer': {
-		fetch: () => getConfig(),
+		fetch: () => getEditableConfig(),
 		component: Footer,
 		wrapper: { tag: 'div' },
 		propsFromData: (data) => ({

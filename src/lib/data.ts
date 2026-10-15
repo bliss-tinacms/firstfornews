@@ -212,7 +212,7 @@ function tinaDirectContentApiUrl() {
 		process.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
 		process.env.PUBLIC_TINA_CLIENT_ID ||
 		process.env.TINA_PUBLIC_CLIENT_ID ||
-		'40bc8cd1-d0fe-4061-b99c-d91be2de59e0';
+		'a9684e57-12db-4e1e-81bb-c908941e164f';
 	const branch =
 		import.meta.env.PUBLIC_TINA_BRANCH ||
 		import.meta.env.NEXT_PUBLIC_TINA_BRANCH ||
@@ -418,6 +418,23 @@ export async function getConfig() {
 	const localConfig = readLocalJson('config', 'config.json');
 	if (localConfig) return { data: { config: localConfig } } as any;
 	return requestWithMetadata(client.queries.config({ relativePath: 'config.json' }));
+}
+
+export async function getEditableConfig() {
+	const relativePath = 'config.json';
+	try {
+		return await requestWithMetadata(client.queries.config({ relativePath }), { priority: 'primary' });
+	} catch (_error) {
+		const live = await fetchLiveTinaResult<{ config: any }>(ConfigDocument, { relativePath });
+		if (live?.data?.config) {
+			return requestWithMetadata(Promise.resolve({
+				data: live.data,
+				query: ConfigDocument,
+				variables: { relativePath },
+			}), { priority: 'primary' });
+		}
+		throw _error;
+	}
 }
 
 
