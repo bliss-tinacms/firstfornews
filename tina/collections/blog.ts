@@ -87,6 +87,7 @@ export const BlogCollection: Collection = {
       label: "Categories",
       type: "string",
       list: true,
+      required: true,
       options: categoryOptions(),
       ui: {
         component: CategoryCheckboxGroupField,

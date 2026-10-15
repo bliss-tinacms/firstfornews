@@ -123,7 +123,7 @@ type Blog implements Node & Document {
   seo: BlogSeo
   pubDate: String
   updatedDate: String
-  categories: [String]
+  categories: [String!]!
   author: BlogAuthor
   heroImage: String
   authorAlt: String

@@ -64,9 +64,10 @@ const defaultSocialImage = config?.seo?.defaultSocialImage || undefined;
 				const selectPrimaryForm = () => {
 					attempts += 1;
 					const island = document.querySelector('[data-tina-island-primary]');
-					const form = island?.matches('[data-tina-form]')
-						? island
-						: island?.querySelector('[data-tina-form]');
+					const form = document.querySelector('[data-tina-primary][data-tina-form]')
+						|| (island?.matches('[data-tina-form]')
+							? island
+							: island?.querySelector('[data-tina-form]'));
 					try {
 						const payload = JSON.parse(form?.getAttribute('data-tina-form') || '{}');
 						if (payload.id) {
