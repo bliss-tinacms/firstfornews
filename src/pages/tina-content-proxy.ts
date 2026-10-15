@@ -94,15 +94,12 @@ function persistBlogCategoryOverride(bodyText: string) {
     const filename = relativePath.endsWith('.mdx') ? relativePath : `${relativePath}.mdx`;
     const directParams = variables.params ?? {};
     const blogParams = directParams.blog ?? directParams;
+    const hasCategories = blogParams && typeof blogParams === 'object' && Object.prototype.hasOwnProperty.call(blogParams, 'categories');
     const categories = normalizeBlogCategoryList(blogParams.categories ?? []);
-    const hasBlogParams = blogParams && typeof blogParams === 'object' && Object.keys(blogParams).length > 0;
-    if (!categories.length && !hasBlogParams) return;
+    if (!hasCategories) return;
     const overrides = readBlogOverrides();
     overrides[filename] = {
-      ...(overrides[filename] ?? {}),
-      ...blogParams,
-      ...(categories.length ? { categories } : {}),
-      ...(blogParams.body ? { body: normalizeTinaRichText(blogParams.body) } : {}),
+      categories,
       _sys: { filename: filename.replace(/\.mdx$/, ''), relativePath: filename },
       updatedAt: new Date().toISOString(),
     };
@@ -273,6 +270,7 @@ function overrideBlogResponse(text: string, bodyText: string) {
     const override = getBlogOverride(relativePath);
     const params = payload?.variables?.params ?? {};
     const blogParams = params.blog ?? params;
+    const hasRequestedCategories = blogParams && typeof blogParams === 'object' && Object.prototype.hasOwnProperty.call(blogParams, 'categories');
     const requestedCategories = normalizeBlogCategoryList(blogParams.categories ?? []);
     const json = JSON.parse(text || '{}');
     if (!json.data) json.data = {};
@@ -285,12 +283,13 @@ function overrideBlogResponse(text: string, bodyText: string) {
           : ['blog'];
     for (const key of targetKeys) {
       const existing = json.data[key] ?? {};
+      const hasOverrideCategories = Array.isArray(override?.categories);
       const overrideCategories = normalizeBlogCategoryList(override?.categories ?? []);
       const localCategories = normalizeBlogCategoryList((localBlog as any)?.categories ?? []);
       const existingCategories = normalizeBlogCategoryList(existing.categories ?? (existing.category ? [existing.category] : []));
-      const categories = requestedCategories.length
+      const categories = hasRequestedCategories
         ? requestedCategories
-        : overrideCategories.length
+        : hasOverrideCategories
           ? overrideCategories
           : localCategories.length
             ? localCategories

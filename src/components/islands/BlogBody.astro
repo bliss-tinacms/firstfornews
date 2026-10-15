@@ -138,8 +138,8 @@ function getFallbackPublishedDate(post?: CmsBlog | null) {
 }
 
 const postAuthor = data ? getAuthor(data.author) : null;
-const author = defaultAuthor || postAuthor;
-const authorName = getReferenceLabel(defaultAuthor) || getReferenceLabel(postAuthor) || getReferenceLabel(data?.author) || 'Newsroom Staff';
+const author = postAuthor || defaultAuthor;
+const authorName = getReferenceLabel(postAuthor) || getReferenceLabel(data?.author) || getReferenceLabel(defaultAuthor) || 'Newsroom Staff';
 const authorSlug = getReferenceSlug(data?.author) || getReferenceSlug(author);
 const authorArchiveUrl = authorSlug ? `/blog/author/${authorSlug}/` : '/blog/';
 const authorInitials = authorName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'FF';

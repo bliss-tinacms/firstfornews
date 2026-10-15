@@ -193,6 +193,22 @@ function hydrateBlogCategories<T extends Record<string, any>>(node: T): T {
 	return next as T;
 }
 
+function withRuntimeBlogCategories<T extends Record<string, any>>(node: T, relativePath?: string | null): T {
+	const hydrated = hydrateBlogCategories(node as any) as Record<string, any>;
+	const override = readBlogOverride(relativePath);
+	const hasOverrideCategories = Array.isArray(override?.categories);
+	const overrideCategories = hydrateBlogCategories({ categories: override?.categories } as any).categories;
+	const localCategories = hydrateBlogCategories((readLocalBlogFrontmatter(relativePath) ?? {}) as any).categories;
+	const categories = hasOverrideCategories
+		? overrideCategories
+		: Array.isArray(hydrated.categories) && hydrated.categories.length
+			? hydrated.categories
+			: Array.isArray(localCategories) && localCategories.length
+				? localCategories
+				: [];
+	return { ...hydrated, categories } as unknown as T;
+}
+
 function toTinaEditableBlog<T extends Record<string, any>>(node: T): T {
 	const hydrated = hydrateBlogCategories(node as any) as Record<string, any>;
 	return {
@@ -239,7 +255,7 @@ function tinaApiToken() {
 
 function hasUnsupportedFieldError(json: any) {
 	const errors = Array.isArray(json?.errors) ? json.errors : [];
-	return errors.some((error) => /Cannot query field\s+\"(seo|experience|focus|categories)\"/.test(String(error?.message || '')));
+	return errors.some((error: any) => /Cannot query field\s+\"(seo|experience|focus|categories)\"/.test(String(error?.message || '')));
 }
 
 function stripUnsupportedLaggingSchemaFields(query: string) {
@@ -266,7 +282,6 @@ const BlogEditorCompatDocument = `query blog($relativePath: String!) {
 		seo { __typename metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
 		pubDate
 		updatedDate
-		categories
 		author {
 			... on User { __typename name role avatar bio email }
 			... on Document { _sys { filename basename hasReferences breadcrumbs path relativePath extension } id }
@@ -530,35 +545,32 @@ export const getPublicPage = (slug: string) => getLivePage(slug);
 
 export const getEditableBlog = async (slug: string) => {
 	const relativePath = slug.endsWith('.mdx') ? slug : `${slug}.mdx`;
-	// Editor/sidebar data must preserve the generated Tina query metadata and rich-text body.
-	// Prefer the generated Tina client first; a local markdown body fallback can render public
-	// pages but leaves the visual editor with an empty/broken form payload for blog posts.
+	// The live project is still serving its legacy singular Category reference. Use a compatible
+	// editor query first, omitting that legacy relation and nested User SEO so the article form
+	// can load while Tina Cloud's collection schema is brought current.
+	const live = await fetchLiveTinaResult<{ blog: any }>(BlogEditorCompatDocument, { relativePath });
+	if (live?.data?.blog) {
+		return requestWithMetadata(Promise.resolve({
+			data: { ...live.data, blog: toTinaEditableBlog(withRuntimeBlogCategories(live.data.blog as any, relativePath)) },
+			query: BlogEditorCompatDocument,
+			variables: { relativePath },
+		}), { priority: 'primary' });
+	}
 	try {
 		const result = await client.queries.blog({ relativePath });
 		if (result?.data?.blog) {
-			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
-				data: { ...result.data, blog: toTinaEditableBlog({ ...(result.data.blog as any), ...(override ?? {}) }) },
+				data: { ...result.data, blog: toTinaEditableBlog(withRuntimeBlogCategories(result.data.blog as any, relativePath)) },
 				query: result.query,
 				variables: result.variables ?? { relativePath },
 			}), { priority: 'primary' });
 		}
 		return requestWithMetadata(Promise.resolve(result), { priority: 'primary' });
 	} catch (_error) {
-		const live = await fetchLiveTinaResult<{ blog: any }>(BlogEditorCompatDocument, { relativePath });
-		if (live?.data?.blog) {
-			const override = readBlogOverride(relativePath);
-			return requestWithMetadata(Promise.resolve({
-				data: { ...live.data, blog: toTinaEditableBlog({ ...(live.data.blog as any), ...(override ?? {}) }) },
-				query: BlogEditorCompatDocument,
-				variables: { relativePath },
-			}), { priority: 'primary' });
-		}
 		const localBlog = readLocalBlogFrontmatter(relativePath);
-		const override = readBlogOverride(relativePath);
-		if (localBlog || override) {
+		if (localBlog) {
 			return requestWithMetadata(Promise.resolve({
-				data: { blog: hydratePermalink('blog', toTinaEditableBlog({ ...(localBlog as any), ...(override ?? {}) })) },
+				data: { blog: hydratePermalink('blog', toTinaEditableBlog(withRuntimeBlogCategories(localBlog as any, relativePath))) },
 				query: BlogDocument,
 				variables: { relativePath },
 			}), { priority: 'primary' });
@@ -577,7 +589,6 @@ export async function getBlog(slug: string) {
 			permalink
 			pubDate
 			updatedDate
-			categories
 			author { ... on User { name role avatar bio email _sys { filename } } }
 			heroImage
 			authorAlt
@@ -587,10 +598,9 @@ export async function getBlog(slug: string) {
 		}
 	}`;
 	const liveBlog = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.blog);
-	const override = readBlogOverride(relativePath);
-	if (liveBlog) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', { ...(liveBlog as any), ...(override ?? {}) })) } } as any;
+	if (liveBlog) return { data: { blog: withRuntimeBlogCategories(hydratePermalink('blog', liveBlog as any), relativePath) } } as any;
 	const localBlog = readLocalBlogFrontmatter(relativePath);
-	if (localBlog || override) return { data: { blog: hydrateBlogCategories(hydratePermalink('blog', { ...(localBlog as any), ...(override ?? {}) })) } } as any;
+	if (localBlog) return { data: { blog: withRuntimeBlogCategories(hydratePermalink('blog', localBlog as any), relativePath) } } as any;
 	return requestWithMetadata(client.queries.blog({ relativePath }), { priority: 'primary' });
 }
 
@@ -702,7 +712,6 @@ export async function listBlogs() {
 					heroImage
 					heroImageAlt
 					seo { metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
-					categories
 					author { ... on User { name role avatar bio email _sys { filename } } }
 					_sys { filename }
 				}
@@ -717,8 +726,7 @@ export async function listBlogs() {
 		return nodes
 			.map((node) => {
 				const relativePath = (node as any)?._sys?.relativePath || ((node as any)?._sys?.filename ? `${(node as any)._sys.filename}.mdx` : null);
-				const override = readBlogOverride(relativePath);
-				return hydrateBlogCategories(hydratePermalink('blog', { ...(node as any), ...(override ?? {}) }));
+				return withRuntimeBlogCategories(hydratePermalink('blog', node as any), relativePath);
 			})
 			.sort((a, b) => {
 				const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
@@ -730,8 +738,7 @@ export async function listBlogs() {
 	if (localBlogs) {
 		return (localBlogs as any[]).map((node) => {
 			const relativePath = node?._sys?.relativePath || (node?._sys?.filename ? `${node._sys.filename}.mdx` : null);
-			const override = readBlogOverride(relativePath);
-			return hydrateBlogCategories({ ...node, ...(override ?? {}) });
+			return withRuntimeBlogCategories(node, relativePath);
 		}).sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
 			const bd = b.pubDate ? new Date(b.pubDate).valueOf() : 0;
@@ -743,8 +750,7 @@ export async function listBlogs() {
 		.flatMap((edge) => (edge?.node ? [edge.node] : []))
 		.map((node) => {
 			const relativePath = (node as any)?._sys?.relativePath || ((node as any)?._sys?.filename ? `${(node as any)._sys.filename}.mdx` : null);
-			const override = readBlogOverride(relativePath);
-			return hydrateBlogCategories(hydratePermalink('blog', { ...(node as any), ...(override ?? {}) }));
+			return withRuntimeBlogCategories(hydratePermalink('blog', node as any), relativePath);
 		})
 		.sort((a, b) => {
 			const ad = a.pubDate ? new Date(a.pubDate).valueOf() : 0;
