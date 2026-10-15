@@ -17,3 +17,5 @@ allowBuilds:
   protobufjs: true
   sharp: true
   workerd: true
+patchedDependencies:
+  '@tinacms/bridge@0.3.0': patches/@tinacms__bridge@0.3.0.patch

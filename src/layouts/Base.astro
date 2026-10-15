@@ -54,37 +54,6 @@ const defaultSocialImage = config?.seo?.defaultSocialImage || undefined;
 		<TinaIsland name="global-footer" wrapper={islands['global-footer'].wrapper}>
 			<Footer config={config} navigation={footerNavigation} />
 		</TinaIsland>
-		<script is:inline>
-			// @tinacms/bridge can send its one-time primary-form selection before
-			// Tina's admin has registered the article form. Repeat the same safe
-			// selection message briefly so multi-island pages open the document
-			// editor instead of whichever global form registered first.
-			if (window.self !== window.top) {
-				let attempts = 0;
-				const selectPrimaryForm = () => {
-					attempts += 1;
-					const island = document.querySelector('[data-tina-island-primary]');
-					const form = document.querySelector('[data-tina-primary][data-tina-form]')
-						|| (island?.matches('[data-tina-form]')
-							? island
-							: island?.querySelector('[data-tina-form]'));
-					try {
-						const payload = JSON.parse(form?.getAttribute('data-tina-form') || '{}');
-						if (payload.id) {
-							window.parent.postMessage(
-								{ type: 'user-select-form', formId: payload.id },
-								window.location.origin,
-							);
-						}
-					} catch (_error) {
-						// The bridge will retry while the island payload is being mounted.
-					}
-					if (attempts >= 40) clearInterval(timer);
-				};
-				const timer = setInterval(selectPrimaryForm, 250);
-				selectPrimaryForm();
-			}
-		</script>
 		{footerCode && <Fragment set:html={footerCode} />}
 	</body>
 </html>
