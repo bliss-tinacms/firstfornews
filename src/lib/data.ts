@@ -206,17 +206,35 @@ function toTinaEditableBlog<T extends Record<string, any>>(node: T): T {
 
 function tinaDirectContentApiUrl() {
 	const clientId =
+		import.meta.env.PUBLIC_TINA_CLIENT_ID ||
+		import.meta.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
+		import.meta.env.TINA_PUBLIC_CLIENT_ID ||
 		process.env.NEXT_PUBLIC_TINA_CLIENT_ID ||
 		process.env.PUBLIC_TINA_CLIENT_ID ||
 		process.env.TINA_PUBLIC_CLIENT_ID ||
-		'a9684e57-12db-4e1e-81bb-c908941e164f';
-	const branch = process.env.NEXT_PUBLIC_TINA_BRANCH || process.env.TINA_BRANCH || 'main';
+		'40bc8cd1-d0fe-4061-b99c-d91be2de59e0';
+	const branch =
+		import.meta.env.PUBLIC_TINA_BRANCH ||
+		import.meta.env.NEXT_PUBLIC_TINA_BRANCH ||
+		import.meta.env.TINA_BRANCH ||
+		process.env.NEXT_PUBLIC_TINA_BRANCH ||
+		process.env.TINA_BRANCH ||
+		'main';
 	if (!clientId) return null;
 	return `https://content.tinajs.io/2.4/content/${encodeURIComponent(clientId)}/github/${encodeURIComponent(branch)}`;
 }
 
 function tinaApiToken() {
-	return process.env.NEXT_PUBLIC_TINA_TOKEN || process.env.TINA_PUBLIC_TINA_TOKEN || process.env.TINA_TOKEN || '';
+	return (
+		import.meta.env.PUBLIC_TINA_TOKEN ||
+		import.meta.env.NEXT_PUBLIC_TINA_TOKEN ||
+		import.meta.env.TINA_PUBLIC_TINA_TOKEN ||
+		import.meta.env.TINA_TOKEN ||
+		process.env.NEXT_PUBLIC_TINA_TOKEN ||
+		process.env.TINA_PUBLIC_TINA_TOKEN ||
+		process.env.TINA_TOKEN ||
+		''
+	);
 }
 
 function hasUnsupportedFieldError(json: any) {
@@ -271,7 +289,10 @@ async function fetchLiveTina<T>(query: string, variables?: Record<string, unknow
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
-			const headers: Record<string, string> = { 'content-type': 'application/json' };
+			const headers: Record<string, string> = {
+				'content-type': 'application/json',
+				'accept-encoding': 'identity',
+			};
 			const token = tinaApiToken();
 			if (token) headers['X-API-KEY'] = token;
 			let response = await fetch(endpoint, {
@@ -313,7 +334,10 @@ async function fetchLiveTinaResult<TData>(query: string, variables?: Record<stri
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), 2000);
 		try {
-			const headers: Record<string, string> = { 'content-type': 'application/json' };
+			const headers: Record<string, string> = {
+				'content-type': 'application/json',
+				'accept-encoding': 'identity',
+			};
 			const token = tinaApiToken();
 			if (token) headers['X-API-KEY'] = token;
 			let response = await fetch(endpoint, {
@@ -354,9 +378,6 @@ function liveOrGenerated<TData>(query: string, variables: Record<string, unknown
 }
 
 export async function getConfig() {
-	const localConfig = readLocalJson('config', 'config.json');
-	if (localConfig) return { data: { config: localConfig } } as any;
-
 	const query = `query Config($relativePath: String!) {
 		config(relativePath: $relativePath) {
 			seo { title description siteOwner logo defaultSocialImage favicon footerLogo }
@@ -368,19 +389,13 @@ export async function getConfig() {
 	}`;
 	const liveConfig = await fetchLiveTina(query, { relativePath: 'config.json' }, (json) => json?.data?.config);
 	if (liveConfig) return { data: { config: liveConfig } } as any;
+	const localConfig = readLocalJson('config', 'config.json');
+	if (localConfig) return { data: { config: localConfig } } as any;
 	return requestWithMetadata(client.queries.config({ relativePath: 'config.json' }));
 }
 
 
 async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
-	try {
-		const filePath = join(process.cwd(), 'src', 'content', 'navigation', relativePath);
-		const navigation = JSON.parse(readFileSync(filePath, 'utf8'));
-		if (navigation?.items) return { data: { navigation } } as any;
-	} catch (_error) {
-		// Fall through to Tina Cloud/generated client.
-	}
-
 	const query = `query Navigation($relativePath: String!) {
 		navigation(relativePath: $relativePath) {
 			title
@@ -390,6 +405,8 @@ async function getLiveNavigation(relativePath: 'header.json' | 'footer.json') {
 
 	const liveNavigation = await fetchLiveTina(query, { relativePath }, (json) => json?.data?.navigation);
 	if (liveNavigation) return { data: { navigation: liveNavigation } } as any;
+	const localNavigation = readLocalJson('navigation', relativePath);
+	if (localNavigation?.items) return { data: { navigation: localNavigation } } as any;
 
 	return requestWithMetadata(client.queries.navigation({ relativePath }));
 }
