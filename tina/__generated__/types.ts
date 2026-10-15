@@ -3800,7 +3800,7 @@ export const ExperimentalGetTinaClient = () =>
   getSdk(
     generateRequester(
       createClient({
-        url: "https://firstfornews.net/tina-content-proxy",
+        url: "https://content.tinajs.io/2.4/content/a9684e57-12db-4e1e-81bb-c908941e164f/github/main",
         queries,
       })
     )

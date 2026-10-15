@@ -95,7 +95,7 @@ function filenameFromBrowser(kind) {
 function resolveFrontendUrl(kind, values) {
   const raw = values?.permalink || values?._sys?.filename || values?.filename || filenameFromBrowser(kind) || values?.title || values?.seoTitle || "";
   const slug = normalizeSlug(raw);
-  if (kind === "blog") return slug ? "/blog/" + slug + "/" : "/blog/";
+  if (kind === "blog") return slug ? "/" + (slug.startsWith("blog/") ? slug.slice(5) : slug) + "/" : "/blog/";
   if (!slug || slug === "home" || slug === "index") return "/";
   return "/" + slug + "/";
 }
@@ -198,6 +198,138 @@ function viewFrontendField(kind) {
   };
 }
 
+// tina/fields/category-checkbox-group.ts
+import React2 from "react";
+var CATEGORY_OPTIONS = [
+  { label: "Business", value: "src/content/category/Business.json" },
+  { label: "Featured", value: "src/content/category/Featured.json" },
+  { label: "Health", value: "src/content/category/Health.json" },
+  { label: "Lifestyle", value: "src/content/category/Lifestyle.json" },
+  { label: "Politics", value: "src/content/category/Politics.json" },
+  { label: "Technology", value: "src/content/category/Technology.json" },
+  { label: "World", value: "src/content/category/World.json" }
+];
+function basename(value) {
+  return String(value || "").split("/").pop()?.replace(/\.(json|mdx?)$/i, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "";
+}
+function normalizeItem(item) {
+  if (!item) return [];
+  if (typeof item === "string") return [item, basename(item)];
+  if (typeof item === "object") {
+    const candidates = [
+      item.category,
+      item.value,
+      item.label,
+      item.title,
+      item.name,
+      item._sys?.path,
+      item._sys?.relativePath,
+      item._sys?.filename
+    ].filter(Boolean);
+    return candidates.flatMap((candidate) => [String(candidate), basename(candidate)]);
+  }
+  return [String(item), basename(item)];
+}
+function normalizeValue(value) {
+  const raw = Array.isArray(value) ? value : value ? [value] : [];
+  const keys = /* @__PURE__ */ new Set();
+  for (const item of raw) {
+    for (const key of normalizeItem(item)) {
+      if (key) keys.add(key);
+    }
+  }
+  return keys;
+}
+function canonicalize(value) {
+  const keys = normalizeValue(value);
+  return CATEGORY_OPTIONS.filter((option) => keys.has(option.value) || keys.has(basename(option.value)) || keys.has(option.label) || keys.has(basename(option.label))).map((option) => option.value);
+}
+function CategoryCheckboxGroupField({ input, field, disabled = false }) {
+  const [hydratedSelected, setHydratedSelected] = React2.useState(null);
+  React2.useEffect(() => {
+    try {
+      const hash = String(window.location.hash || "");
+      const slug = hash.split("/").filter(Boolean).pop();
+      if (!slug || slug === "~") return;
+      const relativePath = `${slug}.mdx`;
+      fetch(`/tina-content-proxy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        },
+        body: JSON.stringify({
+          query: `query BlogCategoryRead($relativePath:String!){ blog(relativePath:$relativePath){ categories } }`,
+          variables: { relativePath }
+        })
+      }).then((response) => response.json()).then((payload) => {
+        const values = canonicalize(payload?.data?.blog?.categories);
+        if (values.length) setHydratedSelected(values);
+      }).catch(() => {
+      });
+    } catch (_error) {
+    }
+  }, [input?.name]);
+  const selected = hydratedSelected ?? canonicalize(input?.value);
+  const selectedSet = new Set(selected);
+  const name = input?.name || field?.name || "categories";
+  function toggle(value, checked) {
+    const next = new Set(selected);
+    if (checked) next.add(value);
+    else next.delete(value);
+    const values = CATEGORY_OPTIONS.filter((option) => next.has(option.value)).map((option) => option.value);
+    setHydratedSelected(values);
+    try {
+      const hash = String(window.location.hash || "");
+      const slug = hash.split("/").filter(Boolean).pop();
+      if (!slug || slug === "~") return;
+      fetch(`/tina-content-proxy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
+        body: JSON.stringify({
+          query: `mutation UpdateBlogCategories($relativePath:String!,$params:BlogMutation!){ updateBlog(relativePath:$relativePath, params:$params){ categories } }`,
+          variables: { relativePath: `${slug}.mdx`, params: { categories: values } }
+        })
+      }).catch(() => {
+      });
+    } catch (_error) {
+    }
+  }
+  return React2.createElement(
+    "div",
+    {
+      id: name,
+      style: { display: "flex", flexDirection: "column", gap: "0.35rem" },
+      "data-ffn-category-checkbox-group": "true",
+      "data-ffn-selected-categories": selected.join(",")
+    },
+    CATEGORY_OPTIONS.map((option) => {
+      const id = `field-${name}-option-${basename(option.value)}`;
+      const checked = selectedSet.has(option.value);
+      return React2.createElement(
+        "label",
+        {
+          key: option.value,
+          htmlFor: id,
+          style: { display: "flex", alignItems: "center", gap: "0.5rem", cursor: disabled ? "not-allowed" : "pointer", color: "#374151", fontSize: "14px" }
+        },
+        React2.createElement("input", {
+          id,
+          name,
+          type: "checkbox",
+          value: option.value,
+          checked,
+          disabled,
+          onChange: (event) => toggle(option.value, event.target.checked),
+          style: { width: "16px", height: "16px" },
+          "data-ffn-category-value": option.value
+        }),
+        React2.createElement("span", null, option.label)
+      );
+    })
+  );
+}
+
 // tina/collections/blog.ts
 function slugifyFilename(value) {
   if (!value || typeof value !== "string") return "untitled";
@@ -246,6 +378,9 @@ function cleanPublicSlug(value) {
 function filenameFromDocument(document) {
   return cleanPublicSlug(document?._sys?.filename || document?._sys?.basename || "");
 }
+function categoryOptions() {
+  return CATEGORY_OPTIONS;
+}
 var BlogCollection = {
   name: "blog",
   label: "Blogs",
@@ -260,22 +395,27 @@ var BlogCollection = {
     router: ({ document }) => {
       const raw = cleanPublicSlug(document?.permalink) || filenameFromDocument(document);
       const slug = raw.startsWith("blog/") ? raw.slice(5) : raw;
-      return slug ? "/blog/" + slug : "/blog/";
+      return slug ? "/" + slug : "/blog/";
     }
   },
   fields: [
     viewFrontendField("blog"),
     { type: "string", name: "title", label: "Title", isTitle: true, required: true },
+    { name: "permalink", label: "Permalink", type: "string", description: "Optional custom public URL path. Leave blank to use the filename/slug." },
     { name: "description", label: "Description", type: "string" },
     seoFields,
     { name: "pubDate", label: "Publication Date", type: "datetime" },
     { name: "updatedDate", label: "Updated Date", type: "datetime" },
     {
-      name: "category",
-      label: "Category",
-      type: "reference",
-      collections: ["category"],
-      description: "Assign this post to a category, similar to WordPress post categories."
+      name: "categories",
+      label: "Categories",
+      type: "string",
+      list: true,
+      options: categoryOptions(),
+      ui: {
+        component: CategoryCheckboxGroupField
+      },
+      description: "Assign this post to one or more categories. Values save as category document paths."
     },
     {
       name: "author",
@@ -299,7 +439,7 @@ var CategoryCollection = {
   format: "json",
   ui: {
     router({ document }) {
-      return `/blog/category/${document._sys.filename}`;
+      return `/${String(document._sys.filename || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}/`;
     }
   },
   fields: [
@@ -317,7 +457,8 @@ var CategoryCollection = {
       ui: {
         component: "textarea"
       }
-    }
+    },
+    { ...seoFields, label: "Category SEO" }
   ]
 };
 
@@ -332,6 +473,12 @@ var GlobalConfigCollection = {
   },
   fields: [
     {
+      name: "favicon",
+      label: "Favicon",
+      type: "image",
+      description: "Legacy top-level favicon field kept for TinaCloud schema compatibility. Prefer Site Identity & SEO \u2192 Favicon for editing."
+    },
+    {
       name: "seo",
       label: "Site Identity & SEO",
       type: "object",
@@ -340,6 +487,12 @@ var GlobalConfigCollection = {
         { name: "description", label: "Default Meta Description", type: "string", ui: { component: "textarea" } },
         { name: "siteOwner", label: "Site Owner", type: "string" },
         { name: "logo", label: "Logo", type: "image" },
+        {
+          name: "defaultSocialImage",
+          label: "Default Social / Embed Image",
+          type: "image",
+          description: "Fallback image used for Open Graph/Twitter/Discord embeds when a page, post, category, or author does not set its own social share image."
+        },
         {
           name: "favicon",
           label: "Favicon",
@@ -374,6 +527,46 @@ var GlobalConfigCollection = {
       fields: [
         { name: "headerCode", label: "Header Code", type: "string", ui: { component: "textarea" } },
         { name: "footerCode", label: "Footer Code", type: "string", ui: { component: "textarea" } }
+      ]
+    },
+    {
+      name: "redirects",
+      label: "Redirects",
+      type: "object",
+      list: true,
+      description: "Manage site redirects. Source Path is the old URL path and Destination Path is where visitors should be sent.",
+      ui: {
+        itemProps: (item) => ({
+          label: item?.source && item?.destination ? `${item.source} \u2192 ${item.destination}` : "Redirect"
+        })
+      },
+      fields: [
+        {
+          name: "enabled",
+          label: "Enabled",
+          type: "boolean",
+          description: "Turn this redirect on or off without deleting it."
+        },
+        {
+          name: "source",
+          label: "Source Path",
+          type: "string",
+          description: "Old path to redirect from, for example /old-page/.",
+          required: true
+        },
+        {
+          name: "destination",
+          label: "Destination Path",
+          type: "string",
+          description: "New path or full URL to redirect to, for example /new-page/.",
+          required: true
+        },
+        {
+          name: "permanent",
+          label: "Permanent",
+          type: "boolean",
+          description: "Use 301 when enabled, or 302 when disabled."
+        }
       ]
     },
     {
@@ -676,7 +869,7 @@ var splitBlockSchema = {
 // src/components/blocks/about-mockup17.template.ts
 var aboutMockup17BlockSchema = {
   name: "aboutMockup17",
-  label: "About Page - Mockup 17",
+  label: "About Page Template Sections",
   fields: [
     {
       type: "object",
@@ -786,7 +979,7 @@ var aboutMockup17BlockSchema = {
 // src/components/blocks/contact-mockup17.template.ts
 var contactMockup17BlockSchema = {
   name: "contactMockup17",
-  label: "Contact Page - Mockup 17",
+  label: "Contact Page Template Sections",
   fields: [
     {
       type: "object",
@@ -860,7 +1053,7 @@ var contactMockup17BlockSchema = {
 // src/components/blocks/our-team-mockup17.template.ts
 var ourTeamMockup17BlockSchema = {
   name: "ourTeamMockup17",
-  label: "Our Team Page - Mockup 17",
+  label: "Our Team Page Template Sections",
   fields: [
     { type: "object", name: "hero", label: "Hero Section", fields: [
       { name: "eyebrow", label: "Eyebrow", type: "string" },
@@ -876,7 +1069,9 @@ var ourTeamMockup17BlockSchema = {
         { name: "location", label: "Location", type: "string" },
         { name: "image", label: "Photo", type: "image" },
         { name: "imageAlt", label: "Photo Alt Text", type: "string" },
-        { name: "bio", label: "Bio", type: "string", ui: { component: "textarea" } }
+        { name: "bio", label: "Bio", type: "string", ui: { component: "textarea" } },
+        { name: "experience", label: "Experience / Meta 1", type: "string" },
+        { name: "focus", label: "Focus / Meta 2", type: "string" }
       ] }
     ] },
     { type: "object", name: "seniorStaff", label: "Senior Editorial Staff Section", fields: [
@@ -888,7 +1083,9 @@ var ourTeamMockup17BlockSchema = {
         { name: "location", label: "Location", type: "string" },
         { name: "image", label: "Photo", type: "image" },
         { name: "imageAlt", label: "Photo Alt Text", type: "string" },
-        { name: "bio", label: "Bio", type: "string", ui: { component: "textarea" } }
+        { name: "bio", label: "Bio", type: "string", ui: { component: "textarea" } },
+        { name: "experience", label: "Experience / Meta 1", type: "string" },
+        { name: "focus", label: "Focus / Meta 2", type: "string" }
       ] }
     ] }
   ]
@@ -907,8 +1104,8 @@ var homepageTemplateBlockSchema = {
         { name: "eyebrow", label: "Eyebrow", type: "string" },
         { name: "title", label: "Headline", type: "string" },
         { name: "description", label: "Description", type: "string", ui: { component: "textarea" } },
-        { name: "buttonText", label: "Button Text", type: "string" },
-        { name: "buttonLink", label: "Button Link", type: "string" },
+        { name: "buttonText", label: "Featured Story Label", type: "string", description: "Text label shown beside the hero eyebrow. This is not a button and does not link anywhere." },
+        { name: "buttonLink", label: "Unused Legacy Link", type: "string", description: "Kept only for TinaCloud schema compatibility. The Featured Story label does not use this link." },
         { name: "image", label: "Hero Image", type: "image" },
         { name: "imageAlt", label: "Hero Image Alt Text", type: "string" }
       ]
@@ -1095,6 +1292,12 @@ var PageCollection = {
       required: true,
       description: "Main visible page title shown at the top of the frontend page."
     },
+    {
+      name: "permalink",
+      label: "Permalink",
+      type: "string",
+      description: "Optional custom public URL path. Leave blank to use the filename/slug."
+    },
     seoFields,
     {
       type: "object",
@@ -1163,7 +1366,8 @@ var UserCollection = {
       type: "string",
       name: "email",
       label: "Email"
-    }
+    },
+    { ...seoFields, label: "Author SEO" }
   ]
 };
 
@@ -1173,7 +1377,7 @@ var config_default = defineConfig({
   contentApiUrlOverride: process.env.NEXT_PUBLIC_TINA_CONTENT_API_URL || process.env.TINA_PUBLIC_TINA_CONTENT_API_URL,
   branch,
   // Get this from tina.io
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID || process.env.PUBLIC_TINA_CLIENT_ID || process.env.TINA_PUBLIC_CLIENT_ID,
+  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID || process.env.PUBLIC_TINA_CLIENT_ID || process.env.TINA_PUBLIC_CLIENT_ID || "a9684e57-12db-4e1e-81bb-c908941e164f",
   // Get this from tina.io
   token: process.env.NEXT_PUBLIC_TINA_TOKEN || process.env.TINA_PUBLIC_TINA_TOKEN || process.env.TINA_TOKEN,
   media: {
