@@ -1,32 +1,11 @@
 {
-  "redirects": [
-    {
-      "enabled": true,
-      "source": "/privacy/",
-      "destination": "/privacy-policy/",
-      "permanent": true
-    }
-  ],
   "seo": {
     "title": "First For News",
     "description": "Timely stories, useful insights, and clear coverage of the topics that matter.",
     "siteOwner": "First For News",
-    "logo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png",
+    "logo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1792076325/firstfornews/ffn-tina-fullcheck-logo.png",
+    "defaultSocialImage": null,
     "favicon": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789664635/firstfornews/favicon.png",
     "footerLogo": "https://res.cloudinary.com/qwdyyii2/image/upload/v1789663489/firstfornews/First-for-News-Logo.png"
-  },
-  "contactForm": {
-    "formspreeEndpoint": "https://formspree.io/f/xppwzoep",
-    "heading": "You live here. You see things we don't.",
-    "description": "Story tips, corrections, letters, and general reader correspondence all reach a person on the newsroom staff.",
-    "buttonText": "Send to the newsroom",
-    "note": "Fields marked * are required. Read during U.S. business hours. Do not use a work account if your message is sensitive.",
-    "subject": "First For News contact form submission"
-  },
-  "codeInjection": {
-    "headerCode": "",
-    "footerCode": ""
-  },
-  "contactLinks": [],
-  "footerStarfield": false
+  }
 }
