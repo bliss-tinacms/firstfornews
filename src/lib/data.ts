@@ -252,6 +252,32 @@ function stripUnsupportedLaggingSchemaFields(query: string) {
 		.replace(/\n{3,}/g, '\n\n');
 }
 
+// A newly added nested User field must not make the whole Blog form disappear
+// while Tina Cloud is reindexing. This still reads the editable blog from Tina
+// Cloud; it omits only nested author SEO from the temporary compatibility query.
+const BlogEditorCompatDocument = `query blog($relativePath: String!) {
+	blog(relativePath: $relativePath) {
+		__typename
+		_sys { filename basename hasReferences breadcrumbs path relativePath extension }
+		id
+		title
+		permalink
+		description
+		seo { __typename metaTitle metaDescription ogTitle ogDescription ogImage canonicalUrl noindex nofollow }
+		pubDate
+		updatedDate
+		categories
+		author {
+			... on User { __typename name role avatar bio email }
+			... on Document { _sys { filename basename hasReferences breadcrumbs path relativePath extension } id }
+		}
+		heroImage
+		authorAlt
+		heroImageAlt
+		body
+	}
+}`;
+
 function tinaProxyEndpoints() {
 	// Do not SSR-fetch this same Passenger app's public /tina-content-proxy.
 	// Self-fetching the live domain during page render can deadlock/timeout under cPanel Passenger.
@@ -502,12 +528,12 @@ export const getEditableBlog = async (slug: string) => {
 		}
 		return requestWithMetadata(Promise.resolve(result), { priority: 'primary' });
 	} catch (_error) {
-		const live = await fetchLiveTinaResult<{ blog: any }>(BlogDocument, { relativePath });
+		const live = await fetchLiveTinaResult<{ blog: any }>(BlogEditorCompatDocument, { relativePath });
 		if (live?.data?.blog) {
 			const override = readBlogOverride(relativePath);
 			return requestWithMetadata(Promise.resolve({
 				data: { ...live.data, blog: toTinaEditableBlog({ ...(live.data.blog as any), ...(override ?? {}) }) },
-				query: BlogDocument,
+				query: BlogEditorCompatDocument,
 				variables: { relativePath },
 			}), { priority: 'primary' });
 		}
