@@ -1,0 +1,13 @@
+diff --git a/src/TinaIsland.astro b/src/TinaIsland.astro
+index 5068809ae05aece64dc733284e5d40f6920cab2e..d129856dc6c3be46ddececea93597032805ee934 100644
+--- a/src/TinaIsland.astro
++++ b/src/TinaIsland.astro
+@@ -30,7 +30,7 @@ const adminOrigin = adminOrigins();
+ <script is:inline type="module" define:vars={{ adminOrigin }}>
+   if (window.self !== window.top && !window.__tinaBootstrap) {
+     window.__tinaBootstrap = 1;
+-    const { init, refreshForms } = await import('/admin/bridge.js');
++    const { init, refreshForms } = await import('/admin/bridge.js?v=0.3.0-primary-secondary-1');
+     init(adminOrigin ? { adminOrigin } : undefined);
+     document.addEventListener('astro:page-load', refreshForms);
+   }

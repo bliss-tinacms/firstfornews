@@ -18,4 +18,5 @@ allowBuilds:
   sharp: true
   workerd: true
 patchedDependencies:
+  '@tinacms/astro@0.5.1': patches/@tinacms__astro@0.5.1.patch
   '@tinacms/bridge@0.3.0': patches/@tinacms__bridge@0.3.0.patch
