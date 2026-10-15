@@ -83,6 +83,14 @@ export const BlogCollection: Collection = {
     { name: "pubDate", label: "Publication Date", type: "datetime" },
     { name: "updatedDate", label: "Updated Date", type: "datetime" },
     {
+      name: "category",
+      label: "Legacy Category",
+      type: "reference",
+      collections: ["category"],
+      ui: { component: "hidden" },
+      description: "Compatibility field retained during the additive multi-category migration.",
+    },
+    {
       name: "categories",
       label: "Categories",
       type: "string",
