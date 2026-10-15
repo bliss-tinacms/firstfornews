@@ -294,10 +294,12 @@ function overrideBlogResponse(text: string, bodyText: string) {
           : localCategories.length
             ? localCategories
             : existingCategories;
+      // Preserve Tina Cloud's typed response. Local MDX frontmatter contains
+      // strings (not Tina's rich-text/reference objects); spreading it over
+      // the GraphQL result makes the admin parser reject the form. Only the
+      // compatibility-only multi-category value is overlaid here.
       const merged = {
         ...existing,
-        ...(localBlog ?? {}),
-        ...(override ?? {}),
         categories,
       };
       delete (merged as Record<string, any>).category;
